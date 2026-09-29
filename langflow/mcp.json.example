@@ -1,0 +1,10 @@
+{
+  "mcp_server": "LANGFLOW_MCP_ENDPOINT (salin dari Langflow: MCP Server -> JSON)",
+  "args_note": "Di Bob: Gear -> MCP -> + -> tempel JSON -> tambah args --with, mcp<2.0.0",
+  "api_key_note": "Generate API Key di Langflow (muncul 1x). Simpan di env, JANGAN commit.",
+  "tools": [
+    "generate_proposal_draft",
+    "revise_proposal",
+    "generate_prd_from_brief"
+  ]
+}

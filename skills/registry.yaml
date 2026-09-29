@@ -1,0 +1,20 @@
+# Skill Registry — KilatAgent (MCP Tools)
+# Daftarkan tiap flow Langflow yang di-expose via MCP di sini.
+
+- id: proposal
+  mcp_tool_name: generate_proposal_draft
+  trigger: "buatkan proposal / penawaran web"
+  flow_file: langflow/flows/10_generate_proposal_draft.json
+  status: MVP
+
+- id: revision
+  mcp_tool_name: revise_proposal
+  trigger: "ganti / tambahkan / revisi proposal"
+  flow_file: langflow/flows/11_revise_proposal.json
+  status: MVP
+
+- id: prd
+  mcp_tool_name: generate_prd_from_brief
+  trigger: "buat PRD"
+  flow_file: langflow/flows/20_generate_prd_from_brief.json
+  status: MVP-kedua

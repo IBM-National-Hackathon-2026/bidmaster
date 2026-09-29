@@ -1,0 +1,42 @@
+# Katalog Harga — Kilat Studio (DUMMY)
+# SATU-SATUNYA sumber harga. Model dilarang membuat angka sendiri.
+
+packages:
+  - id: basic
+    name: Basic
+    price_idr: 5000000
+    timeline_weeks: 2
+    features:
+      - Landing page 5 section
+      - Company profile + galeri
+      - Form kontak WhatsApp
+      - SEO dasar + SSL
+    best_for: "Usaha yang butuh tampil online cepat"
+
+  - id: standard
+    name: Standard
+    price_idr: 10000000
+    timeline_weeks: 4
+    features:
+      - Semua fitur Basic
+      - Katalog/menu dinamis + CMS
+      - Reservasi / booking online
+      - Integrasi pembayaran QRIS
+      - Blog + analitik
+    best_for: "Kafe/klinik/UMKM yang butuh transaksi & reservasi"
+
+  - id: premium
+    name: Premium
+    price_idr: 18000000
+    timeline_weeks: 6
+    features:
+      - Semua fitur Standard
+      - Member area + loyalty
+      - Multi-cabang + multi-bahasa
+      - Integrasi POS / CRM
+      - Maintenance 3 bulan
+    best_for: "Bisnis yang mau scale multi-cabang"
+
+discount_rules:
+  max_discount_percent: 10
+  validity_days: 14
