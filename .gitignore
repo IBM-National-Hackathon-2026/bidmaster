@@ -23,7 +23,10 @@ venv/
 .env_venv/
 
 # --- Hasil generate lokal (draft proposal, docx percobaan) ---
-output/
+# outputs/ di-ignore, KECUALI 2 file contoh dummy untuk portofolio/juri
+outputs/
+!outputs/kafe-arunika-proposal-v1.md
+!outputs/kafe-arunika-proposal-v2.md
 *.log
 *.bak
 *.bak-*

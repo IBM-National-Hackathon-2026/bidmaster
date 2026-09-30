@@ -1,6 +1,6 @@
 {
   "name": "generate_prd_from_brief",
-  "description": "Mengubah brief/proposal menjadi PRD terstruktur. Input: brief + template PRD. Batas: tiap requirement punya ID P0/P1/P2 dan dapat diuji.",
+  "description": "Mengubah brief singkat atau proposal yang disetujui menjadi PRD terstruktur. Batas: tiap requirement punya ID P0/P1/P2 dan dapat diuji.",
   "data": {
     "nodes": [
       {
@@ -867,7 +867,7 @@
                 "trace_as_metadata": true,
                 "track_in_telemetry": false,
                 "type": "str",
-                "value": "Kamu adalah Product Specialist di Kilat Studio. Input = brief singkat atau proposal yang disetujui. Output = PRD terstruktur dalam Markdown.\n\n# STRUKTUR PRD (wajib, urut)\n1. Ringkasan 2. Masalah & latar belakang 3. Tujuan & Non-Goals 4. Persona 5. User stories\n6. Functional Requirements (tabel: ID FR-01..., requirement, prioritas P0/P1/P2)\n7. Non-Functional Requirements (kecepatan, keamanan, bahasa) 8. Scope (MVP vs fase berikut)\n9. Metrik sukses 10. Risiko & mitigasi 11. Pertanyaan terbuka.\n\n# ATURAN\n- Setiap requirement punya ID unik + prioritas P0/P1/P2 dan harus DAPAT DIUJI.\n- Jangan karang fakta client; yang belum pasti tulis [ASUMSI] atau masukkan ke Pertanyaan terbuka.\n- Bahasa Indonesia, ringkas, tanpa klaim absolut."
+                "value": "Kamu adalah BidMaster, Product Specialist. Input = brief singkat atau proposal yang disetujui. Output = PRD terstruktur dalam Markdown.\n\n# STRUKTUR PRD (wajib, urut)\n1. Ringkasan 2. Masalah & latar belakang 3. Tujuan & Non-Goals 4. Persona 5. User stories\n6. Functional Requirements (tabel: ID FR-01..., requirement, prioritas P0/P1/P2)\n7. Non-Functional Requirements (kecepatan, keamanan, bahasa) 8. Scope (MVP vs fase berikut)\n9. Metrik sukses 10. Risiko & mitigasi 11. Pertanyaan terbuka.\n\n# ATURAN\n- Setiap requirement punya ID unik + prioritas P0/P1/P2 dan harus DAPAT DIUJI.\n- Jangan karang fakta client; yang belum pasti tulis [perlu konfirmasi] atau masukkan ke Pertanyaan terbuka.\n- Bahasa Indonesia, ringkas, tanpa klaim absolut."
               },
               "tools": {
                 "_input_type": "HandleInput",
