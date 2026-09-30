@@ -1,4 +1,4 @@
-# ===== KilatAgent .gitignore =====
+# ===== BidMaster .gitignore =====
 # Tujuan: jangan sampai secret / file lokal ikut ke-push ke GitHub.
 
 # --- Secrets & credentials (PENTING) ---

@@ -1,4 +1,4 @@
-# KilatAgent ⚡
+# BidMaster ⚡
 
 **Satu AI agent multi-skill untuk membuat proposal client dalam hitungan menit — langsung dari chat.**
 
@@ -35,7 +35,7 @@ Satu Bob, banyak tools — skill baru = 1 flow Langflow + expose MCP, tanpa tuli
 ## Struktur Repo
 
 ```
-kilat-agent/
+bidmaster/
 ├── README.md  .gitignore  .env.example  requirements.txt
 ├── knowledge/      company_rules.md, proposal_template.md, price_catalog.yaml
 ├── clients/        3 profil client DUMMY (kafe, klinik, batik)
@@ -58,7 +58,7 @@ Dokumen SDLC lengkap (PRD, arsitektur, skill, workflow, TODO) ada di `../SDLC/`.
 ### 0. Simulasi lokal (tanpa Langflow/Bob — 1 menit)
 
 ```
-cd kilat-agent
+cd bidmaster
 pip install -r requirements.txt
 python -m simulator.demo
 ```

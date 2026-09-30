@@ -1,4 +1,4 @@
-# Aturan Perusahaan — KilatAgent (DUMMY untuk Hackathon)
+# Aturan Perusahaan — BidMaster (DUMMY untuk Hackathon)
 
 > File ini adalah satu-satunya sumber aturan. Jangan hardcode aturan di code/prompt.
 
