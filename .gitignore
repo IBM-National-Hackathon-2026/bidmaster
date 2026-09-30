@@ -27,6 +27,8 @@ venv/
 outputs/
 !outputs/kafe-arunika-proposal-v1.md
 !outputs/kafe-arunika-proposal-v2.md
+# direktori lama (pra New-SDLC), sudah dihapus
+output/
 *.log
 *.bak
 *.bak-*
