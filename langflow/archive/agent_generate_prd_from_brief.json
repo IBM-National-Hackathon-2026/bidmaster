@@ -1,5 +1,5 @@
 {
-  "name": "generate_prd_from_brief",
+  "name": "BidMaster 20 Generate PRD From Brief",
   "description": "Mengubah brief singkat atau proposal yang disetujui menjadi PRD terstruktur. Batas: tiap requirement punya ID P0/P1/P2 dan dapat diuji.",
   "data": {
     "nodes": [
@@ -276,7 +276,7 @@
           "width": 320
         },
         "position": {
-          "x": 100,
+          "x": 80,
           "y": 300
         },
         "selected": false,
@@ -905,8 +905,8 @@
           "width": 320
         },
         "position": {
-          "x": 500,
-          "y": 220
+          "x": 560,
+          "y": 260
         },
         "selected": false,
         "type": "genericNode"
@@ -1190,11 +1190,208 @@
           "width": 192
         },
         "position": {
-          "x": 940,
+          "x": 1000,
           "y": 300
         },
         "selected": false,
         "type": "genericNode"
+      },
+      {
+        "id": "CustomComponent-pC53o",
+        "type": "genericNode",
+        "position": {
+          "x": 300,
+          "y": 620
+        },
+        "selected": false,
+        "dragging": false,
+        "data": {
+          "id": "CustomComponent-pC53o",
+          "type": "CustomComponent",
+          "showNode": true,
+          "node": {
+            "base_classes": [
+              "LanguageModel",
+              "BaseLanguageModel"
+            ],
+            "description": "Model dengan failover otomatis Groq 70B -> Groq 8B -> Gemini 2.5-flash -> Ollama.",
+            "display_name": "BidMaster Fallback LLM",
+            "documentation": "https://github.com/langchain-ai/langchain",
+            "icon": "Zap",
+            "key": "BidMasterFallbackLLM",
+            "field_order": [
+              "code",
+              "groq_api_key",
+              "gemini_api_key",
+              "primary_model",
+              "temperature",
+              "use_ollama",
+              "ollama_url",
+              "ollama_model"
+            ],
+            "frozen": false,
+            "legacy": false,
+            "minimized": false,
+            "pinned": false,
+            "beta": false,
+            "edited": false,
+            "tool_mode": false,
+            "custom_fields": {},
+            "conditional_paths": [],
+            "output_types": [],
+            "score": 0.0,
+            "template": {
+              "_type": "Component",
+              "code": {
+                "type": "code",
+                "value": "\"\"\"BidMaster Fallback LLM — custom component Langflow.\n\nSatu output model yang di dalamnya berantai otomatis:\nGroq 70B -> Groq 8B -> Gemini 2.5-flash -> Ollama lokal (opsional).\nJika provider kehabisan kuota / 429 / 503 / error lain, otomatis lanjut\nke provider berikutnya TANPA setting ulang. Habis semua -> error jujur.\n\nCARA PAKAI (per flow, ~3 menit):\n1. Di canvas flow: tambah node \"Custom Component\", hapus kode contoh,\n   paste SELURUH file ini, klik \"Check & Save\".\n2. Isi Groq API Key (wajib, gratis: console.groq.com). Gemini key opsional.\n   Ollama: nyalakan hanya jika Ollama jalan di mesin ini.\n3. Hubungkan SATU garis: [Fallback LLM] model -> [Agent] model.\n   (Input model Agent yang tersambung menimpa dropdown model internal,\n   jadi API key per-Agent tidak diperlukan lagi.)\n4. Test di Playground. Ulangi untuk 3 flow (copy-paste node antar flow bisa).\n\"\"\"\n\nfrom typing import Any, List, Optional\n\nfrom lfx.custom import Component\nfrom lfx.io import (\n    BoolInput,\n    DropdownInput,\n    FloatInput,\n    Output,\n    SecretStrInput,\n    StrInput,\n)\n\nfrom langchain_core.callbacks import CallbackManagerForLLMRun\nfrom langchain_core.language_models import BaseChatModel\nfrom langchain_core.messages import AIMessage, BaseMessage\nfrom langchain_core.outputs import ChatGeneration, ChatResult\nfrom pydantic import ConfigDict\n\n\nclass _FallbackChatModel(BaseChatModel):\n    \"\"\"Chat model yang mencoba daftar provider berurutan saat gagal.\"\"\"\n\n    model_config = ConfigDict(arbitrary_types_allowed=True, extra=\"allow\")\n    chain: List[Any] = []\n    chain_names: List[str] = []\n\n    @property\n    def _llm_type(self) -> str:\n        return \"bidmaster-fallback\"\n\n    def _generate(\n        self,\n        messages: List[BaseMessage],\n        stop: Optional[List[str]] = None,\n        run_manager: Optional[CallbackManagerForLLMRun] = None,\n        **kwargs: Any,\n    ) -> ChatResult:\n        last_error: Optional[Exception] = None\n        tried: List[str] = []\n        for name, model in zip(self.chain_names, self.chain):\n            tried.append(name)\n            try:\n                out = model.invoke(messages, stop=stop)\n                if not isinstance(out, BaseMessage):\n                    out = AIMessage(content=str(out))\n                return ChatResult(generations=[ChatGeneration(message=out)])\n            except Exception as e:  # noqa: BLE001 - sengaja: coba provider berikut\n                last_error = e\n        raise RuntimeError(\n            f\"Semua provider gagal ({', '.join(tried)}). \"\n            f\"Error terakhir: {last_error}\"\n        )\n\n\nclass BidMasterFallbackLLM(Component):\n    display_name = \"BidMaster Fallback LLM\"\n    description = (\n        \"Model dengan failover otomatis: Groq 70B, Groq 8B, Gemini, Ollama. \"\n        \"Sambungkan output-nya ke input model Agent.\"\n    )\n    documentation = \"https://github.com/langchain-ai/langchain\"\n    icon = \"Zap\"\n\n    inputs = [\n        SecretStrInput(\n            name=\"groq_api_key\",\n            display_name=\"Groq API Key\",\n            info=\"Wajib. Gratis di console.groq.com (tanpa kartu kredit).\",\n            required=True,\n        ),\n        SecretStrInput(\n            name=\"gemini_api_key\",\n            display_name=\"Gemini API Key\",\n            info=\"Opsional. Dilewati bila kosong. Dari aistudio.google.com.\",\n            required=False,\n            value=\"\",\n        ),\n        StrInput(\n            name=\"primary_model\",\n            display_name=\"Model Utama\",\n            info=\"Model pertama yang dicoba.\",\n            options=[\n                \"llama-3.3-70b-versatile\",\n                \"llama-3.1-8b-instant\",\n                \"openai/gpt-oss-20b\",\n                \"qwen/qwen3-32b\",\n            ],\n            value=\"llama-3.3-70b-versatile\",\n        ),\n        FloatInput(\n            name=\"temperature\",\n            display_name=\"Temperature\",\n            value=0.7,\n        ),\n        BoolInput(\n            name=\"use_ollama\",\n            display_name=\"Aktifkan Ollama Lokal\",\n            info=\"Nyalakan hanya jika Ollama berjalan (cadangan offline).\",\n            value=False,\n        ),\n        StrInput(\n            name=\"ollama_url\",\n            display_name=\"Ollama Base URL\",\n            value=\"http://localhost:11434\",\n        ),\n        StrInput(\n            name=\"ollama_model\",\n            display_name=\"Ollama Model\",\n            value=\"qwen2.5:7b\",\n        ),\n    ]\n\n    outputs = [\n        Output(display_name=\"Language Model\", name=\"model\", method=\"build_model\"),\n    ]\n\n    def _build_chain(self):\n        from langchain_google_genai import ChatGoogleGenerativeAI\n        from langchain_groq import ChatGroq\n        from langchain_ollama import ChatOllama\n\n        chain, names = [], []\n        groq_key = (self.groq_api_key or \"\").strip()\n        if groq_key:\n            chain.append(ChatGroq(\n                api_key=groq_key, model=self.primary_model,\n                temperature=self.temperature,\n            ))\n            names.append(f\"groq:{self.primary_model}\")\n            chain.append(ChatGroq(\n                api_key=groq_key, model=\"llama-3.1-8b-instant\",\n                temperature=self.temperature,\n            ))\n            names.append(\"groq:llama-3.1-8b-instant\")\n        gemini_key = (self.gemini_api_key or \"\").strip()\n        if gemini_key:\n            chain.append(ChatGoogleGenerativeAI(\n                google_api_key=gemini_key, model=\"gemini-2.5-flash\",\n                temperature=self.temperature,\n            ))\n            names.append(\"gemini:gemini-2.5-flash\")\n        if self.use_ollama:\n            chain.append(ChatOllama(\n                model=self.ollama_model, base_url=self.ollama_url,\n                temperature=self.temperature,\n            ))\n            names.append(f\"ollama:{self.ollama_model}\")\n        if not chain:\n            raise ValueError(\"Isi minimal Groq API Key (atau nyalakan Ollama).\")\n        return chain, names\n\n    def build_model(self) -> BaseChatModel:\n        chain, names = self._build_chain()\n        return _FallbackChatModel(chain=chain, chain_names=names)\n",
+                "show": true,
+                "advanced": true,
+                "required": true,
+                "name": "code",
+                "multiline": true,
+                "dynamic": true,
+                "list": false,
+                "password": false,
+                "api_editable": false
+              },
+              "groq_api_key": {
+                "_input_type": "SecretStrInput",
+                "name": "x",
+                "display_name": "Groq API Key",
+                "info": "Gratis di console.groq.com",
+                "value": "GROQ_API_KEY_DIISI_DI_LANGFLOW",
+                "type": "str",
+                "required": true,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false,
+                "password": true
+              },
+              "gemini_api_key": {
+                "_input_type": "SecretStrInput",
+                "name": "x",
+                "display_name": "Gemini API Key",
+                "info": "Opsional, cadangan (aistudio.google.com)",
+                "value": "GEMINI_API_KEY_DIISI_DI_LANGFLOW",
+                "type": "str",
+                "required": false,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false,
+                "password": true
+              },
+              "primary_model": {
+                "_input_type": "DropdownInput",
+                "name": "x",
+                "display_name": "Model Utama",
+                "info": "Model pertama yang dicoba",
+                "value": "llama-3.3-70b-versatile",
+                "type": "str",
+                "required": false,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false,
+                "options": [
+                  "llama-3.3-70b-versatile",
+                  "llama-3.1-8b-instant",
+                  "openai/gpt-oss-20b",
+                  "qwen/qwen3-32b"
+                ]
+              },
+              "temperature": {
+                "_input_type": "FloatInput",
+                "name": "temperature",
+                "display_name": "Temperature",
+                "info": "Kreativitas output",
+                "value": 0.7,
+                "type": "float",
+                "required": false,
+                "show": true,
+                "advanced": false,
+                "list": false,
+                "dynamic": false,
+                "list_add_label": "Add More",
+                "placeholder": ""
+              },
+              "use_ollama": {
+                "_input_type": "BoolInput",
+                "name": "use_ollama",
+                "display_name": "Aktifkan Ollama Lokal",
+                "info": "Cadangan offline",
+                "value": false,
+                "type": "bool",
+                "required": false,
+                "show": true,
+                "advanced": false,
+                "list": false,
+                "dynamic": false
+              },
+              "ollama_url": {
+                "_input_type": "StrInput",
+                "name": "x",
+                "display_name": "Ollama Base URL",
+                "info": "Endpoint Ollama",
+                "value": "http://localhost:11434",
+                "type": "str",
+                "required": false,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false
+              },
+              "ollama_model": {
+                "_input_type": "StrInput",
+                "name": "x",
+                "display_name": "Ollama Model",
+                "info": "Model Ollama",
+                "value": "qwen2.5:7b",
+                "type": "str",
+                "required": false,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false
+              }
+            },
+            "outputs": [
+              {
+                "allows_loop": false,
+                "cache": true,
+                "display_name": "Language Model",
+                "group_outputs": false,
+                "method": "build_model",
+                "name": "model",
+                "selected": "LanguageModel",
+                "tool_mode": false,
+                "types": [
+                  "LanguageModel"
+                ],
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "last_updated": null,
+            "metadata": {}
+          }
+        }
       }
     ],
     "edges": [
@@ -1257,12 +1454,40 @@
         "sourceHandle": "{œdataTypeœ: œAgentœ, œidœ: œAgent-pC53oœ, œnameœ: œresponseœ, œoutput_typesœ: [œMessageœ]}",
         "target": "ChatOutput-pC53o",
         "targetHandle": "{œfieldNameœ: œinput_valueœ, œidœ: œChatOutput-pC53oœ, œinputTypesœ: [œDataœ, œJSONœ, œDataFrameœ, œTableœ, œMessageœ], œtypeœ: œotherœ}"
+      },
+      {
+        "id": "reactflow__edge-CustomComponent-pC53o{œdataTypeœ:œCustomComponentœ,œidœ:œCustomComponent-pC53oœ,œnameœ:œmodelœ,œoutput_typesœ:[œLanguageModelœ]}-Agent-pC53o{œfieldNameœ:œmodelœ,œidœ:œAgent-pC53oœ,œinputTypesœ:[œLanguageModelœ],œtypeœ:œotherœ}",
+        "source": "CustomComponent-pC53o",
+        "target": "Agent-pC53o",
+        "sourceHandle": "{œdataTypeœ:œCustomComponentœ,œidœ:œCustomComponent-pC53oœ,œnameœ:œmodelœ,œoutput_typesœ:[œLanguageModelœ]}",
+        "targetHandle": "{œfieldNameœ:œmodelœ,œidœ:œAgent-pC53oœ,œinputTypesœ:[œLanguageModelœ],œtypeœ:œotherœ}",
+        "selected": false,
+        "animated": false,
+        "className": "",
+        "data": {
+          "sourceHandle": {
+            "dataType": "CustomComponent",
+            "id": "CustomComponent-pC53o",
+            "name": "model",
+            "output_types": [
+              "LanguageModel"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "model",
+            "id": "Agent-pC53o",
+            "inputTypes": [
+              "LanguageModel"
+            ],
+            "type": "other"
+          }
+        }
       }
     ],
     "viewport": {
       "x": 0,
       "y": 0,
-      "zoom": 1
+      "zoom": 0.8
     }
   }
 }

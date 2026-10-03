@@ -1,4 +1,4 @@
-# Format Proposal — BidMaster (TEMPLATE v2, selaras New-SDLC)
+# Format Proposal — BidMaster (TEMPLATE v2, selaras docs/sdlc)
 
 > Writer WAJIB mengikuti urutan dan judul bab ini. RAB bersifat RAB-lite
 > (proporsi paket, bertanda estimasi). Ketidakpastian fakta ditandai [perlu konfirmasi].

@@ -26,7 +26,7 @@ Satu Bob, banyak tools — skill baru = 1 flow Langflow + expose MCP, tanpa tuli
 
 | MCP Tool | Fungsi | Status |
 |---|---|---|
-| `generate_proposal_draft` | Draft proposal 9 bab + compliance check | MVP ✅ |
+| `generate_proposal_draft` | Draft proposal 10 bab + compliance check | MVP ✅ |
 | `revise_proposal` | Revisi iteratif + tolak diskon >10% sopan | MVP ✅ |
 | `generate_prd_from_brief` | PRD dari brief/proposal | MVP kedua ✅ |
 
@@ -35,21 +35,28 @@ Satu Bob, banyak tools — skill baru = 1 flow Langflow + expose MCP, tanpa tuli
 ## Struktur Repo
 
 ```
-bidmaster/
-├── README.md  .gitignore  .env.example  requirements.txt
-├── knowledge/      company_rules.md, proposal_template.md, price_catalog.yaml
-├── clients/        3 profil client DUMMY (kafe, klinik, batik)
-├── skills/         registry.yaml (daftar MCP tools)
-├── langflow/
-│   ├── flows/      3 file JSON siap import + IMPORT_GUIDE.md
-│   └── mcp.json.example   (contoh config, TANPA secret)
-├── simulator/      tiruan flow untuk demo lokal tanpa server
-├── output/         hasil draft simulasi (di-ignore git)
-├── gateway/        stub ekstensi Telegram (P2)
-├── evals/  docs/ (bob-log.md)  scripts/
+/                       ← Bob workspace root (buka folder ini di Bob)
+├─ AGENTS.md            ← perilaku Bob (root agar Bob baca)
+├─ SKILL.md             ← skill proposal-writer (root agar Bob discover)
+├─ README.md  .gitignore  .env.example  requirements.txt
+├─ knowledge/           ← aturan, format, price list (sumber kebenaran harga)
+├─ data/
+│  ├─ clients/         ← profil client dummy (kafe, klinik, batik)
+│  └─ samples/tender-dummy/ ← paket tender fiktif (uji pola lain, bukan BidMaster)
+├─ skills/             ← registry.yaml (daftar MCP tools)
+├─ langflow/
+│  ├─ flows/           ← 3 JSON kanonis siap import (MCP tools)
+│  ├─ archive/         ← varian lama, jangan diimport
+│  ├─ components/      ← custom component + panduan
+│  └─ IMPORT_GUIDE.md + mcp.json.example
+├─ simulator/          ← tiruan flow untuk demo lokal tanpa server
+├─ outputs/            ← hasil draft (2 contoh di-commit, sisanya ignore)
+└─ docs/
+   ├─ bob-log.md       ← bukti sesi Bob (isi tiap sesi)
+   └─ sdlc/            ← 00–06 + AGENTS/SKILL arsip (dokumen rujukan)
 ```
 
-Dokumen SDLC lengkap (PRD, arsitektur, skill, workflow, TODO) ada di `../SDLC/`.
+Dokumen SDLC lengkap (PRD, arsitektur, skill, workflow, TODO) ada di `docs/sdlc/`.
 
 ---
 
@@ -63,14 +70,14 @@ pip install -r requirements.txt
 python -m simulator.demo
 ```
 
-Output: draft proposal + skor compliance di terminal, file di `output/proposal_v1.md`.
+Output: draft proposal + skor compliance di terminal, file di `outputs/proposal_v1.md`.
 
 ### 1. Langflow — Build & Expose
 
 1. Install Langflow, buat Project baru.
 2. Model: `aistudio.google.com/api-keys` → Settings → Model Providers → Save.
 3. Import `langflow/flows/*.json` (drag-drop / Upload a flow) — detail di `langflow/IMPORT_GUIDE.md`.
-4. Per flow: klik **Agent** → pilih model `gemini-2.5-flash` + isi API key → uji di **Playground**.
+4. Per flow: klik **LLM** → pilih model `gemini-2.5-flash` + isi API key → uji di **Playground**.
 5. **MCP Server → JSON → Generate API Key** → salin JSON + key (key muncul 1x, simpan di luar repo!).
 
 ### 2. Bob — Connect & Call
@@ -94,11 +101,11 @@ Cadangan: rekaman video + 3–5 screenshot bila live demo gagal.
 | File | Isi |
 |---|---|
 | `knowledge/company_rules.md` | Tone, struktur wajib, klausul, batas diskon 10% |
-| `knowledge/proposal_template.md` | 9 bab proposal |
+| `knowledge/proposal_template.md` | 10 bab proposal |
 | `knowledge/price_catalog.yaml` | **Satu-satunya sumber harga** (Basic 5jt / Standard 10jt / Premium 18jt) |
-| `clients/*.md` | Profil client dummy |
+| `data/clients/*.md` | Profil client dummy |
 
-Aturan: harga tidak boleh dikarang model, inferensi wajib tag `[ASUMSI]`,
+Aturan: harga tidak boleh dikarang model, inferensi wajib tag `[perlu konfirmasi]`,
 dokumen `draft` sampai disetujui manusia (approval gate).
 
 ---
@@ -110,7 +117,7 @@ dokumen `draft` sampai disetujui manusia (approval gate).
 
 ## Roadmap
 
-MVP: Bob + MCP + proposal + revisi + PRD → Ekstensi: Gateway Telegram → multi-tenant → CRM & e-sign.
+MVP: Bob + MCP + proposal + revisi + PRD → Ekstensi: Telegram bridge → multi-tenant → CRM & e-sign.
 Model monetisasi: SaaS per perusahaan / per proposal + add-on revisi & ekspor premium.
 
 ## Tim

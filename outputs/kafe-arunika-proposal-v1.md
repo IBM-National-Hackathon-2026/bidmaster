@@ -7,7 +7,7 @@
 
 # Kafe Arunika — Proposal Pembuatan Website
 
-*Tanggal: 30 September 2026 | Berlaku 14 hari | Disusun oleh Kilat Studio dengan BidMaster*
+*Tanggal: 03 October 2026 | Berlaku 14 hari | Disusun oleh Kilat Studio dengan BidMaster*
 
 ## 1. Ringkasan Eksekutif
 Kafe Arunika membutuhkan website agar mudah ditemukan dan bisa menerima reservasi online. Proposal ini disusun berdasar info yang diberikan.

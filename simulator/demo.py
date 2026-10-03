@@ -14,7 +14,7 @@ result = generate(USER_TEXT, client_file="kafe-arunika.md")
 if "clarify" in result:
     print("Bot bertanya:", result["clarify"])
 else:
-    out = BASE / "output" / "proposal_v1.md"
+    out = BASE / "outputs" / "proposal_v1.md"
     out.write_text(result["markdown"], encoding="utf-8")
     print(f"Compliance: {result['score']:.0f}%")
     for name, ok in result["checks"]:

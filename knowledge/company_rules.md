@@ -30,6 +30,6 @@
 - Jika user minta diskon lebih: tolak sopan + tawarkan kurangi fitur atau naik ke paket yang sesuai.
 
 ## 5. Aturan Fakta
-- Fakta client hanya dari input pengguna / file `clients/`.
-- Inferensi wajib ditandai `[ASUMSI: ...]`.
+- Fakta client hanya dari input pengguna / file `data/clients/`.
+- Inferensi wajib ditandai `[perlu konfirmasi: ...]`.
 - Jika info wajib kurang (nama bisnis, industri, tujuan): tanyakan maks 3 pertanyaan, jangan karang proposal penuh.

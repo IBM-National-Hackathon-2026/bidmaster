@@ -1,5 +1,5 @@
 """Proposal engine BidMaster — meniru flow Langflow `generate_proposal_draft`.
-Spec: New-SDLC (10 bab + RAB-lite + tag [perlu konfirmasi]).
+Spec: docs/sdlc (10 bab + RAB-lite + tag [perlu konfirmasi]).
 Template: knowledge/proposal_template.md
 """
 import re
@@ -19,8 +19,8 @@ def load_knowledge():
 
 def intake(user_text, client_file=None):
     info = {"raw": user_text}
-    if client_file and (BASE / "clients" / client_file).exists():
-        info["profile"] = (BASE / "clients" / client_file).read_text(encoding="utf-8")
+    if client_file and (BASE / "data" / "clients" / client_file).exists():
+        info["profile"] = (BASE / "data" / "clients" / client_file).read_text(encoding="utf-8")
     low = user_text.lower()
     info["name"] = "Kafe Arunika" if "kafe" in low else "Client"
     info["industry"] = "F&B / Kafe" if "kafe" in low else "Umum"

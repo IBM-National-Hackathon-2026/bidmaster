@@ -27,8 +27,6 @@ venv/
 outputs/
 !outputs/kafe-arunika-proposal-v1.md
 !outputs/kafe-arunika-proposal-v2.md
-# direktori lama (pra New-SDLC), sudah dihapus
-output/
 *.log
 *.bak
 *.bak-*
@@ -48,5 +46,9 @@ desktop.ini
 .idea/
 *.code-workspace
 
-# --- Node (kalau gateway nanti punya frontend) ---
+# --- Node ---
 node_modules/
+
+# --- Arsip ---
+# Varian flow lama, tidak diimport. Tetap di-commit sebagai referensi.
+!langflow/archive/

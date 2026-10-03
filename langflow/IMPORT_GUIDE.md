@@ -1,9 +1,11 @@
 # Panduan Import Flow ke Langflow (5 menit per flow)
 
-File siap import ada di `flows/`:
-- `10_generate_proposal_draft.json` → MCP tool `generate_proposal_draft`
-- `11_revise_proposal.json` → MCP tool `revise_proposal`
-- `20_generate_prd_from_brief.json` → MCP tool `generate_prd_from_brief`
+File siap import ada di `flows/` (kanonis, sudah diekspos MCP):
+- `generate_proposal_draft.json` → MCP tool `generate_proposal_draft`
+- `revise_proposal.json` → MCP tool `revise_proposal`
+- `generate_prd_from_brief.json` → MCP tool `generate_prd_from_brief`
+
+Arsip di `archive/` jangan diimport (varian Agent lama + draft broken).
 
 ## 0. Catatan versi (penting)
 File ini dibangun meniru struktur export asli Langflow (referensi starter `Simple Agent`,
@@ -33,8 +35,8 @@ Ulangi untuk 3 file (boleh dalam 1 Project agar 1 MCP endpoint menaungi semua to
    - Proposal: `Client kafe di Surabaya Timur, mau web + reservasi online, budget sekitar 10jt`
    - Revisi: tempel draft + `Tambahkan fitur galeri menu di paket Standard`
    - PRD: `Buatkan PRD untuk website kafe dengan reservasi online`
-4. Pastikan **Chat Output** keluar benar (proposal 9 bab + compliance / revisi + diff / PRD).
-   Hasil harus mirip `output/proposal_v1.md` dari simulator.
+4. Pastikan **Chat Output** keluar benar (proposal 10 bab + compliance / revisi + diff / PRD).
+   Hasil harus mirip `outputs/kafe-arunika-proposal-v1.md` dari simulator.
 
 ## 3. Expose via MCP
 1. Di Project Langflow → **MCP Server → JSON → Generate API Key**.

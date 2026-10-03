@@ -1,11 +1,11 @@
 {
-  "name": "generate_proposal_draft",
-  "description": "Membuat draft proposal website untuk client dari info percakapan, sesuai aturan dan format perusahaan. Gunakan saat user meminta proposal, penawaran, paket harga, RAB, atau analisis client. Batas: hanya proposal baru; harga dari katalog; fakta dari input; tandai [perlu konfirmasi].",
+  "name": "BidMaster 11 Revise Proposal - revisi terarah",
+  "description": "Mengubah draft proposal terakhir berdasar instruksi singkat. Batas: ubah bagian terkait saja; harga tetap dari katalog; tolak diskon di atas batas dengan sopan.",
   "data": {
     "nodes": [
       {
         "data": {
-          "id": "ChatInput-kA91m",
+          "id": "ChatInput-rB72n",
           "node": {
             "base_classes": [
               "Message"
@@ -173,7 +173,7 @@
                 "trace_as_input": true,
                 "trace_as_metadata": true,
                 "type": "str",
-                "value": "Buatkan proposal untuk Kafe Arunika di Surabaya Timur, mau web + reservasi online, budget sekitar 10jt"
+                "value": "Tambahkan fitur galeri menu di paket Standard"
               },
               "sender": {
                 "_input_type": "DropdownInput",
@@ -270,13 +270,13 @@
           "type": "ChatInput"
         },
         "dragging": false,
-        "id": "ChatInput-kA91m",
+        "id": "ChatInput-rB72n",
         "measured": {
           "height": 207,
           "width": 320
         },
         "position": {
-          "x": 100,
+          "x": 80,
           "y": 300
         },
         "selected": false,
@@ -284,7 +284,7 @@
       },
       {
         "data": {
-          "id": "Agent-kA91m",
+          "id": "Agent-rB72n",
           "node": {
             "base_classes": [
               "Message"
@@ -867,7 +867,7 @@
                 "trace_as_metadata": true,
                 "track_in_telemetry": false,
                 "type": "str",
-                "value": "Kamu adalah BidMaster, Proposal Specialist yang membantu tim Business Development software house. Kamu menerima INFO CLIENT + PERMINTAAN dari chat input (dikirim via Bob/MCP).\n\n# ATURAN PERUSAHAAN (wajib)\n- Bahasa: Indonesia, formal, ramah, ringkas. Dilarang klaim absolut (terbaik/nomor 1/dijamin viral).\n- Fakta client HANYA dari input. Inferensi/ketidakpastian wajib ditandai [perlu konfirmasi: ...].\n- Harga HANYA dari katalog di bawah. Dilarang membuat angka baru. Diskon maks 10%.\n- Kekurangan client ditulis konstruktif sebagai peluang perbaikan, bukan kritik.\n- Jika info wajib kurang (nama bisnis, industri, kebutuhan website): JANGAN tulis proposal penuh. Tanyakan maks 3 pertanyaan klarifikasi yang paling penting.\n\n# KATALOG HARGA (satu-satunya sumber harga)\n- Basic Rp 5.000.000 (2 minggu): landing 5 section, company profile + galeri, form kontak WA, SEO dasar + SSL. Cocok: tampil online cepat.\n- Standard Rp 10.000.000 (4 minggu): semua Basic + katalog/menu dinamis + CMS, reservasi/booking online, QRIS, blog + analitik. Cocok: kafe/klinik/UMKM.\n- Premium Rp 18.000.000 (6 minggu): semua Standard + member/loyalty, multi-cabang + multi-bahasa, POS/CRM, maintenance 3 bulan. Cocok: scale up.\n\n# LANGKAH KERJA\n1. Ekstrak: nama bisnis, industri, website/sosmed, kebutuhan, budget hint, deadline dari input.\n2. Analisis: keunggulan (point + bukti dari input) dan kekurangan (point + dampak + solusi kami).\n3. Konsep web: tujuan, target pengguna, sitemap, fitur utama, rekomendasi teknologi, timeline minggu.\n4. Paket: tampilkan 3 paket dari katalog + tandai 1 REKOMENDASI + alasan (sesuaikan budget/kebutuhan).\n5. RAB-lite: bagi harga paket REKOMENDASI secara proporsional ke tiap fitur utama sebagai estimasi komponen; beri judul jelas bahwa ini estimasi, bukan RAB akuntansi penuh.\n6. Tulis proposal Markdown mengikuti 10 bab: 1 Ringkasan Eksekutif, 2 Profil Client, 3 Keunggulan Client, 4 Kekurangan/Peluang Perbaikan, 5 Rancangan Website, 6 Timeline & Tahapan, 7 RAB (estimasi), 8 Pilihan Paket Harga, 9 Syarat & Ketentuan (DP 50%, maks 2x revisi mayor, berlaku 14 hari), 10 Penutup & Kontak.\n7. Compliance (cek sendiri, perbaiki 1x bila gagal): semua bab terisi; ada keunggulan DAN kekurangan; ada sitemap+fitur+timeline; ada RAB-lite bertanda estimasi; harga = katalog; ada rekomendasi + alasan; tanpa klaim absolut; klausul wajib ada; tanpa fakta karangan kecuali [perlu konfirmasi]; nama & tanggal benar.\n8. OUTPUT: diawali blok RINGKASAN (maks 5 bullet: client, kebutuhan, rekomendasi paket + harga, timeline, status compliance), lalu proposal lengkap, diakhiri blok compliance + baris: Status: draft - menunggu persetujuan manusia."
+                "value": "Kamu adalah BidMaster, Revision Specialist. Input = DRAFT PROPOSAL TERAKHIR + INSTRUKSI REVISI singkat dari user.\n\n# ATURAN\n- Ubah HANYA bagian yang terdampak instruksi. Bagian lain jangan disentuh.\n- Harga hasil revisi WAJIB tetap dari katalog (Basic 5jt / Standard 10jt / Premium 18jt). Diskon maks 10%.\n- RAB-lite ikut disesuaikan bila paket/fitur berubah, tetap bertanda estimasi.\n- Jika instruksi melanggar aturan (mis. diskon >10%, klaim absolut, fakta karangan): TOLAK SOPAN dalam Bahasa Indonesia, jelaskan batasnya, tawarkan alternatif (kurangi fitur / paket lain / diskon maks yang diizinkan).\n- Fakta baru yang tidak ada di input beri tag [perlu konfirmasi].\n\n# OUTPUT\n1. Proposal versi baru lengkap (struktur 10 bab tetap) dalam Markdown.\n2. Blok RINGKASAN PERUBAHAN: bullet apa yang berubah di bab mana.\n3. Blok compliance singkat + baris Status: draft - menunggu persetujuan manusia."
               },
               "tools": {
                 "_input_type": "HandleInput",
@@ -899,21 +899,21 @@
           "type": "Agent"
         },
         "dragging": false,
-        "id": "Agent-kA91m",
+        "id": "Agent-rB72n",
         "measured": {
           "height": 431,
           "width": 320
         },
         "position": {
-          "x": 500,
-          "y": 220
+          "x": 560,
+          "y": 260
         },
         "selected": false,
         "type": "genericNode"
       },
       {
         "data": {
-          "id": "ChatOutput-kA91m",
+          "id": "ChatOutput-rB72n",
           "node": {
             "base_classes": [
               "Message"
@@ -1184,17 +1184,214 @@
           "type": "ChatOutput"
         },
         "dragging": false,
-        "id": "ChatOutput-kA91m",
+        "id": "ChatOutput-rB72n",
         "measured": {
           "height": 52,
           "width": 192
         },
         "position": {
-          "x": 940,
+          "x": 1000,
           "y": 300
         },
         "selected": false,
         "type": "genericNode"
+      },
+      {
+        "id": "CustomComponent-rB72n",
+        "type": "genericNode",
+        "position": {
+          "x": 300,
+          "y": 620
+        },
+        "selected": false,
+        "dragging": false,
+        "data": {
+          "id": "CustomComponent-rB72n",
+          "type": "CustomComponent",
+          "showNode": true,
+          "node": {
+            "base_classes": [
+              "LanguageModel",
+              "BaseLanguageModel"
+            ],
+            "description": "Model dengan failover otomatis Groq 70B -> Groq 8B -> Gemini 2.5-flash -> Ollama.",
+            "display_name": "BidMaster Fallback LLM",
+            "documentation": "https://github.com/langchain-ai/langchain",
+            "icon": "Zap",
+            "key": "BidMasterFallbackLLM",
+            "field_order": [
+              "code",
+              "groq_api_key",
+              "gemini_api_key",
+              "primary_model",
+              "temperature",
+              "use_ollama",
+              "ollama_url",
+              "ollama_model"
+            ],
+            "frozen": false,
+            "legacy": false,
+            "minimized": false,
+            "pinned": false,
+            "beta": false,
+            "edited": false,
+            "tool_mode": false,
+            "custom_fields": {},
+            "conditional_paths": [],
+            "output_types": [],
+            "score": 0.0,
+            "template": {
+              "_type": "Component",
+              "code": {
+                "type": "code",
+                "value": "\"\"\"BidMaster Fallback LLM — custom component Langflow.\n\nSatu output model yang di dalamnya berantai otomatis:\nGroq 70B -> Groq 8B -> Gemini 2.5-flash -> Ollama lokal (opsional).\nJika provider kehabisan kuota / 429 / 503 / error lain, otomatis lanjut\nke provider berikutnya TANPA setting ulang. Habis semua -> error jujur.\n\nCARA PAKAI (per flow, ~3 menit):\n1. Di canvas flow: tambah node \"Custom Component\", hapus kode contoh,\n   paste SELURUH file ini, klik \"Check & Save\".\n2. Isi Groq API Key (wajib, gratis: console.groq.com). Gemini key opsional.\n   Ollama: nyalakan hanya jika Ollama jalan di mesin ini.\n3. Hubungkan SATU garis: [Fallback LLM] model -> [Agent] model.\n   (Input model Agent yang tersambung menimpa dropdown model internal,\n   jadi API key per-Agent tidak diperlukan lagi.)\n4. Test di Playground. Ulangi untuk 3 flow (copy-paste node antar flow bisa).\n\"\"\"\n\nfrom typing import Any, List, Optional\n\nfrom lfx.custom import Component\nfrom lfx.io import (\n    BoolInput,\n    DropdownInput,\n    FloatInput,\n    Output,\n    SecretStrInput,\n    StrInput,\n)\n\nfrom langchain_core.callbacks import CallbackManagerForLLMRun\nfrom langchain_core.language_models import BaseChatModel\nfrom langchain_core.messages import AIMessage, BaseMessage\nfrom langchain_core.outputs import ChatGeneration, ChatResult\nfrom pydantic import ConfigDict\n\n\nclass _FallbackChatModel(BaseChatModel):\n    \"\"\"Chat model yang mencoba daftar provider berurutan saat gagal.\"\"\"\n\n    model_config = ConfigDict(arbitrary_types_allowed=True, extra=\"allow\")\n    chain: List[Any] = []\n    chain_names: List[str] = []\n\n    @property\n    def _llm_type(self) -> str:\n        return \"bidmaster-fallback\"\n\n    def _generate(\n        self,\n        messages: List[BaseMessage],\n        stop: Optional[List[str]] = None,\n        run_manager: Optional[CallbackManagerForLLMRun] = None,\n        **kwargs: Any,\n    ) -> ChatResult:\n        last_error: Optional[Exception] = None\n        tried: List[str] = []\n        for name, model in zip(self.chain_names, self.chain):\n            tried.append(name)\n            try:\n                out = model.invoke(messages, stop=stop)\n                if not isinstance(out, BaseMessage):\n                    out = AIMessage(content=str(out))\n                return ChatResult(generations=[ChatGeneration(message=out)])\n            except Exception as e:  # noqa: BLE001 - sengaja: coba provider berikut\n                last_error = e\n        raise RuntimeError(\n            f\"Semua provider gagal ({', '.join(tried)}). \"\n            f\"Error terakhir: {last_error}\"\n        )\n\n\nclass BidMasterFallbackLLM(Component):\n    display_name = \"BidMaster Fallback LLM\"\n    description = (\n        \"Model dengan failover otomatis: Groq 70B, Groq 8B, Gemini, Ollama. \"\n        \"Sambungkan output-nya ke input model Agent.\"\n    )\n    documentation = \"https://github.com/langchain-ai/langchain\"\n    icon = \"Zap\"\n\n    inputs = [\n        SecretStrInput(\n            name=\"groq_api_key\",\n            display_name=\"Groq API Key\",\n            info=\"Wajib. Gratis di console.groq.com (tanpa kartu kredit).\",\n            required=True,\n        ),\n        SecretStrInput(\n            name=\"gemini_api_key\",\n            display_name=\"Gemini API Key\",\n            info=\"Opsional. Dilewati bila kosong. Dari aistudio.google.com.\",\n            required=False,\n            value=\"\",\n        ),\n        StrInput(\n            name=\"primary_model\",\n            display_name=\"Model Utama\",\n            info=\"Model pertama yang dicoba.\",\n            options=[\n                \"llama-3.3-70b-versatile\",\n                \"llama-3.1-8b-instant\",\n                \"openai/gpt-oss-20b\",\n                \"qwen/qwen3-32b\",\n            ],\n            value=\"llama-3.3-70b-versatile\",\n        ),\n        FloatInput(\n            name=\"temperature\",\n            display_name=\"Temperature\",\n            value=0.7,\n        ),\n        BoolInput(\n            name=\"use_ollama\",\n            display_name=\"Aktifkan Ollama Lokal\",\n            info=\"Nyalakan hanya jika Ollama berjalan (cadangan offline).\",\n            value=False,\n        ),\n        StrInput(\n            name=\"ollama_url\",\n            display_name=\"Ollama Base URL\",\n            value=\"http://localhost:11434\",\n        ),\n        StrInput(\n            name=\"ollama_model\",\n            display_name=\"Ollama Model\",\n            value=\"qwen2.5:7b\",\n        ),\n    ]\n\n    outputs = [\n        Output(display_name=\"Language Model\", name=\"model\", method=\"build_model\"),\n    ]\n\n    def _build_chain(self):\n        from langchain_google_genai import ChatGoogleGenerativeAI\n        from langchain_groq import ChatGroq\n        from langchain_ollama import ChatOllama\n\n        chain, names = [], []\n        groq_key = (self.groq_api_key or \"\").strip()\n        if groq_key:\n            chain.append(ChatGroq(\n                api_key=groq_key, model=self.primary_model,\n                temperature=self.temperature,\n            ))\n            names.append(f\"groq:{self.primary_model}\")\n            chain.append(ChatGroq(\n                api_key=groq_key, model=\"llama-3.1-8b-instant\",\n                temperature=self.temperature,\n            ))\n            names.append(\"groq:llama-3.1-8b-instant\")\n        gemini_key = (self.gemini_api_key or \"\").strip()\n        if gemini_key:\n            chain.append(ChatGoogleGenerativeAI(\n                google_api_key=gemini_key, model=\"gemini-2.5-flash\",\n                temperature=self.temperature,\n            ))\n            names.append(\"gemini:gemini-2.5-flash\")\n        if self.use_ollama:\n            chain.append(ChatOllama(\n                model=self.ollama_model, base_url=self.ollama_url,\n                temperature=self.temperature,\n            ))\n            names.append(f\"ollama:{self.ollama_model}\")\n        if not chain:\n            raise ValueError(\"Isi minimal Groq API Key (atau nyalakan Ollama).\")\n        return chain, names\n\n    def build_model(self) -> BaseChatModel:\n        chain, names = self._build_chain()\n        return _FallbackChatModel(chain=chain, chain_names=names)\n",
+                "show": true,
+                "advanced": true,
+                "required": true,
+                "name": "code",
+                "multiline": true,
+                "dynamic": true,
+                "list": false,
+                "password": false,
+                "api_editable": false
+              },
+              "groq_api_key": {
+                "_input_type": "SecretStrInput",
+                "name": "x",
+                "display_name": "Groq API Key",
+                "info": "Gratis di console.groq.com",
+                "value": "GROQ_API_KEY_DIISI_DI_LANGFLOW",
+                "type": "str",
+                "required": true,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false,
+                "password": true
+              },
+              "gemini_api_key": {
+                "_input_type": "SecretStrInput",
+                "name": "x",
+                "display_name": "Gemini API Key",
+                "info": "Opsional, cadangan (aistudio.google.com)",
+                "value": "GEMINI_API_KEY_DIISI_DI_LANGFLOW",
+                "type": "str",
+                "required": false,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false,
+                "password": true
+              },
+              "primary_model": {
+                "_input_type": "DropdownInput",
+                "name": "x",
+                "display_name": "Model Utama",
+                "info": "Model pertama yang dicoba",
+                "value": "llama-3.3-70b-versatile",
+                "type": "str",
+                "required": false,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false,
+                "options": [
+                  "llama-3.3-70b-versatile",
+                  "llama-3.1-8b-instant",
+                  "openai/gpt-oss-20b",
+                  "qwen/qwen3-32b"
+                ]
+              },
+              "temperature": {
+                "_input_type": "FloatInput",
+                "name": "temperature",
+                "display_name": "Temperature",
+                "info": "Kreativitas output",
+                "value": 0.7,
+                "type": "float",
+                "required": false,
+                "show": true,
+                "advanced": false,
+                "list": false,
+                "dynamic": false,
+                "list_add_label": "Add More",
+                "placeholder": ""
+              },
+              "use_ollama": {
+                "_input_type": "BoolInput",
+                "name": "use_ollama",
+                "display_name": "Aktifkan Ollama Lokal",
+                "info": "Cadangan offline",
+                "value": false,
+                "type": "bool",
+                "required": false,
+                "show": true,
+                "advanced": false,
+                "list": false,
+                "dynamic": false
+              },
+              "ollama_url": {
+                "_input_type": "StrInput",
+                "name": "x",
+                "display_name": "Ollama Base URL",
+                "info": "Endpoint Ollama",
+                "value": "http://localhost:11434",
+                "type": "str",
+                "required": false,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false
+              },
+              "ollama_model": {
+                "_input_type": "StrInput",
+                "name": "x",
+                "display_name": "Ollama Model",
+                "info": "Model Ollama",
+                "value": "qwen2.5:7b",
+                "type": "str",
+                "required": false,
+                "show": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "placeholder": "",
+                "advanced": false,
+                "dynamic": false,
+                "title_case": false
+              }
+            },
+            "outputs": [
+              {
+                "allows_loop": false,
+                "cache": true,
+                "display_name": "Language Model",
+                "group_outputs": false,
+                "method": "build_model",
+                "name": "model",
+                "selected": "LanguageModel",
+                "tool_mode": false,
+                "types": [
+                  "LanguageModel"
+                ],
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "last_updated": null,
+            "metadata": {}
+          }
+        }
       }
     ],
     "edges": [
@@ -1204,7 +1401,7 @@
         "data": {
           "sourceHandle": {
             "dataType": "ChatInput",
-            "id": "ChatInput-kA91m",
+            "id": "ChatInput-rB72n",
             "name": "message",
             "output_types": [
               "Message"
@@ -1212,19 +1409,19 @@
           },
           "targetHandle": {
             "fieldName": "input_value",
-            "id": "Agent-kA91m",
+            "id": "Agent-rB72n",
             "inputTypes": [
               "Message"
             ],
             "type": "str"
           }
         },
-        "id": "reactflow__edge-ChatInput-kA91m{œdataTypeœ:œChatInputœ,œidœ:œChatInput-kA91mœ,œnameœ:œmessageœ,œoutput_typesœ:[œMessageœ]}-Agent-kA91m{œfieldNameœ:œinput_valueœ,œidœ:œAgent-kA91mœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}",
+        "id": "reactflow__edge-ChatInput-rB72n{œdataTypeœ:œChatInputœ,œidœ:œChatInput-rB72nœ,œnameœ:œmessageœ,œoutput_typesœ:[œMessageœ]}-Agent-rB72n{œfieldNameœ:œinput_valueœ,œidœ:œAgent-rB72nœ,œinputTypesœ:[œMessageœ],œtypeœ:œstrœ}",
         "selected": false,
-        "source": "ChatInput-kA91m",
-        "sourceHandle": "{œdataTypeœ: œChatInputœ, œidœ: œChatInput-kA91mœ, œnameœ: œmessageœ, œoutput_typesœ: [œMessageœ]}",
-        "target": "Agent-kA91m",
-        "targetHandle": "{œfieldNameœ: œinput_valueœ, œidœ: œAgent-kA91mœ, œinputTypesœ: [œMessageœ], œtypeœ: œstrœ}"
+        "source": "ChatInput-rB72n",
+        "sourceHandle": "{œdataTypeœ: œChatInputœ, œidœ: œChatInput-rB72nœ, œnameœ: œmessageœ, œoutput_typesœ: [œMessageœ]}",
+        "target": "Agent-rB72n",
+        "targetHandle": "{œfieldNameœ: œinput_valueœ, œidœ: œAgent-rB72nœ, œinputTypesœ: [œMessageœ], œtypeœ: œstrœ}"
       },
       {
         "animated": false,
@@ -1232,7 +1429,7 @@
         "data": {
           "sourceHandle": {
             "dataType": "Agent",
-            "id": "Agent-kA91m",
+            "id": "Agent-rB72n",
             "name": "response",
             "output_types": [
               "Message"
@@ -1240,7 +1437,7 @@
           },
           "targetHandle": {
             "fieldName": "input_value",
-            "id": "ChatOutput-kA91m",
+            "id": "ChatOutput-rB72n",
             "inputTypes": [
               "Data",
               "JSON",
@@ -1251,18 +1448,46 @@
             "type": "other"
           }
         },
-        "id": "reactflow__edge-Agent-kA91m{œdataTypeœ:œAgentœ,œidœ:œAgent-kA91mœ,œnameœ:œresponseœ,œoutput_typesœ:[œMessageœ]}-ChatOutput-kA91m{œfieldNameœ:œinput_valueœ,œidœ:œChatOutput-kA91mœ,œinputTypesœ:[œDataœ,œJSONœ,œDataFrameœ,œTableœ,œMessageœ],œtypeœ:œotherœ}",
+        "id": "reactflow__edge-Agent-rB72n{œdataTypeœ:œAgentœ,œidœ:œAgent-rB72nœ,œnameœ:œresponseœ,œoutput_typesœ:[œMessageœ]}-ChatOutput-rB72n{œfieldNameœ:œinput_valueœ,œidœ:œChatOutput-rB72nœ,œinputTypesœ:[œDataœ,œJSONœ,œDataFrameœ,œTableœ,œMessageœ],œtypeœ:œotherœ}",
         "selected": false,
-        "source": "Agent-kA91m",
-        "sourceHandle": "{œdataTypeœ: œAgentœ, œidœ: œAgent-kA91mœ, œnameœ: œresponseœ, œoutput_typesœ: [œMessageœ]}",
-        "target": "ChatOutput-kA91m",
-        "targetHandle": "{œfieldNameœ: œinput_valueœ, œidœ: œChatOutput-kA91mœ, œinputTypesœ: [œDataœ, œJSONœ, œDataFrameœ, œTableœ, œMessageœ], œtypeœ: œotherœ}"
+        "source": "Agent-rB72n",
+        "sourceHandle": "{œdataTypeœ: œAgentœ, œidœ: œAgent-rB72nœ, œnameœ: œresponseœ, œoutput_typesœ: [œMessageœ]}",
+        "target": "ChatOutput-rB72n",
+        "targetHandle": "{œfieldNameœ: œinput_valueœ, œidœ: œChatOutput-rB72nœ, œinputTypesœ: [œDataœ, œJSONœ, œDataFrameœ, œTableœ, œMessageœ], œtypeœ: œotherœ}"
+      },
+      {
+        "id": "reactflow__edge-CustomComponent-rB72n{œdataTypeœ:œCustomComponentœ,œidœ:œCustomComponent-rB72nœ,œnameœ:œmodelœ,œoutput_typesœ:[œLanguageModelœ]}-Agent-rB72n{œfieldNameœ:œmodelœ,œidœ:œAgent-rB72nœ,œinputTypesœ:[œLanguageModelœ],œtypeœ:œotherœ}",
+        "source": "CustomComponent-rB72n",
+        "target": "Agent-rB72n",
+        "sourceHandle": "{œdataTypeœ:œCustomComponentœ,œidœ:œCustomComponent-rB72nœ,œnameœ:œmodelœ,œoutput_typesœ:[œLanguageModelœ]}",
+        "targetHandle": "{œfieldNameœ:œmodelœ,œidœ:œAgent-rB72nœ,œinputTypesœ:[œLanguageModelœ],œtypeœ:œotherœ}",
+        "selected": false,
+        "animated": false,
+        "className": "",
+        "data": {
+          "sourceHandle": {
+            "dataType": "CustomComponent",
+            "id": "CustomComponent-rB72n",
+            "name": "model",
+            "output_types": [
+              "LanguageModel"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "model",
+            "id": "Agent-rB72n",
+            "inputTypes": [
+              "LanguageModel"
+            ],
+            "type": "other"
+          }
+        }
       }
     ],
     "viewport": {
       "x": 0,
       "y": 0,
-      "zoom": 1
+      "zoom": 0.8
     }
   }
 }
