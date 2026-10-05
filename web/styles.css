@@ -1,25 +1,84 @@
-:root{color-scheme:light dark;--bd:#c9c2b4;--bg:#faf7f0;--ink:#231f1a;--mut:#6f675c;--acc:#8a5a17;--acc2:#1f6f50;--card:#fffdf8;--err:#b3261e}
-*{box-sizing:border-box}html{scroll-behavior:smooth}
-body{font-family:Georgia,"Times New Roman",serif;margin:0;background:var(--bg);color:var(--ink);line-height:1.6}
-.top{background:#231f1a;color:#f5efe3;padding:14px 16px}.top div{max-width:960px;margin:auto;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-.brand{font-size:1.3rem;letter-spacing:.04em}.tag{font-size:.85rem;opacity:.8}
-main{max-width:960px;margin:auto;padding:16px}
-.step{counter-increment:s}.step h2::before{content:counter(s) ". ";color:var(--acc)}
-body{counter-reset:s}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:20px;margin:14px 0;box-shadow:0 1px 3px #0001}
-label{display:block;margin:12px 0 4px;font-weight:700}input,select,textarea{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;font:inherit;background:#fff;color:#111}
-.req{color:var(--acc);font-weight:700}
-button{padding:11px 18px;border:0;border-radius:8px;background:var(--acc);color:#fff;font:inherit;cursor:pointer;margin:6px 6px 0 0;min-height:44px}
-button.ghost{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+/* BidMaster — tema dashboard pengadaan. Referensi: USWDS gov design system
+   (header gelap + kartu putih + fokus tebal), pola wizard NN/g (stepper +
+   ringkasan sebelum submit), tooltip APG (hover/focus, Esc-friendly). */
+:root{
+  color-scheme:light dark;
+  --bg:#f4f1ea; --card:#fffdf8; --ink:#211d18; --mut:#6f675c;
+  --bd:#d8d0c0; --acc:#8a5a17; --acc-ink:#fff;
+  --ok:#1f6f50; --err:#b3261e; --warn:#8a5a17;
+  --hdr:#211d18; --hdr-ink:#f5efe3;
+  --r:14px; --sh:0 1px 2px #0001,0 4px 14px #0001;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);margin:0;background:var(--bg);color:var(--ink);line-height:1.6}
+code{font-family:var(--mono);font-size:.85em}
+/* Header sticky ala dashboard gov */
+.top{position:sticky;top:0;z-index:20;background:var(--hdr);color:var(--hdr-ink);padding:12px 16px;box-shadow:0 1px 0 #0006}
+.top>div{max-width:1024px;margin:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:.05em;font-size:1.15rem}
+.brand::before{content:"⚡";margin-right:6px}
+.tag{font-size:.82rem;opacity:.85}
+#who{margin-left:auto;font-size:.82rem;opacity:.9}
+main{max-width:1024px;margin:auto;padding:16px 16px 64px}
+/* Stepper wizard (pola NN/g: label deskriptif + posisi jelas) */
+.steps{list-style:none;display:flex;gap:6px;margin:14px 0;padding:0;counter-reset:st}
+.steps li{flex:1;min-width:0}
+.steps a{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:.82rem;line-height:1.35}
+.steps a b{display:block;font-size:.78rem;color:var(--mut);font-weight:600}
+.steps a[aria-current="step"]{border-color:var(--acc);box-shadow:inset 0 -3px 0 var(--acc)}
+.steps a::before{counter-increment:st;content:counter(st) ". ";color:var(--acc);font-weight:800}
+/* Kartu + form */
+.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:20px;margin:14px 0;box-shadow:var(--sh)}
+.step h2{margin:0 0 4px;font-size:1.1rem}
+.sub{margin:0 0 8px;color:var(--mut);font-size:.88rem}
+label{display:block;margin:12px 0 4px;font-weight:650}
+.hint{margin:2px 0 0;color:var(--mut);font-size:.83rem}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--bd);border-radius:10px;font:inherit;background:#fff;color:#111}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);outline:3px solid #8a5a1744;outline-offset:1px}
+input[aria-invalid="true"]{border-color:var(--err)}
+.req{color:var(--acc);font-weight:700;font-size:.78rem}
+/* Istilah + tooltip aksesibel (pola APG: focusable, tak menutup konten) */
+.term{border-bottom:1px dotted var(--acc);cursor:help;position:relative;white-space:nowrap}
+.term::after{content:attr(data-tip);position:absolute;left:0;bottom:130%;min-width:200px;max-width:280px;background:var(--hdr);color:var(--hdr-ink);font-weight:400;font-size:.8rem;padding:8px 10px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:30;white-space:normal;line-height:1.45}
+.term:hover::after,.term:focus-visible::after{opacity:1}
+.glos-grid{display:grid;gap:8px 20px;margin:8px 0}
+@media(min-width:720px){.glos-grid{grid-template-columns:1fr 1fr}}
+.glos-grid dt{font-weight:700}
+.glos-grid dd{margin:0 0 8px;color:var(--ink);font-size:.9rem}
+.glos-grid dd small{color:var(--mut)}
+/* Tombol: aksi primer besar, sekunder ghost */
+button{padding:11px 18px;border:0;border-radius:10px;background:var(--acc);color:var(--acc-ink);font:inherit;font-weight:650;cursor:pointer;margin:6px 6px 0 0;min-height:44px}
+button:hover{filter:brightness(1.07)}
+button.ghost{background:transparent;color:var(--acc);border:1.5px solid var(--acc)}
 button:disabled{opacity:.5;cursor:wait}
 .err{color:var(--err);font-weight:700;min-height:1.4em}
-.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1px solid var(--bd);border-radius:999px;padding:8px 14px;background:#fff;cursor:pointer;min-height:40px}
-.chip[aria-pressed=true]{background:#231f1a;color:#f5efe3;border-color:#231f1a}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{border:1.5px solid var(--bd);border-radius:999px;padding:8px 14px;background:#fff;cursor:pointer;min-height:40px;color:#111}
+.chip[aria-pressed="true"]{background:var(--hdr);color:var(--hdr-ink);border-color:var(--hdr)}
 .grid{display:grid;gap:0 16px}@media(min-width:680px){.grid{grid-template-columns:1fr 1fr}}
-table{width:100%;border-collapse:collapse}th,td{border:1px solid var(--bd);padding:8px;text-align:left;font-size:.92rem}
-pre{white-space:pre-wrap;background:#231f1a;color:#f5efe3;padding:16px;border-radius:8px;overflow:auto;max-height:60vh;font-family:ui-monospace,monospace;font-size:.85rem}
-.mut{color:var(--mut);font-size:.88rem}.ok{color:var(--acc2);font-weight:700}.bad{color:var(--err);font-weight:700}
-.pills{display:flex;gap:8px;flex-wrap:wrap}.pill{border-radius:999px;padding:4px 12px;font-size:.85rem;border:1px solid var(--bd)}
-.pill.ok{border-color:var(--acc2)}.pill.bad{border-color:var(--err)}
-:focus-visible{outline:3px solid var(--acc2);outline-offset:2px}
-@media(prefers-color-scheme:dark){:root{--bg:#1c1917;--ink:#ece5d8;--card:#292524;--bd:#57534e;--mut:#a8a29e}input,select,textarea{background:#1c1917;color:#ece5d8}.chip{background:#292524}}
+.tblwrap{overflow-x:auto;border:1px solid var(--bd);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:640px}th,td{border-bottom:1px solid var(--bd);padding:9px 10px;text-align:left;font-size:.9rem}
+thead th{background:#efe9db;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+tbody tr:nth-child(even){background:#faf7f0}
+td input{max-width:90px;padding:7px 8px}
+/* Ringkasan estimasi sticky (pola dashboard: insight sekilas) */
+.estbar{position:sticky;bottom:12px;background:var(--hdr);color:var(--hdr-ink);border-radius:12px;padding:10px 14px;display:flex;gap:14px;flex-wrap:wrap;font-size:.9rem;box-shadow:var(--sh);z-index:10}
+.estbar b{font-variant-numeric:tabular-nums}
+pre{white-space:pre-wrap;background:#211d18;color:#f5efe3;padding:16px;border-radius:10px;overflow:auto;max-height:60vh;font-family:var(--mono);font-size:.83rem}
+.mut{color:var(--mut);font-size:.87rem}.ok{color:var(--ok);font-weight:700}.bad{color:var(--err);font-weight:700}
+.warn{color:var(--warn);font-weight:700}
+.pills{display:flex;gap:8px;flex-wrap:wrap}.pill{border-radius:999px;padding:4px 12px;font-size:.83rem;border:1.5px solid var(--bd);background:#fff}
+.pill.ok{border-color:var(--ok)}.pill.bad{border-color:var(--err)}
+.gatebox{border:1.5px dashed var(--bd);border-radius:10px;padding:10px 12px;margin-top:10px}
+.gatebox.block{border-color:var(--err);background:#fdf0ef}
+.gatebox.pass{border-color:var(--ok);background:#eef7f2}
+details{border:1px solid var(--bd);border-radius:10px;padding:10px 14px;background:#faf7f0}
+summary{cursor:pointer;font-weight:700}
+:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+#hist>div{display:flex;gap:6px;align-items:center;margin:4px 0;flex-wrap:wrap}
+#audit>div{padding:4px 0;border-bottom:1px dashed var(--bd);font-size:.85rem}
+/* Cetak: hanya draft */
+@media print{.top,#loginCard,#h-steps,#h-mode,#f,#h-hist,.estbar,.noprint{display:none!important}main{max-width:none}pre{max-height:none;background:#fff;color:#000;border:1px solid #000}}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1917;--ink:#ece5d8;--card:#292524;--bd:#57534e;--mut:#a8a29e;--acc-ink:#fff}input,select,textarea{background:#1c1917;color:#ece5d8}.chip{background:#292524;color:#ece5d8}thead th{background:#3a352f}tbody tr:nth-child(even){background:#24211d}.pill{background:#24211d}details{background:#24211d}}
