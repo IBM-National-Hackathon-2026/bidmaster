@@ -1,14 +1,16 @@
 "use strict";
-/* BidMaster front: form terstruktur -> POST /api/draft|/api/export. Tanpa prompt bebas. */
+/* BidMaster internal: form tender terstruktur -> POST /api/draft|/api/export. Login wajib. Tanpa prompt bebas. */
 const $ = id => document.getElementById(id);
 const fmt = n => "Rp " + n.toLocaleString("id-ID");
-let CAT = null, MD = "", LAST = null;
+let CAT = null, MD = "", LAST = null, TOK = "";
 const HKEY = "bidmaster-history-v1";
+const authH = () => TOK ? { "Authorization": "Bearer " + TOK } : {};
 
 async function init() {
   const r = await fetch("/api/catalog");
   CAT = await r.json();
   $("ind").replaceChildren(...CAT.industries.map(i => { const o = document.createElement("option"); o.textContent = i; return o; }));
+  $("ind").value = "Pemerintahan";
   $("diskMax").textContent = CAT.discount_max;
   $("disk").max = CAT.discount_max;
   $("paket").replaceChildren(...CAT.website.packages.map(p => { const o = document.createElement("option"); o.value = p.id; o.textContent = `${p.name} — ${fmt(p.price_idr)} / ${p.timeline_weeks} mgg`; return o; }));
@@ -22,13 +24,14 @@ async function init() {
     td.append(inp); tr.append(td); return tr;
   }));
   document.querySelectorAll("[data-ex]").forEach(b => b.onclick = () => fill(b.dataset.ex));
-  syncMode(); renderHist();
+  syncMode(); renderHist(); me();
 }
 function mode() { return $("mode").value; }
 function syncMode() {
   const t = mode() === "tender";
   $("webBox").hidden = t; $("fitCard").hidden = t; $("tenBox").hidden = !t;
-  if (t) { $("nama").placeholder = "Dinas Pelayanan Publik Kota Arunika"; } else { $("nama").placeholder = "Kafe Arunika"; syncPaket(); }
+  if (t) { $("nama").placeholder = "Dinas Pelayanan Publik Kota Arunika"; $("dur").value = $("dur").value || 12; }
+  else { $("nama").placeholder = "Kafe Arunika (demo)"; syncPaket(); }
 }
 function syncPaket() {
   const p = CAT.website.packages.find(x => x.id === $("paket").value);
@@ -45,11 +48,40 @@ function syncEst() {
   $("est").textContent = `Estimasi bayar: ${fmt(total)}${d ? ` (diskon ${d}%)` : ""} — ${picked().length} fitur`;
 }
 function fill(k) {
-  if (k === "tender") { $("mode").value = "tender"; syncMode(); $("nama").value = "Dinas Pelayanan Publik Kota Arunika"; $("ind").value = "Pemerintahan"; return; }
-  if (mode() !== "website") { $("mode").value = "website"; syncMode(); }
-  const E = { kafe: ["Kafe Arunika", "web + reservasi + galeri menu", "Budget ±10jt"], klinik: ["Klinik Sehat", "profil + booking + jadwal dokter", "Budget ±15jt"], batik: ["Batik Laras", "katalog + order WA + blog", "Budget ±5jt"] }[k];
-  $("nama").value = E[0]; $("dok").value = E[1]; $("cat").value = E[2];
-  $("paket").value = k === "batik" ? "basic" : "standard"; syncPaket();
+  if (k === "tender") {
+    $("mode").value = "tender"; syncMode();
+    $("nama").value = "Dinas Pelayanan Publik Kota Arunika"; $("ind").value = "Pemerintahan";
+    $("pagu").value = 20000000; $("dur").value = 12;
+    $("dok").value = "Pengembangan backend API\nPengujian aplikasi\nPelatihan pengguna";
+    const q = { "DEV-BE": 10, "QA": 5, "TRAIN": 2 };
+    $("komp").querySelectorAll("input").forEach(i => { i.value = q[i.dataset.kode] || 0; });
+    return;
+  }
+  $("mode").value = "website"; syncMode();
+  $("nama").value = "Kafe Arunika (demo)"; $("dok").value = "web + reservasi + galeri menu"; $("cat").value = "Demo internal";
+  $("paket").value = "standard"; syncPaket();
+}
+async function me() {
+  try {
+    const r = await fetch("/api/me", { headers: authH() });
+    if (!r.ok) throw 0;
+    const u = await r.json();
+    $("who").textContent = `${u.nama} (${u.peran})`;
+    $("role").textContent = `Masuk sebagai ${u.nama} — peran ${u.peran}.`;
+    $("logoutBtn").hidden = false;
+  } catch { $("who").textContent = "belum login"; $("logoutBtn").hidden = true; }
+}
+async function doLogin() {
+  $("err").textContent = "";
+  const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nama: $("user").value.trim(), pw: $("pw").value }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { $("err").textContent = j.error || "Login gagal."; return; }
+  TOK = j.token; $("pw").value = "";
+  me();
+}
+async function doLogout() {
+  await fetch("/api/logout", { method: "POST", headers: authH() });
+  TOK = ""; me();
 }
 async function readDoc(file) {
   if (!file) return ["", ""];
@@ -67,31 +99,51 @@ async function submit() {
     const f = $("file").files[0];
     if (f) [dokText, dokNama] = await readDoc(f);
     const t = mode() === "tender";
-    const body = { mode: t ? "tender" : "website", nama: $("nama").value.trim(), industri: $("ind").value, durasi_minggu: parseInt($("dur").value || (t ? 12 : 4), 10), diskon_persen: t ? 0 : (parseFloat($("disk").value) || 0), dokumen_text: dokText, dokumen_nama: dokNama, catatan: $("cat").value.trim() };
+    const body = { mode: t ? "tender" : "website", nama: $("nama").value.trim(), industri: $("ind").value, durasi_minggu: parseInt($("dur").value || (t ? 12 : 4), 10), diskon_persen: t ? 0 : (parseFloat($("disk").value) || 0), pagu: parseInt($("pagu").value || 0, 10), dokumen_text: dokText, dokumen_nama: dokNama, catatan: $("cat").value.trim(), legal: { nib: $("nib").value.trim(), npwp: $("npwp").value.trim(), akta: $("akta").value.trim() } };
     if (t) { const ks = komps(); if (!ks.length) { $("err").textContent = "Isi qty minimal 1 komponen."; $("komp").querySelector("input").focus(); return; } body.komponen = ks; }
     else { body.paket = $("paket").value; body.fitur = picked(); }
-    const r = await fetch("/api/draft", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const r = await fetch("/api/draft", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, authH()), body: JSON.stringify(body) });
     const j = await r.json();
-    if (!r.ok) { $("err").textContent = j.error || "Gagal."; const m = { nama: "nama", paket: "paket", dur: "dur", disk: "disk", fitur: "fitur", ind: "ind", komp: "komp", dok: "dok" }; if (j.field && m[j.field] && $(m[j.field])) $(m[j.field]).focus(); return; }
+    if (!r.ok) { $("err").textContent = j.error || "Gagal."; if (r.status === 401) $("user").focus(); return; }
     MD = j.markdown; LAST = { t: Date.now(), nama: body.nama, mode: j.meta.mode, total: j.meta.total, score: j.compliance.score, md: MD };
     $("out").textContent = MD;
     $("pills").replaceChildren(...j.compliance.checks.map(c => { const s = document.createElement("span"); s.className = "pill " + (c.ok ? "ok" : "bad"); s.textContent = (c.ok ? "✓ " : "✗ ") + c.name; return s; }));
-    $("score").textContent = `Compliance ${j.compliance.score.toFixed(0)}% — ${j.compliance.passed ? "LOLOS" : "ADA PELANGGARAN, jangan finalkan"}`;
-    $("score").className = j.compliance.passed ? "ok" : "bad";
-    $("meta").textContent = `${j.meta.package} · total ${fmt(j.meta.total)} · ${j.meta.duration_weeks} minggu`;
+    const blocked = j.korporat && j.korporat.gate && !j.korporat.gate.passed;
+    $("score").textContent = `Compliance ${j.compliance.score.toFixed(0)}% — ${blocked ? "BLOKIR GATE, jangan finalkan" : (j.compliance.passed ? "LOLOS" : "ADA PELANGGARAN, jangan finalkan")}`;
+    $("score").className = (!blocked && j.compliance.passed) ? "ok" : "bad";
+    $("meta").textContent = `${j.meta.package} · total ${fmt(j.meta.total)} · ${j.meta.duration_weeks} minggu` + (j.korporat.pagu ? ` · pagu ${fmt(j.korporat.pagu)}` : "");
+    $("gate").replaceChildren();
+    if (j.korporat) {
+      const k = j.korporat;
+      const p = document.createElement("p");
+      const cov = k.kak.length ? `${k.kak.filter(x => x.cocok).length}/${k.kak.length} kebutuhan KAK terpetakan` : "KAK kosong — tempel dokumen KAK";
+      p.innerHTML = "";
+      p.textContent = `Gate korporat: ${k.gate.passed ? "LOLOS" : "BLOKIR"} · ${cov}` + (k.missing_legal.length ? ` · legal kurang: ${k.missing_legal.join(", ")}` : " · legal lengkap");
+      p.className = k.gate.passed ? "ok" : "bad";
+      $("gate").append(p);
+      k.gate.blocks.forEach(b => { const d = document.createElement("div"); d.textContent = "⛔ " + b; d.className = "bad"; $("gate").append(d); });
+      const unc = (k.uncovered || []).slice(0, 5);
+      unc.forEach(u => { const d = document.createElement("div"); d.textContent = "• KAK tak terpetakan: " + u.slice(0, 120); $("gate").append(d); });
+    }
     saveHist();
   } catch (e) { $("err").textContent = e.message || "Jaringan gagal."; }
   finally { $("go").disabled = false; }
 }
-function dl(ext) {
+function dl() {
   if (!MD) { $("err").textContent = "Buat draft dulu."; return; }
-  if (ext === "md") { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([MD], { type: "text/markdown" })); a.download = "draft-proposal.md"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([MD], { type: "text/markdown" })); a.download = "draft-proposal.md"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 async function dx() {
   if (!MD) { $("err").textContent = "Buat draft dulu."; return; }
-  const r = await fetch("/api/export", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ format: "docx", markdown: MD }) });
+  const r = await fetch("/api/export", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, authH()), body: JSON.stringify({ format: "docx", markdown: MD }) });
   if (!r.ok) { $("err").textContent = (await r.json()).error || "Export gagal."; return; }
   const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob()); a.download = "draft-proposal.docx"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+async function showAudit() {
+  const r = await fetch("/api/audit", { headers: authH() });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { $("err").textContent = j.error || "Gagal."; return; }
+  $("audit").replaceChildren(...j.audit.slice(0, 20).map(x => { const d = document.createElement("div"); d.textContent = `${new Date(x.ts * 1000).toLocaleString("id-ID")} — ${x.aksi} — ${x.detail}`; return d; }));
 }
 function loadH() { try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch { return []; } }
 function saveHist() {
@@ -113,7 +165,9 @@ function renderHist() {
   }));
 }
 $("mode").onchange = syncMode; $("paket").onchange = syncPaket; $("disk").oninput = syncEst;
-$("go").onclick = submit; $("dl").onclick = () => dl("md"); $("dx").onclick = dx;
+$("loginBtn").onclick = doLogin; $("logoutBtn").onclick = doLogout;
+$("go").onclick = submit; $("dl").onclick = dl; $("dx").onclick = dx;
 $("pr").onclick = () => { if (!MD) { $("err").textContent = "Buat draft dulu."; return; } window.print(); };
 $("wipe").onclick = () => { localStorage.removeItem(HKEY); renderHist(); };
+$("auditBtn").onclick = showAudit;
 init();

@@ -2,8 +2,8 @@
 
 Run:  cd bidmaster  ->  python -m api.server  ->  http://127.0.0.1:8080
 Satu origin (front+api) = tanpa CORS, CSP ketat, tanpa key di browser.
-Tanpa simpan data: draft dihitung lalu dikirim, upload hanya di memori.
-Mode: website (paket fix) | tender (per-komponen x qty).
+Alat internal perusahaan untuk menang tender (mode tender default).
+Login tim + audit trail; gate korporat: KAK coverage, pagu, legalitas.
 """
 import json
 import time
@@ -12,18 +12,21 @@ from datetime import date
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+from api.auth import audit as audit_log, login as do_login, logout as do_logout, who
 from api.export_docx import md_to_docx_bytes
+from api.gates import gate, kak_coverage, kak_items, legal_check
 from simulator.proposal_engine import load_knowledge, TAG
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
+KN = ROOT / "knowledge"
 MAX_BODY = 256 * 1024
 MAX_DOC = 200 * 1024
 MAX_MD = 200 * 1024
 RATE_N, RATE_S = 20, 60  # 20 req/menit per IP
 
-INDUSTRIES = ["F&B / Kafe", "Healthcare / Klinik", "Fashion / UMKM",
-              "Jasa", "Pemerintahan", "Lainnya"]
+INDUSTRIES = ["Pemerintahan", "F&B / Kafe", "Healthcare / Klinik", "Fashion / UMKM",
+              "Jasa", "Lainnya"]
 FEATURES = ["Katalog/menu + CMS", "Reservasi online", "Pembayaran QRIS",
             "Blog + analitik", "Galeri foto", "Peta + tombol WA",
             "Member/loyalty", "Multi-cabang/bahasa"]
@@ -35,9 +38,12 @@ TENDER_SITEMAP = ["Beranda", "Profil", "Layanan", "Jadwal", "Kontak"]
 
 _hits = {}
 TEMPLATE, CATALOG = load_knowledge()
-TENDER = yaml.safe_load(
-    (ROOT / "data" / "samples" / "tender-dummy" / "price_catalog.yaml").read_text(encoding="utf-8"))
+TENDER = yaml.safe_load((KN / "tender_price.yaml").read_text(encoding="utf-8"))
 TENDER_MAP = {k["kode"]: k for k in TENDER["komponen"]}
+TENDER_TMPL = (KN / "tender_template.md").read_text(encoding="utf-8")
+COMPANY_MD = (KN / "tender_company.md").read_text(encoding="utf-8")
+SOP_MD = (KN / "tender_sop.md").read_text(encoding="utf-8")
+TEAM = yaml.safe_load((KN / "tender_team.yaml").read_text(encoding="utf-8"))
 
 
 def limited(ip):
@@ -50,6 +56,16 @@ def limited(ip):
 
 def err(field, msg):
     return {"error": msg, "field": field}
+
+
+def _token(req):
+    auth = req.headers.get("Authorization", "")
+    if auth.startswith("Bearer "):
+        return auth[7:].strip()[:128]
+    for part in (req.headers.get("Cookie", "") or "").split(";"):
+        if part.strip().startswith("bm_token="):
+            return part.strip()[9:][:128]
+    return ""
 
 
 def _disc(d):
@@ -66,13 +82,13 @@ def _disc(d):
 def validate(d):
     if not isinstance(d, dict):
         return None, err("form", "Body harus JSON object.")
-    mode = d.get("mode", "website")
+    mode = d.get("mode", "tender")
     if mode not in ("website", "tender"):
         return None, err("mode", "Mode website/tender.")
     nama = str(d.get("nama", "")).strip()[:80]
     if len(nama) < 2:
-        return None, err("nama", "Nama bisnis minimal 2 karakter.")
-    ind = str(d.get("industri", ""))
+        return None, err("nama", "Nama instansi minimal 2 karakter.")
+    ind = str(d.get("industri", "Pemerintahan"))
     if ind not in INDUSTRIES:
         return None, err("ind", "Industri tidak dikenal.")
     try:
@@ -87,8 +103,16 @@ def validate(d):
     doc = str(d.get("dokumen_text", ""))[:MAX_DOC]
     if len(str(d.get("dokumen_text", ""))) > MAX_DOC:
         return None, err("dok", "Dokumen maks 200KB.")
+    try:
+        pagu = int(d.get("pagu", 0) or 0)
+    except (TypeError, ValueError):
+        return None, err("pagu", "Pagu harus angka.")
+    if not 0 <= pagu <= 10_000_000_000:
+        return None, err("pagu", "Pagu 0-10Miliar.")
+    legal_raw = d.get("legal", {}) if isinstance(d.get("legal", {}), dict) else {}
+    legal = {k: str(legal_raw.get(k, "")).strip()[:40] for k in ("nib", "npwp", "akta")}
     base = {"mode": mode, "nama": nama, "industri": ind, "durasi": dur,
-            "diskon": disc, "dok": doc,
+            "diskon": disc, "dok": doc, "pagu": pagu, "legal": legal,
             "dok_nama": str(d.get("dokumen_nama", ""))[:80],
             "catatan": str(d.get("catatan", "")).strip()[:500]}
     if mode == "website":
@@ -162,9 +186,9 @@ def compose(v):
             rab += (f"| {k['kode']} | {k['nama']} | {qty} {k['satuan']} | "
                     f"{k['harga_dasar']:,} | {k['harga_dasar'] * qty:,} |\n")
         rab += f"|  |  |  | **Total bayar (Tender)** | **{total:,}** |\n"
-        tab = "| Kode | Komponen | Satuan | Harga dasar |\n|---|---|---|---|\n"
-        for k in TENDER["komponen"]:
-            tab += f"| {k['kode']} | {k['nama']} | {k['satuan']} | {k['harga_dasar']:,} |\n"
+        if v["pagu"]:
+            rab += f"\nPagu: Rp {v['pagu']:,} — {'DI ATAS pagu [perlu konfirmasi: turunkan qty]' if total > v['pagu'] else 'di dalam pagu'}.\n"
+        tab = ""  # tender pakai template sendiri, bukan tabel paket website
         reason = f"{len(v['items'])} komponen x qty, durasi {dur} minggu, total Rp {total:,}"
         sitemap = TENDER_SITEMAP
         feat_lines = [f"{k['nama']} ({qty} {k['satuan']})" for k, qty in v["items"]]
@@ -176,62 +200,108 @@ def compose(v):
     ph = [b + (1 if i < r else 0) for i in range(3)]
     phases = (f"- M1 Desain & konten: {ph[0]} minggu\n"
               f"- M2 Development: {ph[1]} minggu\n- M3 QA + go-live: {ph[2]} minggu")
-    s = [(f"Kebutuhan terdefinisi: {len(feat_lines)} item dipilih", "dari form — deterministik")]
-    if v["dok"]:
-        s.append(("Dokumen requirement tersedia", f"{len(v['dok'])} karakter, {v['dok_nama'] or 'tanpa nama'}"))
-    s.append((f"Konteks {v['industri']}", f"{TAG}: validasi data eksisting client]"))
-    w = [(f"Kehadiran digital belum optimal ({v['industri']})",
-          "sulit ditemukan & transaksi manual", f"paket {pname}: {feat_lines[0]}")]
-    if any(k in v["dok"].lower() for k in ("manual", "dm", "wa ", "whatsapp")):
-        w.append(("Proses masih manual (dari dokumen)", "calon client bisa pindah",
-                  f"otomatisasi via {feat_lines[0]}"))
-    md = TEMPLATE.replace("{client_name}", v["nama"])
-    md = md.replace("{date}", date.today().strftime("%d %B %Y"))
-    dokref = f" (dokumen {v['dok_nama']})" if v["dok_nama"] else ""
-    md = md.replace("{executive_summary}",
-        f"{v['nama']} ({v['industri']}) membutuhkan: {', '.join(feat_lines[:3])}. "
-        f"Penawaran {pname} Rp {total:,}, {dur} minggu{dokref}.")
-    prof = (f"**{v['nama']}** — {v['industri']}.\nItem: {', '.join(feat_lines)}.\n"
-            f"Durasi: {dur} minggu. Diskon: {v['diskon']:g}%.")
-    if v["dok"]:
-        tail_dok = "…" if len(v["dok"]) > 500 else ""
-        prof += f"\nKebutuhan tambahan dari dokumen ({len(v['dok'])} karakter): {v['dok'][:500]}{tail_dok}"
-    if v["catatan"]:
-        prof += "\nCatatan: " + v["catatan"]
-    md = md.replace("{client_profile}", prof)
-    md = md.replace("{strengths}", "\n".join(f"- **{a}** — {b}" for a, b in s))
-    md = md.replace("{weaknesses}", "\n".join(f"- **{a}** (dampak: {b}) → solusi: {c}" for a, b, c in w))
-    md = md.replace("{objectives}", obj)
-    md = md.replace("{target_users}", f"- Pengguna {v['industri']} [perlu konfirmasi: segmen pasti]")
-    md = md.replace("{sitemap}", "\n".join("- " + x for x in sitemap))
-    md = md.replace("{key_features}", "\n".join("- " + f for f in feat_lines))
-    md = md.replace("{tech_suggestion}", f"Next.js + CMS ringan + WhatsApp API {TAG}: stack default studio]")
-    md = md.replace("{timeline_weeks}", str(dur))
-    md = md.replace("{phases}", phases)
-    md = md.replace("{rab_table}", rab)
-    md = md.replace("{packages_table}", tab)
-    md = md.replace("{recommended_package}", pname)
-    md = md.replace("{recommendation_reason}", reason + disc_txt)
-    md = md.replace("{terms}",
-        f"DP 50%, pelunasan sebelum serah terima. Maks 2x revisi mayor. "
-        f"Berlaku {CATALOG['discount_rules']['validity_days']} hari. Harga belum termasuk domain/hosting.")
-    md = md.replace("{cta}", "Balas setuju + pilih paket, kami kirim invoice DP dan jadwal kickoff.")
-    checks = [
-        ("10 bab + RAB-lite", "## 2. Profil Client" in md and "## 7. RAB" in md),
-        ("Keunggulan + kekurangan", "Keunggulan Client" in md and "Kekurangan" in md),
-        ("Harga = katalog", price_proof in md),
-        ("Diskon dalam batas", v["diskon"] <= CATALOG["discount_rules"]["max_discount_percent"]),
-        ("RAB total konsisten", f"{total:,}" in rab),
-        ("Tag konfirmasi", TAG in md),
-        ("Klausul DP 50%", "DP 50%" in md),
-    ]
+    if v["mode"] == "website":
+        s = [(f"Kebutuhan terdefinisi: {len(feat_lines)} item dipilih", "dari form — deterministik")]
+        if v["dok"]:
+            s.append(("Dokumen requirement tersedia", f"{len(v['dok'])} karakter, {v['dok_nama'] or 'tanpa nama'}"))
+        s.append((f"Konteks {v['industri']}", f"{TAG}: validasi data eksisting client]"))
+        w = [(f"Kehadiran digital belum optimal ({v['industri']})",
+              "sulit ditemukan & transaksi manual", f"paket {pname}: {feat_lines[0]}")]
+        if any(k in v["dok"].lower() for k in ("manual", "dm", "wa ", "whatsapp")):
+            w.append(("Proses masih manual (dari dokumen)", "calon client bisa pindah",
+                      f"otomatisasi via {feat_lines[0]}"))
+        md = TEMPLATE.replace("{client_name}", v["nama"])
+        md = md.replace("{date}", date.today().strftime("%d %B %Y"))
+        dokref = f" (dokumen {v['dok_nama']})" if v["dok_nama"] else ""
+        md = md.replace("{executive_summary}",
+            f"{v['nama']} ({v['industri']}) membutuhkan: {', '.join(feat_lines[:3])}. "
+            f"Penawaran {pname} Rp {total:,}, {dur} minggu{dokref}.")
+        prof = (f"**{v['nama']}** — {v['industri']}.\nItem: {', '.join(feat_lines)}.\n"
+                f"Durasi: {dur} minggu. Diskon: {v['diskon']:g}%.")
+        if v["dok"]:
+            tail_dok = "…" if len(v["dok"]) > 500 else ""
+            prof += f"\nKebutuhan tambahan dari dokumen ({len(v['dok'])} karakter): {v['dok'][:500]}{tail_dok}"
+        if v["catatan"]:
+            prof += "\nCatatan: " + v["catatan"]
+        md = md.replace("{client_profile}", prof)
+        md = md.replace("{strengths}", "\n".join(f"- **{a}** — {b}" for a, b in s))
+        md = md.replace("{weaknesses}", "\n".join(f"- **{a}** (dampak: {b}) → solusi: {c}" for a, b, c in w))
+        md = md.replace("{objectives}", obj)
+        md = md.replace("{target_users}", f"- Pengguna {v['industri']} [perlu konfirmasi: segmen pasti]")
+        md = md.replace("{sitemap}", "\n".join("- " + x for x in sitemap))
+        md = md.replace("{key_features}", "\n".join("- " + f for f in feat_lines))
+        md = md.replace("{tech_suggestion}", f"Next.js + CMS ringan + WhatsApp API {TAG}: stack default studio]")
+        md = md.replace("{timeline_weeks}", str(dur))
+        md = md.replace("{phases}", phases)
+        md = md.replace("{rab_table}", rab)
+        md = md.replace("{packages_table}", tab)
+        md = md.replace("{recommended_package}", pname)
+        md = md.replace("{recommendation_reason}", reason + disc_txt)
+        md = md.replace("{terms}",
+            f"DP 50%, pelunasan sebelum serah terima. Maks 2x revisi mayor. "
+            f"Berlaku {CATALOG['discount_rules']['validity_days']} hari. Harga belum termasuk domain/hosting.")
+        md = md.replace("{cta}", "Balas setuju + pilih paket, kami kirim invoice DP dan jadwal kickoff.")
+        checks = [
+            ("10 bab + RAB-lite", "## 2. Profil Client" in md and "## 7. RAB" in md),
+            ("Keunggulan + kekurangan", "Keunggulan Client" in md and "Kekurangan" in md),
+            ("Harga = katalog", price_proof in md),
+            ("Diskon dalam batas", v["diskon"] <= CATALOG["discount_rules"]["max_discount_percent"]),
+            ("RAB total konsisten", f"{total:,}" in rab),
+            ("Tag konfirmasi", TAG in md),
+            ("Klausul DP 50%", "DP 50%" in md),
+        ]
+        kak_rows, uncovered, missing_legal, g = [], [], [], {"passed": True, "blocks": []}
+    else:
+        items_kak = kak_items(v["dok"])
+        kak_rows, uncovered = kak_coverage(items_kak, [k for k, _ in v["items"]])
+        missing_legal = legal_check(v["legal"])
+        g = gate(total, v["pagu"], uncovered, missing_legal)
+        tgl = date.today().strftime("%d %B %Y")
+        ringkas = (f"{v['nama']} membutuhkan: {', '.join(feat_lines[:3])}. "
+                   f"Penawaran Rp {total:,}, {dur} minggu{disc_txt}.")
+        profil = COMPANY_MD[:1200] + ("\nLegalitas: NIB %s, NPWP %s, Akta %s." % (
+            v["legal"]["nib"] or "[perlu konfirmasi]", v["legal"]["npwp"] or "[perlu konfirmasi]",
+            v["legal"]["akta"] or "[perlu konfirmasi]"))
+        paham = (v["dok"][:1200] if v["dok"] else "[perlu konfirmasi: KAK belum ditempel]") + (
+            f"\nKAK terpetakan: {len(kak_rows) - len(uncovered)}/{len(kak_rows)}." if kak_rows else "")
+        if v["catatan"]:
+            paham += "\nCatatan internal: " + v["catatan"]
+        solusi = "\n".join("- " + f for f in feat_lines) + f"\nSitemap: {', '.join(sitemap)}."
+        metodo = "Mengacu SOP perusahaan: analisis → desain → pengembangan → pengujian → implementasi → pelatihan → pemeliharaan."
+        tim_txt = "\n".join(f"- {a['nama']} — {a['peran']} (Rp {a['tarif_harian']:,}/hari)"
+                            for a in TEAM["anggota"][:6])
+        uji = "Unit/integrasi/fungsional + UAT bersama pengguna. Garansi & pemeliharaan sesuai KAK " + TAG + ": masa dukungan pasti]."
+        penutup = ("Hormat kami, PT Solusi Digital Nusantara. Lampiran: profil, RAB, jadwal, daftar tim. "
+                   "Dokumen fiktif untuk pengujian — bukan penawaran resmi.")
+        md = TENDER_TMPL.replace("{instansi}", v["nama"]).replace("{tanggal}", tgl)
+        for key, val in (("ringkasan", ringkas), ("profil", profil), ("pemahaman", paham),
+                         ("solusi", solusi), ("metodologi", metodo),
+                         ("jadwal", phases), ("tim", tim_txt), ("uji", uji),
+                         ("rab", rab), ("penutup", penutup)):
+            md = md.replace("{%s}" % key, val)
+        checks = [
+            ("11 bab + harga", "## 10. Penawaran Harga" in md and "## 3. Profil Perusahaan" in md),
+            ("Harga = katalog", price_proof in md),
+            ("RAB total konsisten", f"{total:,}" in rab),
+            ("KAK terpetakan", not uncovered),
+            ("Pagu OK", not v["pagu"] or total <= v["pagu"]),
+            ("Legalitas lengkap", not missing_legal),
+            ("Tag konfirmasi", TAG in md),
+        ]
     score = sum(1 for _, ok in checks if ok) / len(checks) * 100
     tail = (f"\n\n---\n**Compliance: {score:.0f}%**\n"
-            + "\n".join(f"- [{'x' if ok else ' '}] {n}" for n, ok in checks)
-            + "\n*Status: draft — menunggu persetujuan manusia.*")
+            + "\n".join(f"- [{'x' if ok else ' '}] {n}" for n, ok in checks))
+    if v["mode"] == "tender" and not g["passed"]:
+        tail += "\n**Gate korporat: BLOKIR**\n" + "\n".join("- " + b for b in g["blocks"])
+    tail += "\n*Status: draft — menunggu persetujuan manusia.*"
+    passed = all(ok for _, ok in checks) and g["passed"]
     meta = {"package": pname, "total": total, "duration_weeks": dur, "mode": v["mode"]}
-    return md + tail, {"score": score, "passed": all(ok for _, ok in checks),
-                       "checks": [{"name": n, "ok": ok} for n, ok in checks]}, meta
+    extra = {"kak": kak_rows if v["mode"] == "tender" else [],
+             "uncovered": uncovered if v["mode"] == "tender" else [],
+             "missing_legal": missing_legal if v["mode"] == "tender" else [],
+             "gate": g, "pagu": v.get("pagu", 0)}
+    return md + tail, {"score": score, "passed": passed,
+                       "checks": [{"name": n, "ok": ok} for n, ok in checks]}, meta, extra
 
 
 class H(BaseHTTPRequestHandler):
@@ -282,30 +352,59 @@ class H(BaseHTTPRequestHandler):
                 "discount_max": CATALOG["discount_rules"]["max_discount_percent"],
                 "website": {"packages": CATALOG["packages"], "features": FEATURES},
                 "tender": {"komponen": TENDER["komponen"]}}))
+        if self.path == "/api/me":
+            u = who(_token(self))
+            if not u:
+                return self._send(401, json.dumps({"error": "Login dulu."}))
+            return self._send(200, json.dumps(u))
+        if self.path == "/api/audit":
+            from api.auth import history
+            u = who(_token(self))
+            if not u:
+                return self._send(401, json.dumps({"error": "Login dulu."}))
+            uid = None if u["peran"] == "admin" else u["id"]
+            return self._send(200, json.dumps({"audit": history(uid)}))
         return self._send(404, json.dumps({"error": "Not found"}))
 
     def do_POST(self):
-        if self.path not in ("/api/draft", "/api/export"):
+        if self.path not in ("/api/login", "/api/logout", "/api/draft", "/api/export"):
             return self._send(404, json.dumps({"error": "Not found"}))
         if limited(self.client_address[0]):
             return self._send(429, json.dumps({"error": "Terlalu sering, coba 1 menit lagi."}))
         data, problem = self._body(MAX_MD if self.path == "/api/export" else MAX_BODY)
         if problem:
             return self._send(400, json.dumps(problem))
+        if self.path == "/api/login":
+            if not isinstance(data, dict):
+                return self._send(400, json.dumps({"error": "Body harus JSON object."}))
+            s = do_login(str(data.get("nama", ""))[:40], str(data.get("pw", "")))
+            if not s:
+                return self._send(401, json.dumps({"error": "Nama/password salah."}))
+            return self._send(200, json.dumps(s), extra={
+                "Set-Cookie": f"bm_token={s['token']}; HttpOnly; Path=/; SameSite=Strict"})
+        tok = _token(self)
+        u = who(tok)
+        if self.path == "/api/logout":
+            do_logout(tok)
+            return self._send(200, json.dumps({"ok": True}))
+        if not u:
+            return self._send(401, json.dumps({"error": "Login dulu."}))
         if self.path == "/api/export":
             if data.get("format") != "docx":
                 return self._send(400, json.dumps({"error": "Format harus docx."}))
             md = data.get("markdown", "")
             if not isinstance(md, str) or not 1 <= len(md) <= MAX_MD:
                 return self._send(400, json.dumps({"error": "Markdown 1B-200KB."}))
+            audit_log(u["id"], "export", f"docx {len(md)} chr")
             return self._send(200, md_to_docx_bytes(md),
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 {"Content-Disposition": "attachment; filename=draft-proposal.docx"})
         data, problem = validate(data)
         if problem:
             return self._send(400, json.dumps(problem))
-        md, comp, meta = compose(data)
-        return self._send(200, json.dumps({"markdown": md, "compliance": comp, "meta": meta}))
+        md, comp, meta, extra = compose(data)
+        audit_log(u["id"], "draft", f"{data['nama']} {meta['mode']} Rp {meta['total']:,} skor {comp['score']:.0f}")
+        return self._send(200, json.dumps({"markdown": md, "compliance": comp, "meta": meta, "korporat": extra}))
 
 
 if __name__ == "__main__":

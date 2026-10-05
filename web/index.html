@@ -4,63 +4,82 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<title>BidMaster — Mesin Proposal</title>
+<title>BidMaster — Alat Proposal Tender Internal</title>
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<div class="top"><div><span class="brand">BidMaster</span><span class="tag">isi data → draft jadi · tanpa prompt bebas</span></div></div>
+<div class="top"><div><span class="brand">BidMaster</span><span class="tag">alat internal perusahaan · draft tender → gate → approve manusia</span><span id="who" class="mut" style="margin-left:auto"></span></div></div>
 <main>
+<section class="card" id="loginCard" aria-labelledby="hl">
+<h2 id="hl">Login tim</h2>
+<div class="grid">
+<div><label for="user">Nama</label><input id="user" maxlength="40" autocomplete="username" placeholder="admin"></div>
+<div><label for="pw">Password</label><input id="pw" type="password" maxlength="100" autocomplete="current-password"></div>
+</div>
+<p><button type="button" id="loginBtn">Masuk</button> <button type="button" class="ghost" id="logoutBtn" hidden>Keluar</button> <span class="mut" id="role"></span></p>
+<p class="mut">Seed awal: <code>admin / bidmaster123</code> — ganti via env <code>SEED_ADMIN_PASS</code>. Sesi 12 jam, cookie HttpOnly.</p>
+</section>
 <div class="card" role="group" aria-label="Mode katalog">
 <label class="mut" for="mode">Mode katalog</label>
-<select id="mode" style="max-width:280px"><option value="website">Website (paket fix)</option><option value="tender">Tender (per-komponen)</option></select>
+<select id="mode" style="max-width:280px"><option value="tender">Tender (per-komponen) — default</option><option value="website">Website (paket fix) — demo</option></select>
 </div>
 <form id="f" onsubmit="return false">
 <section class="card step" aria-labelledby="h1">
-<h2 id="h1">Client</h2>
+<h2 id="h1">Instansi / paket tender</h2>
 <div class="grid">
-<div><label for="nama">Nama <span class="req">* wajib</span></label><input id="nama" maxlength="80" required autocomplete="organization" placeholder="Kafe Arunika"></div>
-<div><label for="ind">Industri <span class="req">* wajib</span></label><select id="ind"></select></div>
+<div><label for="nama">Nama instansi <span class="req">* wajib</span></label><input id="nama" maxlength="80" required autocomplete="organization" placeholder="Dinas Pelayanan Publik Kota Arunika"></div>
+<div><label for="ind">Sektor <span class="req">* wajib</span></label><select id="ind"></select></div>
 </div>
-<p class="mut">Contoh cepat: <button type="button" class="ghost" data-ex="kafe">Kafe</button> <button type="button" class="ghost" data-ex="klinik">Klinik</button> <button type="button" class="ghost" data-ex="batik">Batik</button> <button type="button" class="ghost" data-ex="tender">Tender</button></p>
+<div class="grid">
+<div><label for="pagu">Pagu (Rp, 0 = tanpa pagu)</label><input id="pagu" type="number" min="0" max="10000000000" step="100000" value="0"></div>
+<div><label for="dur">Durasi pengerjaan (minggu) <span class="req">* wajib</span></label><input id="dur" type="number" min="1" max="12" value="12"><p class="mut" id="durHint"></p></div>
+</div>
+<p class="mut">Contoh cepat: <button type="button" class="ghost" data-ex="tender">Paket tender dummy</button> <button type="button" class="ghost" data-ex="kafe">Demo website</button></p>
 </section>
 <section class="card step" aria-labelledby="h2">
 <h2 id="h2">Penawaran kita</h2>
-<div id="webBox">
+<div id="tenBox">
+<p class="mut">Isi qty per komponen (0 = lewati). Harga satuan dari katalog tender — satu-satunya sumber harga.</p>
+<table><thead><tr><th>Kode</th><th>Komponen</th><th>Satuan</th><th>Harga</th><th>Qty</th></tr></thead><tbody id="komp"></tbody></table>
+</div>
+<div id="webBox" hidden>
 <div><label for="paket">Harga penawaran <span class="req">* wajib</span></label><select id="paket"></select></div>
 <label for="disk">Diskon % (maks <span id="diskMax">10</span>)</label><input id="disk" type="number" min="0" max="10" step="0.5" value="0" style="max-width:160px">
 <p class="mut" id="est" aria-live="polite"></p>
 </div>
-<div><label for="dur">Durasi pengerjaan (minggu) <span class="req">* wajib</span></label><input id="dur" type="number" min="1" max="12"><p class="mut" id="durHint"></p></div>
-<div id="tenBox" hidden>
-<p class="mut">Isi qty per komponen (0 = lewati). Harga satuan dari katalog tender.</p>
-<table><thead><tr><th>Kode</th><th>Komponen</th><th>Satuan</th><th>Harga</th><th>Qty</th></tr></thead><tbody id="komp"></tbody></table>
-</div>
 </section>
-<section class="card step" id="fitCard" aria-labelledby="h3">
-<h2 id="h3">Fitur website <span class="req">* min 1</span></h2>
+<section class="card step" id="fitCard" aria-labelledby="h3" hidden>
+<h2 id="h3">Fitur website (demo) <span class="req">* min 1</span></h2>
 <div class="chips" id="fitur" role="group" aria-label="Pilih fitur"></div>
 </section>
 <section class="card step" aria-labelledby="h4">
-<h2 id="h4">Dokumen requirement</h2>
-<label for="file">Upload file (.txt/.md/.csv/.json, maks 200KB)</label><input id="file" type="file" accept=".txt,.md,.csv,.json,.pdf,.doc,.docx">
-<label for="dok">atau tempel teks</label><textarea id="dok" rows="3" maxlength="200000" placeholder="Contoh: butuh reservasi online, galeri menu, bayar QRIS…"></textarea>
-<label for="cat">Catatan (maks 500)</label><input id="cat" maxlength="500" placeholder="Budget ±10jt, deadline…">
+<h2 id="h4">KAK + legalitas</h2>
+<label for="file">Upload KAK (.txt/.md/.csv/.json, maks 200KB)</label><input id="file" type="file" accept=".txt,.md,.csv,.json,.pdf,.doc,.docx">
+<label for="dok">atau tempel teks KAK</label><textarea id="dok" rows="4" maxlength="200000" placeholder="Contoh per baris: Pengembangan backend API; Pengujian aplikasi; Pelatihan pengguna"></textarea>
+<div class="grid">
+<div><label for="nib">NIB <span class="req">* wajib tender</span></label><input id="nib" maxlength="40" placeholder="8120101234567"></div>
+<div><label for="npwp">NPWP <span class="req">* wajib tender</span></label><input id="npwp" maxlength="40" placeholder="01.234.567.8-901.000"></div>
+</div>
+<label for="akta">No. Akta pendirian <span class="req">* wajib tender</span></label><input id="akta" maxlength="40" placeholder="No. 12/2021 Notaris …">
+<label for="cat">Catatan internal (maks 500, tak masuk dokumen final)</label><input id="cat" maxlength="500" placeholder="Diskusi pagu, strategi harga…">
 </section>
 <p class="err" id="err" role="alert" aria-live="assertive"></p>
 <p><button type="button" id="go">Buat draft proposal</button> <button type="button" class="ghost" id="dl">.md</button> <button type="button" class="ghost" id="dx">.docx</button> <button type="button" class="ghost" id="pr">Print/PDF</button></p>
 </form>
 <section class="card step" aria-labelledby="h5" aria-live="polite">
-<h2 id="h5">Draft + compliance</h2>
+<h2 id="h5">Draft + compliance + gate korporat</h2>
 <p><span id="score"></span> <span class="mut" id="meta"></span></p>
 <div class="pills" id="pills"></div>
-<pre id="out">Isi langkah di atas → tekan Buat draft.</pre>
+<div id="gate" class="mut"></div>
+<pre id="out">Login → isi instansi + qty + KAK + legalitas → Buat draft.</pre>
 </section>
 <section class="card step" aria-labelledby="h6">
-<h2 id="h6">Riwayat (browser ini saja)</h2>
+<h2 id="h6">Riwayat (browser ini saja) + audit server</h2>
 <div id="hist" class="mut">Belum ada.</div>
-<p><button type="button" class="ghost" id="wipe">Hapus riwayat</button></p>
+<p><button type="button" class="ghost" id="wipe">Hapus riwayat lokal</button> <button type="button" class="ghost" id="auditBtn">Lihat audit server</button></p>
+<div id="audit" class="mut"></div>
 </section>
-<p class="mut">Keamanan: tanpa login tanpa simpan data di server; upload hanya di memori lalu dibuang. Riwayat hanya di localStorage perangkat ini. Fakta tak pasti → [perlu konfirmasi]. Harga final + diskon + kirim ke client butuh persetujuan manusia.</p>
+<p class="mut">Keamanan: login tim wajib; upload hanya di memori lalu dibuang. Riwayat lokal di localStorage perangkat ini; audit aktivitas di server (siapa buat/export). Fakta tak pasti → [perlu konfirmasi]. Harga final + kirim ke panitia butuh persetujuan manusia. Draft BLOKIR gate (pagu/KAK/legalitas) tidak boleh difinalkan.</p>
 </main>
 <script src="/app.js" defer></script>
 </body>
