@@ -10,25 +10,33 @@
 <body>
 <div class="top"><div><span class="brand">BidMaster</span><span class="tag">isi data → draft jadi · tanpa prompt bebas</span></div></div>
 <main>
+<div class="card" role="group" aria-label="Mode katalog">
+<label class="mut" for="mode">Mode katalog</label>
+<select id="mode" style="max-width:280px"><option value="website">Website (paket fix)</option><option value="tender">Tender (per-komponen)</option></select>
+</div>
 <form id="f" onsubmit="return false">
 <section class="card step" aria-labelledby="h1">
 <h2 id="h1">Client</h2>
 <div class="grid">
-<div><label for="nama">Nama bisnis <span class="req">* wajib</span></label><input id="nama" maxlength="80" required autocomplete="organization" placeholder="Kafe Arunika"></div>
-<div><label for="ind">Industri <span class="req">* wajib</span></label><select id="ind"><option>F&amp;B / Kafe</option><option>Healthcare / Klinik</option><option>Fashion / UMKM</option><option>Jasa</option><option>Lainnya</option></select></div>
+<div><label for="nama">Nama <span class="req">* wajib</span></label><input id="nama" maxlength="80" required autocomplete="organization" placeholder="Kafe Arunika"></div>
+<div><label for="ind">Industri <span class="req">* wajib</span></label><select id="ind"></select></div>
 </div>
-<p class="mut">Contoh cepat: <button type="button" class="ghost" data-ex="kafe">Kafe</button> <button type="button" class="ghost" data-ex="klinik">Klinik</button> <button type="button" class="ghost" data-ex="batik">Batik</button></p>
+<p class="mut">Contoh cepat: <button type="button" class="ghost" data-ex="kafe">Kafe</button> <button type="button" class="ghost" data-ex="klinik">Klinik</button> <button type="button" class="ghost" data-ex="batik">Batik</button> <button type="button" class="ghost" data-ex="tender">Tender</button></p>
 </section>
 <section class="card step" aria-labelledby="h2">
 <h2 id="h2">Penawaran kita</h2>
-<div class="grid">
+<div id="webBox">
 <div><label for="paket">Harga penawaran <span class="req">* wajib</span></label><select id="paket"></select></div>
-<div><label for="dur">Durasi pengerjaan (minggu) <span class="req">* wajib</span></label><input id="dur" type="number" min="1" max="12"><p class="mut" id="durHint"></p></div>
-</div>
-<label for="disk">Diskon % (maks 10)</label><input id="disk" type="number" min="0" max="10" step="0.5" value="0" style="max-width:160px">
+<label for="disk">Diskon % (maks <span id="diskMax">10</span>)</label><input id="disk" type="number" min="0" max="10" step="0.5" value="0" style="max-width:160px">
 <p class="mut" id="est" aria-live="polite"></p>
+</div>
+<div><label for="dur">Durasi pengerjaan (minggu) <span class="req">* wajib</span></label><input id="dur" type="number" min="1" max="12"><p class="mut" id="durHint"></p></div>
+<div id="tenBox" hidden>
+<p class="mut">Isi qty per komponen (0 = lewati). Harga satuan dari katalog tender.</p>
+<table><thead><tr><th>Kode</th><th>Komponen</th><th>Satuan</th><th>Harga</th><th>Qty</th></tr></thead><tbody id="komp"></tbody></table>
+</div>
 </section>
-<section class="card step" aria-labelledby="h3">
+<section class="card step" id="fitCard" aria-labelledby="h3">
 <h2 id="h3">Fitur website <span class="req">* min 1</span></h2>
 <div class="chips" id="fitur" role="group" aria-label="Pilih fitur"></div>
 </section>
@@ -39,15 +47,20 @@
 <label for="cat">Catatan (maks 500)</label><input id="cat" maxlength="500" placeholder="Budget ±10jt, deadline…">
 </section>
 <p class="err" id="err" role="alert" aria-live="assertive"></p>
-<p><button type="button" id="go">Buat draft proposal</button> <button type="button" class="ghost" id="dl">Unduh .md</button></p>
+<p><button type="button" id="go">Buat draft proposal</button> <button type="button" class="ghost" id="dl">.md</button> <button type="button" class="ghost" id="dx">.docx</button> <button type="button" class="ghost" id="pr">Print/PDF</button></p>
 </form>
 <section class="card step" aria-labelledby="h5" aria-live="polite">
 <h2 id="h5">Draft + compliance</h2>
 <p><span id="score"></span> <span class="mut" id="meta"></span></p>
 <div class="pills" id="pills"></div>
-<pre id="out">Isi 4 langkah di atas → tekan Buat draft.</pre>
+<pre id="out">Isi langkah di atas → tekan Buat draft.</pre>
 </section>
-<p class="mut">Keamanan: tanpa login tanpa simpan data di server; upload hanya di memori lalu dibuang. Fakta tak pasti → [perlu konfirmasi]. Harga final + diskon + kirim ke client butuh persetujuan manusia.</p>
+<section class="card step" aria-labelledby="h6">
+<h2 id="h6">Riwayat (browser ini saja)</h2>
+<div id="hist" class="mut">Belum ada.</div>
+<p><button type="button" class="ghost" id="wipe">Hapus riwayat</button></p>
+</section>
+<p class="mut">Keamanan: tanpa login tanpa simpan data di server; upload hanya di memori lalu dibuang. Riwayat hanya di localStorage perangkat ini. Fakta tak pasti → [perlu konfirmasi]. Harga final + diskon + kirim ke client butuh persetujuan manusia.</p>
 </main>
 <script src="/app.js" defer></script>
 </body>
