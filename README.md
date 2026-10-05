@@ -63,24 +63,24 @@ Header `# CONTOH SANITASI` di tiap `.example` di-strip otomatis oleh loader — 
 
 ## Cara kerja di balik layar
 
-**Loader (`api/knowledge.py`)**: `read_kn(nama)` → pakai file asli bila ada, fallback ke `*.example` bila tidak (pola `.env.example`). Clone segar jalan tanpa setup. Strip header sanitasi, pertahankan token `{...}`.
-
-**Validator (`validate` di `api/server.py`)**: mode website/tender, nama ≥2 char, industri whitelist, durasi 1–12, diskon ≤ `discount_rules.max`, pagu 0–10M, legalitas ≤40 char, komponen kode dikenal + qty 0–1000 (maks 10 item), fitur whitelist (maks 8). Gagal → 400 + `field` → UI fokus ke field.
-
-**Composer (`compose`)**: tender → `total = Σ harga_dasar × qty`, RAB tabel Kode/Komponen/Qty×Satuan/Subtotal, template 11 bab diisi via `str.replace` token (`{instansi}`, `{rab}`, `{tim}`, …), profil = company[:1200] + legalitas, tim = 6 anggota pertama, metodologi statis 7 tahap. Website → total = paket − diskon, RAB-lite proporsional via `split_total`. Fakta tak pasti → `[perlu konfirmasi: …]`.
-
-**Gate (`api/gates.py`, murni fungsi)**: `kak_items` pecah dokumen per baris/koma/semicolon (≥8 char, maks 30); `kak_coverage` cocokkan kata ≥4 huruf per baris ke kode+nama komponen; `legal_check` NIB/NPWP/akta wajib isi; `gate` BLOKIR bila total > pagu / ada KAK tak terpetakan / legal kurang. Compliance 7 cek + skor %; `passed = semua cek + gate`.
-
-**Auth (`api/auth.py`, sqlite3 stdlib)**: PBKDF2-HMAC-SHA256 200k iterasi, token 32B, sesi 12 jam, peran admin/bd/reviewer/viewer, tabel audit (login/draft/export). Seed `admin/bidmaster123` via `SEED_ADMIN_PASS`. DB `data.db*` di-gitignore.
-
-**Export (`api/export_docx.py`, stdlib-only)**: Markdown → OOXML minimal via `zipfile` (heading, bold, tabel, list). Bukan konversi sempurna — cukup untuk draft.
-
-**Server (`api/server.py`, stdlib `http.server`, satu origin)**: `GET / /app.js /styles.css /api/health /api/catalog /api/me /api/audit`, `POST /api/login /api/logout /api/draft /api/export`. Batas body 256KB / dokumen 200KB / markdown 200KB, rate-limit 20 req/menit/IP, header CSP ketat + nosniff + DENY + no-referrer + no-store, upload hanya di memori lalu dibuang.
-
-**Frontend (`web/`, tanpa build)**: wizard 5 langkah + stepper, glossary tooltip (hover/fokus), estbar sticky (total/pagu/status live), subtotal per baris, validasi fokus per-field, riwayat localStorage + audit server, tombol contoh tender/website, print CSS.
-
-**Jalur agentik (opsional, tidak wajib jalan)**: `skills/registry.yaml` daftar 3 MCP tools → `langflow/flows/*.json` diimport ke Langflow Project → expose MCP → Bob panggil `generate_proposal_draft` / `revise_proposal` / `generate_prd_from_brief`. Config di `langflow/mcp.json.example`; key asli hanya di config Bob lokal / Global Variables Langflow, tidak di-commit.
+1. Form di browser mengirim data JSON ke server (`POST /api/draft`).
+2. Server memeriksa isian satu per satu. Kalau ada yang salah, server menolak dan menunjuk field-nya.
+3. Kalau lolos, server menghitung total dari katalog: harga satuan × qty.
+4. Server menempel hasil ke template dokumen (token `{...}` diganti isi asli).
+5. Fakta yang belum pasti ditulis `[perlu konfirmasi]`, bukan dikarang.
+6. Gate memeriksa tiga hal: tiap baris KAK cocok komponen, total tidak lewat pagu, NIB/NPWP/akta terisi.
+7. Hasil kembali ke browser: draft + skor + status LOLOS/BLOKIR. BLOKIR berarti perbaiki dulu.
+8. Login memakai password hash dan sesi 12 jam. Setiap buat draft dan export tercatat di audit.
+9. Export DOCX dibuat langsung oleh server tanpa library tambahan.
 
 ## Keamanan
 
-Tidak ada secret di repo. Satu-satunya env backend: `SEED_ADMIN_PASS`. API key (Groq/Gemini/Langflow) hanya di `.env` lokal / config Bob / Langflow variables — histori pernah bocor, revoke bila pernah pakai key lama. Login wajib untuk draft/export; draft BLOKIR gate dilarang finalkan; harga final + kirim panitia butuh approve manusia.
+- Repo tidak menyimpan secret. Password awal diganti lewat `SEED_ADMIN_PASS`.
+- Password disimpan sebagai hash, bukan teks asli.
+- Sesi login 12 jam dengan cookie HttpOnly.
+- Draft dan export wajib login.
+- Batas ukuran request dan rate-limit per IP aktif.
+- Header keamanan ketat (CSP, nosniff, no-store).
+- File upload hanya dibaca di memori lalu dibuang.
+- Database lokal (`data.db*`) tidak ikut push.
+- Dokumen status draft sampai manusia menyetujui.
