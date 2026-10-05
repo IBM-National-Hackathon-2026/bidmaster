@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; object-src 'none'; base-uri 'none'">
+<title>BidMaster — Draft Proposal</title>
+<!-- ponytail: statis tanpa backend; upgrade ke api/proxy saat butuh panggil Langflow tanpa bocor key -->
+<style>
+:root{color-scheme:light dark;--bd:#ddd;--bg:#fff;--mut:#666}
+*{box-sizing:border-box}body{font-family:system-ui,sans-serif;margin:0;background:var(--bg);color:inherit}
+main{max-width:880px;margin:auto;padding:16px}header{border-bottom:1px solid var(--bd);padding:16px}
+.card{border:1px solid var(--bd);border-radius:8px;padding:16px;margin:12px 0}
+label{display:block;margin:8px 0 4px;font-weight:600}input,select,textarea{width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;font:inherit}
+button{padding:10px 16px;border:0;border-radius:6px;background:#111;color:#fff;font:inherit;cursor:pointer;margin:4px 4px 0 0}
+button[aria-pressed=true]{outline:2px solid #06c}pre{white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:6px;overflow:auto}
+@media(prefers-color-scheme:dark){pre{background:#1a1a1a}}.mut{color:var(--mut);font-size:.9em}
+table{width:100%;border-collapse:collapse}th,td{border:1px solid var(--bd);padding:8px;text-align:left}
+:focus-visible{outline:2px solid #06c;outline-offset:2px}.grid{display:grid;gap:12px}@media(min-width:640px){.grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><main><strong>BidMaster</strong> <span class="mut">draft proposal &lt; 15 menit · statis · tanpa server</span></main></header>
+<main>
+<section class="card" aria-labelledby="h-in">
+<h2 id="h-in">1. Info client</h2>
+<div class="grid">
+<div><label for="nama">Nama bisnis *</label><input id="nama" maxlength="80" required autocomplete="organization" placeholder="Kafe Arunika"></div>
+<div><label for="ind">Industri *</label><select id="ind"><option>F&amp;B / Kafe</option><option>Healthcare / Klinik</option><option>Fashion / UMKM</option><option>Lainnya</option></select></div>
+</div>
+<label for="butuh">Kebutuhan *</label><textarea id="butuh" rows="2" maxlength="500" required placeholder="web + reservasi online">web + reservasi online</textarea>
+<label for="bud">Budget hint</label><input id="bud" maxlength="20" inputmode="numeric" placeholder="10jt">
+<div role="group" aria-label="Contoh cepat">
+<p class="mut">Contoh:</p>
+<button type="button" data-ex="kafe">Kafe</button>
+<button type="button" data-ex="klinik">Klinik</button>
+<button type="button" data-ex="batik">Batik</button>
+</div>
+<p><button type="button" id="gen">Buat draft</button>
+<button type="button" id="dl">Unduh .md</button></p>
+</section>
+<section class="card" aria-labelledby="h-out" aria-live="polite">
+<h2 id="h-out">2. Draft + compliance</h2>
+<pre id="out">Isi form lalu tekan Buat draft.</pre>
+</section>
+<section class="card" aria-labelledby="h-pak">
+<h2 id="h-pak">3. Paket (satu-satunya sumber harga)</h2>
+<table><thead><tr><th>Paket</th><th>Harga</th><th>Waktu</th><th>Cocok</th></tr></thead><tbody id="pak"></tbody></table>
+<p class="mut">Diskon maks 10%. RAB = proporsi estimasi paket terpilih, bukan akuntansi penuh.</p>
+</section>
+<p class="mut">Keamanan: 100% lokal, tanpa network, tanpa key, tanpa simpan data. Fakta tak pasti ditandai [perlu konfirmasi]. Harga final butuh persetujuan manusia.</p>
+</main>
+<script>
+"use strict";
+const PAK=[{n:"Basic",h:5000000,w:"2 minggu",for:"Tampil online cepat"},{n:"Standard",h:10000000,w:"4 minggu",for:"Kafe/klinik/UMKM"},{n:"Premium",h:18000000,w:"6 minggu",for:"Scale multi-cabang"}];
+const EX={kafe:["Kafe Arunika","F&B / Kafe","web + reservasi online + galeri menu","10jt"],klinik:["Klinik Sehat","Healthcare / Klinik","company profile + booking + jadwal dokter","15jt"],batik:["Batik Laras","Fashion / UMKM","katalog + order WA + blog","5jt"]};
+const $=id=>document.getElementById(id);
+const fmt=n=>("Rp "+n.toLocaleString("id-ID"));
+document.querySelector("tbody#pak").replaceChildren(...PAK.map(p=>{const tr=document.createElement("tr");[p.n,fmt(p.h),p.w,p.for].forEach(t=>{const td=document.createElement("td");td.textContent=t;tr.append(td)});return tr}));
+document.querySelectorAll("[data-ex]").forEach(b=>b.onclick=()=>{const e=EX[b.dataset.ex];$("nama").value=e[0];$("ind").value=e[1];$("butuh").value=e[2];$("bud").value=e[3];gen()});
+function gen(){
+const nama=$("nama").value.trim().slice(0,80),ind=$("ind").value,butuh=$("butuh").value.trim().slice(0,500),bud=$("bud").value.trim().slice(0,20);
+if(!nama||!butuh){$("out").textContent="Lengkapi nama + kebutuhan dulu.";return ""}
+const rec=/15|18/.test(bud)?"Premium":/5\b|5jt/.test(bud)?"Basic":"Standard";
+const pk=PAK.find(p=>p.n===rec);
+const md=["# "+nama+" — Proposal Website","","*Berlaku 14 hari | Disusun Kilat Studio + BidMaster*","","## 1. Ringkasan",nama+" ("+ind+") butuh: "+butuh+". Rekomendasi: "+rec+" ("+fmt(pk.h)+").","","## 2. Keunggulan","- Audiens/produk ada [perlu konfirmasi: validasi data client]","","## 3. Kekurangan / Peluang","- Belum online optimal → solusi: paket "+rec,"","## 4. RAB-lite (ESTIMASI)","Total "+fmt(pk.h)+" / "+pk.w,"","## 5. Paket","Basic 5jt / Standard 10jt / Premium 18jt. Rekomendasi: "+rec+".","","## 6. Syarat","DP 50%, maks 2x revisi mayor, berlaku 14 hari.","","Compliance: struktur ok, harga=katalog, klausul ada. Status: draft.","","Tidak yakin? tandai [perlu konfirmasi], jangan karang."].join("\n");
+$("out").textContent=md;return md}
+$("gen").onclick=gen;
+$("dl").onclick=()=>{const md=gen();if(!md)return;const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([md],{type:"text/markdown"}));a.download="draft-proposal.md";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
+</script>
+</body>
+</html>

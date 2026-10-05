@@ -50,6 +50,7 @@ Satu Bob, banyak tools — skill baru = 1 flow Langflow + expose MCP, tanpa tuli
 │  ├─ components/      ← custom component + panduan
 │  └─ IMPORT_GUIDE.md + mcp.json.example
 ├─ simulator/          ← tiruan flow untuk demo lokal tanpa server
+├─ web/                ← UI statis (index.html, tanpa backend) → ponytail: tambah api/ saat butuh proxy Langflow
 ├─ outputs/            ← hasil draft (2 contoh di-commit, sisanya ignore)
 └─ docs/
    ├─ bob-log.md       ← bukti sesi Bob (isi tiap sesi)
