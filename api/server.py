@@ -265,8 +265,8 @@ def compose(v):
         tim_txt = "\n".join(f"- {a['nama']} — {a['peran']} (Rp {a['tarif_harian']:,}/hari)"
                             for a in TEAM["anggota"][:6])
         uji = "Unit/integrasi/fungsional + UAT bersama pengguna. Garansi & pemeliharaan sesuai KAK " + TAG + ": masa dukungan pasti]."
-        penutup = ("Hormat kami, PT Solusi Digital Nusantara. Lampiran: profil, RAB, jadwal, daftar tim. "
-                   "Dokumen fiktif untuk pengujian — bukan penawaran resmi.")
+        penutup = ("Hormat kami, [Nama Perusahaan]. Lampiran: profil, RAB, jadwal, daftar tim. "
+                   "Status draft — wajib review manusia sebelum dikirim ke panitia.")
         md = TENDER_TMPL.replace("{instansi}", v["nama"]).replace("{tanggal}", tgl)
         for key, val in (("ringkasan", ringkas), ("profil", profil), ("pemahaman", paham),
                          ("solusi", solusi), ("metodologi", metodo),
