@@ -1,57 +1,59 @@
-# ===== BidMaster .gitignore =====
-# Tujuan: jangan sampai secret / file lokal ikut ke-push ke GitHub.
+# ===== BidMaster .gitignore — CORE ONLY =====
+# Prinsip: GitHub hanya berisi inti runnable + README.md satu-satunya *.md.
+# Sisanya (docs SDLC, submission, simulator, outputs, arsip, secret) tetap lokal.
 
-# --- Secrets & credentials (PENTING) ---
+# --- Secrets & lokal ---
 .env
 .env.*
-*.env
 !.env.example
-# Config MCP berisi API key asli (contoh tanpa secret: mcp.json.example tetap ke-commit)
-langflow/mcp.json
-**/.bob/
-*token*.json
-*credentials*.json
 *.pem
 *.key
+*token*.json
+*credentials*.json
+**/.bob/
+data.db*
+*.sqlite*
+*.db-shm
+*.db-wal
+*.db-journal
 
-# --- Python ---
+# --- Single README rule: abaikan semua markdown kecuali README root ---
+*.md
+!/README.md
+# knowledge/*.example TIDAK berakhiran .md -> tetap ter-track
+# sebagai data runtime sanitasi. Sengaja.
+
+# --- Data perusahaan asli: jangan push (yang di-push hanya *.example) ---
+knowledge/*.yaml
+
+# --- Non-core: docs SDLC + submission form (update lokal saja, tidak push) ---
+docs/
+AGENTS.md
+SKILL.md
+
+# --- Non-core: simulator demo lokal, outputs, arsip ---
+simulator/
+outputs/
+langflow/archive/
+langflow/components/
+langflow/IMPORT_GUIDE.md
+langflow/mcp.json
+
+# --- Python / OS / IDE / Node ---
 __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
 venv/
-.env_venv/
-
-# --- Hasil generate lokal (draft proposal, docx percobaan) ---
-# outputs/ di-ignore, KECUALI 2 file contoh dummy untuk portofolio/juri
-outputs/
-!outputs/kafe-arunika-proposal-v1.md
-!outputs/kafe-arunika-proposal-v2.md
-*.log
-*.bak
-*.bak-*
-
-# --- Data stores lokal (kalau nanti pakai Chroma/Postgres via docker) ---
-chroma/
-pgdata/
-*.db
-*.db-shm
-*.db-wal
-*.db-journal
-*.sqlite
-*.sqlite3
-
-# --- OS & IDE ---
 .DS_Store
 Thumbs.db
 desktop.ini
 .vscode/
 .idea/
 *.code-workspace
-
-# --- Node ---
 node_modules/
-
-# --- Arsip ---
-# Varian flow lama, tidak diimport. Tetap di-commit sebagai referensi.
-!langflow/archive/
+*.log
+*.bak
+*.bak-*
+chroma/
+pgdata/

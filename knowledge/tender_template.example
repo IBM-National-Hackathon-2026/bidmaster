@@ -1,0 +1,58 @@
+# CONTOH SANITASI — salin ke tender_template.md lalu sesuaikan dengan template perusahaan.
+# File ini yang di-push. Template asli bersifat rahasia, jangan commit.
+# WAJIB pertahankan: "## 3. Profil Perusahaan" dan "## 10. Penawaran Harga"
+# (dipakai compliance check). Token {...} diisi otomatis oleh composer.
+
+# [JUDUL PEKERJAAN — GANTI]
+
+**Instansi:** {instansi}
+
+**Penyedia:** [NAMA PERUSAHAAN]
+
+**Tanggal:** {tanggal}
+
+## 1. Surat Pengantar
+
+{ringkasan}
+
+## 2. Ringkasan Eksekutif
+
+{ringkasan}
+
+## 3. Profil Perusahaan
+
+{profil}
+
+## 4. Pemahaman Kebutuhan
+
+{pemahaman}
+
+## 5. Solusi dan Ruang Lingkup Teknis
+
+{solusi}
+
+## 6. Metodologi Pelaksanaan
+
+{metodologi}
+
+## 7. Jadwal Pelaksanaan
+
+{jadwal}
+
+## 8. Tim Pelaksana
+
+{tim}
+
+## 9. Pengujian, Garansi, dan Pemeliharaan
+
+{uji}
+
+## 10. Penawaran Harga
+
+{rab}
+
+## 11. Penutup
+
+{penutup}
+
+> **CATATAN:** Sesuaikan dengan dokumen pemilihan sebelum dikirim ke panitia.

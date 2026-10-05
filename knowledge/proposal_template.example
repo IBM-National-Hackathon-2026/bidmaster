@@ -1,11 +1,12 @@
-# Format Proposal — BidMaster (TEMPLATE v2, selaras docs/sdlc)
-
-> Writer WAJIB mengikuti urutan dan judul bab ini. RAB bersifat RAB-lite
-> (proporsi paket, bertanda estimasi). Ketidakpastian fakta ditandai [perlu konfirmasi].
+# CONTOH SANITASI — salin ke proposal_template.md lalu sesuaikan dengan template perusahaan.
+# File ini yang di-push. Template asli bersifat rahasia, jangan commit.
+# WAJIB pertahankan: baris "# {client_name}", judul "## 2. Profil Client",
+# "## 7. RAB", kata "Keunggulan Client", "Kekurangan", dan klausul "DP 50%"
+# (dipakai compliance check). Token {...} diisi otomatis oleh composer.
 
 # {client_name} — Proposal Pembuatan Website
 
-*Tanggal: {date} | Berlaku 14 hari | Disusun oleh Kilat Studio dengan BidMaster*
+*Tanggal: {date} | Berlaku 14 hari | Disusun oleh [NAMA PERUSAHAAN] dengan BidMaster*
 
 ## 1. Ringkasan Eksekutif
 {executive_summary}

@@ -1,55 +1,49 @@
+# CONTOH SANITASI — salin ke tender_price.yaml lalu ganti dengan harga perusahaan.
+# File ini yang di-push. Harga asli bersifat rahasia, jangan commit.
+# Struktur WAJIB: komponen[].{kode,nama,satuan,harga_dasar} (dibaca validator
+# + gate pagu; harga HANYA dari file ini, composer dilarang mengarang angka).
 meta:
-  sumber: 02_daftar_harga.csv
+  sumber: daftar_harga_perusahaan
   mata_uang: IDR
-  catatan: Data dummy untuk pengujian. Satu-satunya sumber harga; jangan membuat angka di luar daftar ini.
+  catatan: Satu-satunya sumber harga; jangan membuat angka di luar daftar ini.
 komponen:
 - kode: DEV-FE
   nama: Pengembangan frontend aplikasi
   satuan: orang-hari
   harga_dasar: 900000
-  catatan: Harga dummy
+  catatan: Sesuaikan
 - kode: DEV-BE
   nama: Pengembangan backend/API
   satuan: orang-hari
   harga_dasar: 1100000
-  catatan: Harga dummy
+  catatan: Sesuaikan
 - kode: UIUX
   nama: Desain UI/UX
   satuan: hari
   harga_dasar: 800000
-  catatan: Harga dummy
+  catatan: Sesuaikan
 - kode: ANALYST
   nama: Analisis kebutuhan sistem
   satuan: hari
   harga_dasar: 1000000
-  catatan: Harga dummy
+  catatan: Sesuaikan
 - kode: QA
   nama: Pengujian aplikasi
   satuan: hari
   harga_dasar: 750000
-  catatan: Harga dummy
+  catatan: Sesuaikan
 - kode: DEPLOY
   nama: Deployment dan konfigurasi
   satuan: paket
   harga_dasar: 2500000
-  catatan: Harga dummy
+  catatan: Sesuaikan
 - kode: TRAIN
   nama: Pelatihan pengguna
   satuan: sesi
   harga_dasar: 1500000
-  catatan: Harga dummy
+  catatan: Sesuaikan
 - kode: MAINT
   nama: Pemeliharaan aplikasi
   satuan: bulan
   harga_dasar: 2000000
-  catatan: Harga dummy
-- kode: SERVER
-  nama: Server aplikasi
-  satuan: bulan
-  harga_dasar: 500000
-  catatan: Asumsi dummy; spesifikasi harus dikonfirmasi
-- kode: DOMAIN
-  nama: Domain
-  satuan: tahun
-  harga_dasar: 250000
-  catatan: Asumsi dummy
+  catatan: Sesuaikan

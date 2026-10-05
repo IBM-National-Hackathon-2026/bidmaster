@@ -1,0 +1,34 @@
+# CONTOH SANITASI — salin ke tender_team.yaml lalu ganti dengan data tim.
+# File ini yang di-push. Data asli bersifat rahasia, jangan commit.
+# Struktur WAJIB: anggota[].{id,nama,peran,keahlian,tarif_harian}
+# (6 pertama masuk ke bab Tim Pelaksana; jangan mengarang sertifikasi).
+meta:
+  sumber: database_tim_perusahaan
+  mata_uang: IDR
+  catatan: Data tim. Jangan mengarang nama, sertifikasi, atau pengalaman di luar daftar ini.
+anggota:
+- id: T001
+  nama: Nama Personel 1
+  peran: Project Manager
+  keahlian:
+  - Manajemen proyek
+  pengalaman_simulasi_tahun: 4
+  tarif_harian: 1000000
+  catatan: Sesuaikan
+- id: T002
+  nama: Nama Personel 2
+  peran: System Analyst
+  keahlian:
+  - Analisis kebutuhan
+  pengalaman_simulasi_tahun: 3
+  tarif_harian: 1000000
+  catatan: Sesuaikan
+- id: T003
+  nama: Nama Personel 3
+  peran: UI/UX Designer
+  keahlian:
+  - Figma
+  - user flow
+  pengalaman_simulasi_tahun: 3
+  tarif_harian: 800000
+  catatan: Sesuaikan

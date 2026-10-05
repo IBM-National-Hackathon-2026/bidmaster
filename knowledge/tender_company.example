@@ -1,0 +1,19 @@
+# CONTOH SANITASI — salin ke tender_company.md lalu ganti dengan profil perusahaan.
+# File ini yang di-push. Data asli bersifat rahasia, jangan commit.
+# Teks bebas, 1200 karakter pertama masuk ke bab Profil Perusahaan.
+# Legalitas (NIB/NPWP/akta) diisi lewat form, bukan dari file ini.
+
+# Profil Perusahaan — [NAMA PERUSAHAAN]
+
+## Identitas
+Nama: [NAMA PERUSAHAAN]. Bidang: [BIDANG USAHA].
+Alamat: [ALAMAT].
+
+## Layanan
+[DAFTAR LAYANAN — contoh: pengembangan aplikasi web, API, UI/UX, pengujian, deployment, pemeliharaan.]
+
+## Portofolio
+[CANTUMKAN HANYA proyek nyata. Jangan mengarang pengalaman atau sertifikasi.]
+
+## Kapabilitas
+[TEKNOLOGI yang benar-benar dikuasai tim.]

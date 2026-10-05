@@ -7,7 +7,6 @@ Login tim + audit trail; gate korporat: KAK coverage, pagu, legalitas.
 """
 import json
 import time
-import yaml
 from datetime import date
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -15,11 +14,10 @@ from pathlib import Path
 from api.auth import audit as audit_log, login as do_login, logout as do_logout, who
 from api.export_docx import md_to_docx_bytes
 from api.gates import gate, kak_coverage, kak_items, legal_check
-from simulator.proposal_engine import load_knowledge, TAG
+from api.knowledge import TAG, load_knowledge, load_tender
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
-KN = ROOT / "knowledge"
 MAX_BODY = 256 * 1024
 MAX_DOC = 200 * 1024
 MAX_MD = 200 * 1024
@@ -38,12 +36,8 @@ TENDER_SITEMAP = ["Beranda", "Profil", "Layanan", "Jadwal", "Kontak"]
 
 _hits = {}
 TEMPLATE, CATALOG = load_knowledge()
-TENDER = yaml.safe_load((KN / "tender_price.yaml").read_text(encoding="utf-8"))
+TENDER, TENDER_TMPL, COMPANY_MD, TEAM = load_tender()
 TENDER_MAP = {k["kode"]: k for k in TENDER["komponen"]}
-TENDER_TMPL = (KN / "tender_template.md").read_text(encoding="utf-8")
-COMPANY_MD = (KN / "tender_company.md").read_text(encoding="utf-8")
-SOP_MD = (KN / "tender_sop.md").read_text(encoding="utf-8")
-TEAM = yaml.safe_load((KN / "tender_team.yaml").read_text(encoding="utf-8"))
 
 
 def limited(ip):

@@ -1,0 +1,22 @@
+# CONTOH SANITASI — salin ke company_rules.md lalu sesuaikan dengan aturan perusahaan.
+# File ini yang di-push. Aturan asli bersifat rahasia, jangan commit.
+# File ini acuan operasional manusia (tidak dibaca composer; batas diskon +
+# masa berlaku dibaca dari price catalog, klausul DP 50% dari template).
+
+## 1. Identitas & Tone
+- Bahasa default: Bahasa Indonesia, formal, ramah, tidak berlebihan.
+- Dilarang klaim absolut ("terbaik", "nomor 1", "dijamin viral") kecuali ada bukti tertulis.
+
+## 2. Klausul Wajib (harus muncul di dokumen final)
+- Pembayaran: DP 50%, pelunasan sebelum serah terima.
+- Revisi: maks 2x revisi desain mayor per paket.
+- Masa berlaku penawaran: 14 hari.
+- Harga belum termasuk domain/hosting kecuali disebut di paket.
+
+## 3. Aturan Harga & Diskon
+- Harga HANYA dari price catalog. Dilarang membuat angka baru.
+- Diskon maksimal 10% tanpa persetujuan pimpinan.
+
+## 4. Aturan Fakta
+- Fakta hanya dari input pengguna / dokumen KAK.
+- Inferensi wajib ditandai [perlu konfirmasi: ...].

@@ -1,5 +1,7 @@
-# Katalog Harga — Kilat Studio (DUMMY)
-# SATU-SATUNYA sumber harga. Model dilarang membuat angka sendiri.
+# CONTOH SANITASI — salin ke price_catalog.yaml lalu ganti dengan harga perusahaan.
+# File ini yang di-push. Harga asli bersifat rahasia, jangan commit.
+# Struktur WAJIB: packages[].{id,name,price_idr,timeline_weeks,features,best_for}
+# + discount_rules.{max_discount_percent,validity_days} (dibaca validator).
 
 packages:
   - id: basic

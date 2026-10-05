@@ -1,0 +1,24 @@
+# CONTOH SANITASI — salin ke tender_sop.md lalu sesuaikan dengan SOP perusahaan.
+# File ini yang di-push. SOP asli bersifat rahasia, jangan commit.
+# File ini dokumentasi operasional (tidak dibaca composer); ringkasannya dipakai di bab Metodologi.
+
+## 1. Analisis
+Kumpulkan kebutuhan, susun kebutuhan fungsional/nonfungsional, minta persetujuan ruang lingkup.
+
+## 2. Desain
+User flow, wireframe, desain antarmuka, model data, rancangan arsitektur. Perubahan dicatat.
+
+## 3. Pengembangan
+Bangun aplikasi berdasarkan backlog yang disetujui. Perubahan ruang lingkup dicatat dan disetujui.
+
+## 4. Pengujian
+Unit/integrasi/fungsional, catat bug, perbaiki. UAT bersama perwakilan pengguna.
+
+## 5. Implementasi
+Lingkungan, konfigurasi, deployment, pencadangan, pemeriksaan pascaimplementasi.
+
+## 6. Pelatihan dan serah terima
+Pelatihan, dokumentasi, daftar akun/akses, berita acara serah terima.
+
+## 7. Pemeliharaan
+Tangani kendala sesuai ruang lingkup dan masa dukungan kontrak.
