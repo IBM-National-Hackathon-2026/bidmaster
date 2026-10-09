@@ -22,11 +22,11 @@ web/ index.html login.html app.html agent.html app.js agent.js login.js index.js
   → UI memakai Bootstrap 5 (framework CSS via CDN) + tema kustom di styles.css.
   → Seluruh JS/CSS lokal file eksternal (tanpa inline) agar lolos CSP ketat.
 knowledge/*.example        ← 9 template sanitasi (tanpa embel .md/.yaml)
-langflow/flows/*.json      ← 3 kanonis (generate_proposal_draft, revise_proposal,
-                             generate_prd_from_brief) + 1 eksperimen RAG
-                             (bidmaster_proposal_generator_rag)
+langflow/flows/*.json      ← flow aktif `bidmaster_proposal_generator_rag`
+                             (project Bidmaster_Proposal, 1 flow;
+                             3 flow lama jadi referensi, tidak dipakai)
 langflow/mcp.json.example  ← template endpoint MCP (tanpa secret)
-skills/registry.yaml       ← daftar MCP tools (3 kanonis)
+skills/registry.yaml       ← 1 MCP tool aktif
 ```
 
 `docs/`, `simulator/`, `outputs/`, `AGENTS.md`, `SKILL.md`, arsip flow lama: lokal saja, tidak di-push. `knowledge/*.md` / `*.yaml` asli (data perusahaan): tidak di-push, hanya `*.example` sanitasi.
@@ -77,14 +77,12 @@ Header `# CONTOH SANITASI` di tiap `.example` di-strip otomatis oleh loader — 
 7. Hasil kembali ke browser: draft + skor + status LOLOS/BLOKIR. BLOKIR berarti perbaiki dulu.
 8. Login memakai password hash dan sesi 12 jam. Setiap buat draft dan export tercatat di audit.
 9. Export DOCX dibuat langsung oleh server tanpa library tambahan.
-10. Jalur chat (`/agent`) meneruskan pesan ke Langflow via `api/langflow_client.py`. Tanpa `LANGFLOW_URL` + `LANGFLOW_API_KEY`, endpoint mengembalikan 503 dan form deterministik tetap jalan.
+10. Jalur chat (`/agent`) meneruskan pesan ke 1 flow aktif Langflow (`LANGFLOW_FLOW` di `.env`, project Bidmaster_Proposal) via `api/langflow_client.py`. Tanpa `LANGFLOW_URL` + `LANGFLOW_API_KEY`, endpoint mengembalikan 503 dan form deterministik tetap jalan.
 
 ## Flow Langflow + watsonx
 
-- 3 flow kanonis tetap jadi kontrak (`skills/registry.yaml`): `generate_proposal_draft`, `revise_proposal`, `generate_prd_from_brief`.
-- Flow baru `bidmaster_proposal_generator_rag` adalah eksperimen pola RAG (File → Split → Chroma + Embedding → Prompt → Language Model). Struktur graf valid, tapi belum setara flow kanonis: belum ada LLM compliance-checker khusus dan awalnya tanpa `endpoint_name` (sudah diisi) plus sisa token `{variable_name}` di prompt (sudah dibersihkan).
-- Sebelum dipakai: import ke Langflow, upload ulang file knowledge, isi direktori persist Chroma, uji di Playground, baru expose bila lolos.
-- Kunci IBM watsonx tidak disimpan di repo atau backend. Isi di dalam Langflow pada komponen Language Model + Embedding Model: provider `ibm_watsonx`, nama model, `project_id`, endpoint region (`base_url_ibm_watsonx`), dan API key via Global Variables Langflow. Backend hanya butuh `LANGFLOW_URL` + `LANGFLOW_API_KEY` di `.env` lokal.
+- Flow aktif: `bidmaster_proposal_generator_rag` (project Bidmaster_Proposal): File → Split → Chroma + Embedding → Prompt → Language Model. Draft, revisi, dan PRD semua lewat flow ini.
+- Kunci IBM watsonx tidak disimpan di repo atau backend. Isi di dalam Langflow pada komponen Language Model + Embedding Model: provider `ibm_watsonx`, nama model, `project_id`, endpoint region (`base_url_ibm_watsonx`), dan API key via Global Variables Langflow. Backend hanya butuh `LANGFLOW_URL` + `LANGFLOW_API_KEY` (+ `LANGFLOW_FLOW`) di `.env` lokal.
 
 ## Keamanan
 

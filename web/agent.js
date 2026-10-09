@@ -7,7 +7,7 @@
 const $ = id => document.getElementById(id);
 
 // ── State ──────────────────────────────────────────────────────────
-let currentFlow = "generate_proposal_draft";
+let currentFlow = "bidmaster_proposal_generator";
 let sessionId = makeSessionId();
 let isThinking = false;
 let isConfigured = false;
@@ -16,9 +16,7 @@ try { TOK = TOK || sessionStorage.getItem("bm_token") || ""; } catch {}
 const authH = () => TOK ? { "Authorization": "Bearer " + TOK } : {};
 
 const THINKING_LABELS = {
-  "generate_proposal_draft": "Bob sedang menganalisis dan menyusun proposal…",
-  "revise_proposal": "Bob sedang merevisi proposal…",
-  "generate_prd_from_brief": "Bob sedang menyusun PRD…",
+  "bidmaster_proposal_generator": "Bob sedang menganalisis dan menyusun jawaban…",
 };
 
 // ── Session ID ────────────────────────────────────────────────────
@@ -370,23 +368,11 @@ function switchFlow(flow) {
 }
 
 const FLOW_HINTS = {
-  "generate_proposal_draft": [
-    "Kafe di Surabaya butuh web + reservasi online, budget 15 juta",
-    "Client klinik ingin website dengan appointment online dan galeri dokter",
+  "bidmaster_proposal_generator": [
+    "Buatkan draft proposal untuk kafe di Surabaya, butuh web + reservasi, budget 10jt",
+    "Revisi proposal: tambahkan fitur galeri menu",
+    "Buatkan PRD dari brief website tadi",
     "Tender dinas pemerintah, pagu 50 juta, durasi 3 bulan",
-    "UMKM fashion butuh toko online + QRIS",
-  ],
-  "revise_proposal": [
-    "Turunkan paket Premium 10%, tetap dalam batas diskon",
-    "Tambahkan fitur galeri foto ke paket Standard",
-    "Perpanjang timeline 2 minggu untuk fase development",
-    "Revisi bagian RAB: tambah komponen pelatihan pengguna",
-  ],
-  "generate_prd_from_brief": [
-    "Buatkan PRD dari proposal kafe yang sudah disetujui",
-    "PRD untuk sistem reservasi online klinik",
-    "PRD teknis website company profile + blog",
-    "PRD untuk sistem e-commerce UMKM fashion",
   ],
 };
 

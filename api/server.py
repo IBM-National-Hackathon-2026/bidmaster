@@ -26,6 +26,7 @@ from api.export_docx import md_to_docx_bytes
 from api.gates import gate, kak_coverage, kak_items, legal_check
 from api.knowledge import TAG, load_knowledge, load_tender
 from api.langflow_client import (
+    flow_id as lf_flow,
     generate_draft as lf_draft,
     revise_proposal as lf_revise,
     generate_prd as lf_prd,
@@ -379,7 +380,8 @@ class H(BaseHTTPRequestHandler):
         if self.path == "/api/agent/status":
             return self._send(200, json.dumps({
                 "configured": lf_ready(),
-                "flows": ["generate_proposal_draft", "revise_proposal", "generate_prd_from_brief"],
+                "flows": ["bidmaster_proposal_generator"],
+                "flow": lf_flow(),
             }))
         if self.path == "/api/audit":
             from api.auth import history
@@ -434,9 +436,12 @@ class H(BaseHTTPRequestHandler):
             msg = str(data.get("message", "")).strip()[:4000]
             if not msg:
                 return self._send(400, json.dumps({"error": "Field 'message' tidak boleh kosong."}))
-            flow = str(data.get("flow", "generate_proposal_draft"))
+            flow = str(data.get("flow", "bidmaster_proposal_generator"))
             session_id = str(data.get("session_id", ""))[:64]
+            # Satu flow aktif (project Bidmaster_Proposal); nama lama tetap
+            # diterima dan dipetakan ke flow yang sama agar klien lama jalan.
             flow_fns = {
+                "bidmaster_proposal_generator": lf_draft,
                 "generate_proposal_draft": lf_draft,
                 "revise_proposal": lf_revise,
                 "generate_prd_from_brief": lf_prd,

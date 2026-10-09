@@ -1,14 +1,17 @@
 """Langflow HTTP client untuk BidMaster.
 
 Memanggil Langflow Run API langsung (tanpa MCP) dari web server.
-Endpoint: POST {LANGFLOW_URL}/api/v1/run/{flow_endpoint}?stream=false
+Endpoint: POST {LANGFLOW_URL}/api/v1/run/{flow}?stream=false
+{flow} bisa berupa endpoint_name atau flow ID (baca dari env LANGFLOW_FLOW).
 
 Variabel env yang diperlukan:
     LANGFLOW_URL     — base URL Langflow, mis. http://127.0.0.1:7860
     LANGFLOW_API_KEY — API key dari Langflow Project
+    LANGFLOW_FLOW    — endpoint/ID flow aktif (default: generate_proposal_draft)
 
-Jika kedua variabel tidak diisi, is_configured() mengembalikan False dan
-caller wajib mengembalikan 503 ke browser.
+Env dibaca per panggilan (bukan saat import) agar ganti .env cukup
+dengan restart server, bukan restart proses import. Jika URL/key kosong,
+is_configured() mengembalikan False dan caller wajib 503 ke browser.
 """
 import json
 import os
@@ -16,22 +19,26 @@ import urllib.error
 import urllib.request
 from typing import Optional
 
-# Baca dari environment (di-load oleh server.py dari .env)
-_URL = os.getenv("LANGFLOW_URL", "").rstrip("/")
-_KEY = os.getenv("LANGFLOW_API_KEY", "")
-
 # Timeout dalam detik — Langflow bisa lambat saat cold start
 _TIMEOUT = 120
 
-# Nama endpoint flow di Langflow (sesuai endpoint_name di JSON flow)
-FLOW_DRAFT = "generate_proposal_draft"
-FLOW_REVISE = "revise_proposal"
-FLOW_PRD = "generate_prd_from_brief"
+
+def _cfg():
+    url = os.getenv("LANGFLOW_URL", "").rstrip("/")
+    return url, os.getenv("LANGFLOW_API_KEY", ""), \
+        os.getenv("LANGFLOW_FLOW", "generate_proposal_draft").strip() or \
+        "generate_proposal_draft"
+
+
+def flow_id() -> str:
+    """Endpoint/ID flow aktif dari env (untuk /api/agent/status)."""
+    return _cfg()[2]
 
 
 def is_configured() -> bool:
     """True jika LANGFLOW_URL dan LANGFLOW_API_KEY sudah diisi."""
-    return bool(_URL and _KEY)
+    url, key, _ = _cfg()
+    return bool(url and key)
 
 
 def _run(flow_endpoint: str, message: str, session_id: str = "") -> dict:
@@ -42,7 +49,8 @@ def _run(flow_endpoint: str, message: str, session_id: str = "") -> dict:
     atau
         {"ok": False, "error": "<pesan error>"}
     """
-    url = f"{_URL}/api/v1/run/{flow_endpoint}?stream=false"
+    url_base, key, _ = _cfg()
+    url = f"{url_base}/api/v1/run/{flow_endpoint}?stream=false"
     payload = {
         "input_value": message,
         "output_type": "chat",
@@ -57,7 +65,7 @@ def _run(flow_endpoint: str, message: str, session_id: str = "") -> dict:
         data=body,
         headers={
             "Content-Type": "application/json",
-            "x-api-key": _KEY,
+            "x-api-key": key,
         },
         method="POST",
     )
@@ -107,16 +115,18 @@ def _extract_text(data: dict) -> Optional[str]:
     return None
 
 
+# Satu flow aktif (project Bidmaster_Proposal): revisi/PRD/draft semua
+# lewat flow RAG yang sama — prompts PA menyediakan konteks tugasnya.
 def generate_draft(message: str, session_id: str = "") -> dict:
-    """Panggil flow generate_proposal_draft."""
-    return _run(FLOW_DRAFT, message, session_id)
+    """Panggil flow proposal aktif (draft)."""
+    return _run(flow_id(), message, session_id)
 
 
 def revise_proposal(message: str, session_id: str = "") -> dict:
-    """Panggil flow revise_proposal."""
-    return _run(FLOW_REVISE, message, session_id)
+    """Revisi via flow proposal aktif."""
+    return _run(flow_id(), message, session_id)
 
 
 def generate_prd(message: str, session_id: str = "") -> dict:
-    """Panggil flow generate_prd_from_brief."""
-    return _run(FLOW_PRD, message, session_id)
+    """PRD via flow proposal aktif."""
+    return _run(flow_id(), message, session_id)
