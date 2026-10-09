@@ -83,6 +83,7 @@ Header `# CONTOH SANITASI` di tiap `.example` di-strip otomatis oleh loader — 
 
 - Flow aktif: `bidmaster_proposal_generator_rag` (project Bidmaster_Proposal): File → Split → Chroma + Embedding → Prompt → Language Model. Draft, revisi, dan PRD semua lewat flow ini.
 - Kunci IBM watsonx tidak disimpan di repo atau backend. Isi di dalam Langflow pada komponen Language Model + Embedding Model: provider `ibm_watsonx`, nama model, `project_id`, endpoint region (`base_url_ibm_watsonx`), dan API key via Global Variables Langflow. Backend hanya butuh `LANGFLOW_URL` + `LANGFLOW_API_KEY` (+ `LANGFLOW_FLOW`) di `.env` lokal.
+- Jalankan Langflow dengan `LANGFLOW_RESTRICT_LOCAL_FILE_ACCESS=false` (komponen Read File diblokir saat run via API bila guard ini true).
 
 ## Keamanan
 
