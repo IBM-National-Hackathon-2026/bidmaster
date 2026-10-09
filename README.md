@@ -17,8 +17,10 @@ Jalur chat (opsional): Tim → IBM Bob → MCP → Langflow flows → draft + re
 README.md                  ← satu-satunya *.md di repo
 .env.example .gitignore requirements.txt (pyyaml saja)
 api/ server.py knowledge.py auth.py gates.py export_docx.py langflow_client.py
-web/ index.html login.html app.html agent.html app.js agent.js styles.css
-  → UI memakai Bootstrap 5 (framework CSS via CDN) + tema kustom di styles.css
+web/ index.html login.html app.html agent.html app.js agent.js login.js index.js
+     styles.css agent.css
+  → UI memakai Bootstrap 5 (framework CSS via CDN) + tema kustom di styles.css.
+  → Seluruh JS/CSS lokal file eksternal (tanpa inline) agar lolos CSP ketat.
 knowledge/*.example        ← 9 template sanitasi (tanpa embel .md/.yaml)
 langflow/flows/*.json      ← 3 kanonis (generate_proposal_draft, revise_proposal,
                              generate_prd_from_brief) + 1 eksperimen RAG

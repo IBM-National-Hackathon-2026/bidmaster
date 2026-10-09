@@ -228,6 +228,7 @@ function renderHist() {
   }));
 }
 $("mode").onchange = syncMode; $("paket").onchange = syncPaket; $("disk").oninput = syncEst;
+$("f").onsubmit = e => { e.preventDefault(); submit(); };
 if ($("logoutBtn")) $("logoutBtn").onclick = doLogout;
 $("go").onclick = submit; $("dl").onclick = dl; $("dx").onclick = dx;
 $("pr").onclick = () => { if (!MD) { showErr("Buat draft dulu (Langkah 5 masih kosong)."); return; } window.print(); };

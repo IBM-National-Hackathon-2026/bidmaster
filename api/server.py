@@ -360,7 +360,7 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, (WEB / name).read_bytes(), "text/html")
         if p in ("/agent", "/agent.html"):
             return self._send(200, (WEB / "agent.html").read_bytes(), "text/html")
-        if p in ("/app.js", "/styles.css", "/agent.js"):
+        if p in ("/app.js", "/agent.js", "/login.js", "/index.js", "/styles.css", "/agent.css"):
             ct = "text/javascript" if p.endswith(".js") else "text/css"
             return self._send(200, (WEB / p[1:]).read_bytes(), ct)
         if self.path == "/api/health":

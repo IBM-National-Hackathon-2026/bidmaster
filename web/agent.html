@@ -8,387 +8,8 @@
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 <link rel="stylesheet" href="/styles.css">
-<style>
-/* Prevent body scroll — fullscreen chat layout */
-html, body { height: 100%; overflow: hidden; }
+<link rel="stylesheet" href="/agent.css">
 
-/* ── Agent chat page ─────────────────────────────── */
-.agent-layout {
-  display: flex;
-  height: calc(100vh - 60px);
-  overflow: hidden;
-}
-
-/* Sidebar */
-.agent-sidebar {
-  width: 260px;
-  flex-shrink: 0;
-  background: var(--surface);
-  border-right: 1px solid var(--bd);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-@media (max-width: 768px) { .agent-sidebar { display: none; } }
-.sidebar-header {
-  padding: 16px;
-  border-bottom: 1px solid var(--bd);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.sidebar-header h3 { font-size: .88rem; font-weight: 700; color: var(--ink); }
-.flow-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.flow-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: .82rem;
-  font-weight: 500;
-  color: var(--mut);
-  background: none;
-  border: none;
-  text-align: left;
-  min-height: auto;
-  transition: background .12s, color .12s;
-}
-.flow-btn:hover { background: var(--bg); color: var(--ink); }
-.flow-btn.active { background: var(--brand-lt); color: var(--brand); font-weight: 600; }
-.flow-btn .flow-icon { font-size: 1rem; flex-shrink: 0; }
-.sidebar-status {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--bd);
-  font-size: .78rem;
-}
-.status-dot {
-  display: inline-block;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  margin-right: 5px;
-  background: var(--bd-2);
-}
-.status-dot.online { background: var(--ok); }
-.status-dot.offline { background: var(--err); }
-.session-box {
-  padding: 12px 16px;
-  border-top: 1px solid var(--bd);
-  margin-top: auto;
-  font-size: .78rem;
-  color: var(--mut);
-}
-.session-box code { font-size: .75rem; }
-
-/* Main chat area */
-.agent-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--bg);
-}
-
-/* Chat header */
-.chat-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--bd);
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-.bob-avatar {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e5322d 0%, #c42722 100%);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-weight: 800; font-size: .9rem;
-  flex-shrink: 0;
-  position: relative;
-}
-.bob-avatar.thinking::after {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 50%;
-  border: 2px solid var(--brand);
-  border-top-color: transparent;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.chat-header-info h2 { font-size: .95rem; font-weight: 700; }
-.chat-header-info p { font-size: .78rem; color: var(--mut); }
-.chat-header .flow-label {
-  margin-left: auto;
-  background: var(--brand-lt);
-  color: var(--brand);
-  border: 1px solid #fecaca;
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: .75rem;
-  font-weight: 600;
-}
-
-/* Messages */
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  scroll-behavior: smooth;
-}
-.msg {
-  display: flex;
-  gap: 10px;
-  max-width: 100%;
-  animation: msgIn .2s ease-out;
-}
-@keyframes msgIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.msg.user { flex-direction: row-reverse; }
-.msg-avatar {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: .75rem; font-weight: 700; color: #fff;
-  margin-top: 2px;
-}
-.msg.user .msg-avatar { background: var(--ink); }
-.msg.bot .msg-avatar {
-  background: linear-gradient(135deg, #e5322d, #c42722);
-}
-.msg-body { max-width: 72%; }
-.msg.user .msg-body { align-items: flex-end; }
-.msg-bubble {
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: .88rem;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-.msg.user .msg-bubble {
-  background: var(--ink);
-  color: #fff;
-  border-bottom-right-radius: 4px;
-}
-.msg.bot .msg-bubble {
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--bd);
-  border-bottom-left-radius: 4px;
-}
-.msg-bubble.error-bubble {
-  background: var(--err-lt);
-  border-color: var(--err);
-  color: var(--err);
-}
-.msg-time {
-  font-size: .72rem;
-  color: var(--mut);
-  margin-top: 3px;
-  padding: 0 4px;
-}
-.msg.user .msg-time { text-align: right; }
-
-/* Markdown rendering in bot bubble */
-.msg-bubble h1,.msg-bubble h2,.msg-bubble h3 {
-  font-size: .95rem; font-weight: 700; margin: 10px 0 4px;
-}
-.msg-bubble h2 { margin-top: 14px; }
-.msg-bubble p { margin: 4px 0; }
-.msg-bubble ul,.msg-bubble ol { padding-left: 18px; margin: 4px 0; }
-.msg-bubble li { margin: 2px 0; }
-.msg-bubble table { font-size: .8rem; width: 100%; border-collapse: collapse; margin: 8px 0; }
-.msg-bubble th,.msg-bubble td { border: 1px solid var(--bd); padding: 5px 8px; }
-.msg-bubble th { background: var(--bg); font-weight: 600; }
-.msg-bubble code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: .82em; }
-.msg-bubble pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: .8rem; margin: 8px 0; }
-.msg-bubble pre code { background: none; padding: 0; }
-.msg-bubble strong { font-weight: 700; }
-.msg-bubble em { font-style: italic; }
-.msg-bubble hr { border: none; border-top: 1px solid var(--bd); margin: 10px 0; }
-
-/* Typing indicator */
-.typing-indicator {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  padding: 0 4px;
-}
-.typing-indicator.visible { display: flex; }
-.typing-bubble {
-  background: var(--surface);
-  border: 1px solid var(--bd);
-  border-radius: 14px;
-  border-bottom-left-radius: 4px;
-  padding: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.typing-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--mut);
-  animation: bounce 1.2s ease-in-out infinite;
-}
-.typing-dot:nth-child(2) { animation-delay: .15s; }
-.typing-dot:nth-child(3) { animation-delay: .3s; }
-@keyframes bounce {
-  0%,80%,100% { transform: translateY(0); opacity: .4; }
-  40% { transform: translateY(-6px); opacity: 1; }
-}
-.typing-label {
-  font-size: .78rem;
-  color: var(--mut);
-  font-style: italic;
-}
-
-/* Input area */
-.chat-input-area {
-  background: var(--surface);
-  border-top: 1px solid var(--bd);
-  padding: 12px 16px;
-  flex-shrink: 0;
-}
-.chat-input-wrap {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-  max-width: 900px;
-  margin: 0 auto;
-}
-.chat-textarea {
-  flex: 1;
-  resize: none;
-  border: 1.5px solid var(--bd-2);
-  border-radius: 12px;
-  padding: 10px 14px;
-  font: inherit;
-  font-size: .9rem;
-  line-height: 1.5;
-  min-height: 44px;
-  max-height: 160px;
-  overflow-y: auto;
-  background: var(--surface);
-  transition: border-color .15s, box-shadow .15s;
-}
-.chat-textarea:focus {
-  border-color: var(--brand);
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(229,50,45,.12);
-}
-.send-btn {
-  width: 44px; height: 44px;
-  border-radius: 12px;
-  background: var(--brand);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  min-height: 44px;
-  padding: 0;
-  font-size: 1rem;
-  transition: background .15s, transform .1s;
-}
-.send-btn:hover { background: var(--brand-d); }
-.send-btn:active { transform: scale(.93); }
-.send-btn:disabled { opacity: .4; pointer-events: none; }
-.send-btn svg { width: 18px; height: 18px; }
-
-/* Prompt hints */
-.prompt-hints {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 8px;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
-}
-.hint-chip {
-  background: var(--bg);
-  border: 1px solid var(--bd);
-  border-radius: 999px;
-  padding: 4px 12px;
-  font-size: .78rem;
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: border-color .12s, background .12s;
-}
-.hint-chip:hover { border-color: var(--brand); background: var(--brand-lt); color: var(--brand); }
-
-/* Not configured banner */
-.not-configured {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: var(--r);
-  padding: 16px 20px;
-  margin: 16px 20px;
-  flex-shrink: 0;
-}
-.not-configured h4 { font-size: .9rem; font-weight: 700; color: #92400e; margin-bottom: 6px; }
-.not-configured p { font-size: .83rem; color: #78350f; line-height: 1.55; }
-.not-configured code { background: #fef3c7; padding: 1px 5px; border-radius: 4px; }
-
-/* Markdown export toolbar */
-.msg-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-}
-.msg-action-btn {
-  background: none;
-  border: 1px solid var(--bd);
-  border-radius: 6px;
-  padding: 3px 8px;
-  font-size: .72rem;
-  color: var(--mut);
-  cursor: pointer;
-  min-height: auto;
-  transition: border-color .12s, color .12s;
-}
-.msg-action-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-lt); }
-
-/* Welcome state */
-.chat-welcome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 40px 24px;
-  flex: 1;
-  gap: 12px;
-}
-.welcome-avatar {
-  width: 72px; height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e5322d, #c42722);
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-size: 2rem; font-weight: 800;
-  margin-bottom: 4px;
-}
-.chat-welcome h3 { font-size: 1.2rem; font-weight: 700; }
-.chat-welcome p { color: var(--mut); font-size: .9rem; max-width: 420px; line-height: 1.65; }
-</style>
 </head>
 <body>
 
@@ -416,9 +37,9 @@ html, body { height: 100%; overflow: hidden; }
   <!-- Sidebar -->
   <aside class="agent-sidebar">
     <!-- Auth warning (shown when not logged in) -->
-    <div class="not-configured" id="authWarningBanner" hidden style="margin:12px;border-radius:8px;">
+    <div class="not-configured banner-tight" id="authWarningBanner" hidden>
       <h4>🔒 Belum login</h4>
-      <p>Bob Agent butuh sesi aktif.<br><a href="/login" style="color:var(--brand);font-weight:600;">Masuk sekarang →</a></p>
+      <p>Bob Agent butuh sesi aktif.<br><a href="/login" class="link-brand">Masuk sekarang →</a></p>
     </div>
     <div class="sidebar-status">
       <span class="status-dot" id="statusDot"></span>
@@ -444,10 +65,10 @@ html, body { height: 100%; overflow: hidden; }
     </div>
 
     <div class="session-box">
-      <div style="margin-bottom:4px; font-weight:600;">Session ID</div>
+      <div class="sess-label">Session ID</div>
       <code id="sessionIdDisplay">—</code>
-      <div style="margin-top:8px">
-        <button class="btn ghost sm" style="width:100%;margin:0;" id="newSessionBtn">Sesi baru</button>
+      <div class="mt-2">
+        <button class="btn ghost sm w-100 m-0" id="newSessionBtn">Sesi baru</button>
       </div>
     </div>
   </aside>
@@ -456,10 +77,10 @@ html, body { height: 100%; overflow: hidden; }
   <div class="agent-main">
 
     <!-- Auth warning for mobile (shown when not logged in, sidebar hidden on mobile) -->
-    <div class="not-configured" id="authWarningBannerMobile" hidden style="margin:12px 16px 0;border-radius:8px;">
+    <div class="not-configured banner-tight-mobile" id="authWarningBannerMobile" hidden>
       <h4>🔒 Belum login</h4>
       <p>Bob Agent membutuhkan sesi login aktif.<br>
-        <a href="/login" style="color:var(--brand);font-weight:600;">Masuk sekarang →</a>
+        <a href="/login" class="link-brand">Masuk sekarang →</a>
       </p>
     </div>
 
@@ -495,7 +116,7 @@ html, body { height: 100%; overflow: hidden; }
 
     <!-- Typing indicator -->
     <div class="typing-indicator" id="typingIndicator" aria-live="polite" aria-label="Bob sedang berpikir">
-      <div class="msg-avatar" style="background:linear-gradient(135deg,#e5322d,#c42722)">B</div>
+      <div class="msg-avatar bot-avatar-sm">B</div>
       <div>
         <div class="typing-bubble">
           <div class="typing-dot"></div>
