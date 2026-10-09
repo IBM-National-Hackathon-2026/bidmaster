@@ -238,10 +238,10 @@ function addMessage(role, text, opts = {}) {
   msgEl.appendChild(avatar);
   msgEl.appendChild(body);
 
-  // Insert before typing indicator
+  // Append ke container (typing indicator adalah sibling, bukan child —
+  // insertBefore dengan reference non-child melempar NotFoundError).
   const container = $("chatMessages");
-  const typing = $("typingIndicator");
-  container.insertBefore(msgEl, typing);
+  container.append(msgEl);
   scrollBottom();
 }
 
