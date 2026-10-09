@@ -1,9 +1,11 @@
 "use strict";
-/* BidMaster internal: form tender -> POST /api/draft|/api/export. Login wajib.
-   UX: wizard 5 langkah (NN/g), ringkasan lengket, tooltip glossary (APG). */
+/* BidMaster: /app wizard tender -> POST /api/draft|/api/export. Login di /login.
+   Token sesi dibaca dari cookie (fallback memory) agar pindah halaman tetap login. */
 const $ = id => document.getElementById(id);
 const fmt = n => "Rp " + n.toLocaleString("id-ID");
-let CAT = null, MD = "", LAST = null, TOK = "";
+let CAT = null, MD = "", LAST = null;
+let TOK = (document.cookie.match(/(?:^|;\s*)bm_token=([^;]+)/) || [0, ""])[1] || "";
+try { TOK = TOK || sessionStorage.getItem("bm_token") || ""; } catch {}
 const HKEY = "bidmaster-history-v1";
 const authH = () => TOK ? { "Authorization": "Bearer " + TOK } : {};
 const PRICE = k => (CAT.tender.komponen.find(x => x.kode === k) || {}).harga_dasar || 0;
@@ -23,6 +25,7 @@ async function init() {
     [k.kode, k.nama, k.satuan, fmt(k.harga_dasar)].forEach(t => { const td = document.createElement("td"); td.textContent = t; tr.append(td); });
     const td = document.createElement("td"), inp = document.createElement("input");
     inp.type = "number"; inp.min = "0"; inp.max = "1000"; inp.value = "0"; inp.dataset.kode = k.kode;
+    inp.className = "form-control form-control-sm";
     inp.setAttribute("aria-label", "Qty " + k.kode + " (" + k.nama + ", " + k.satuan + ")");
     inp.oninput = syncTotals;
     td.append(inp); tr.append(td);
@@ -30,15 +33,14 @@ async function init() {
     return tr;
   }));
   document.querySelectorAll("[data-ex]").forEach(b => b.onclick = () => fill(b.dataset.ex));
-  document.querySelectorAll(".steps a").forEach(a => a.onclick = () => setStep(a.dataset.st));
+  document.querySelectorAll(".steps-list a, .steps a").forEach(a => { a.onclick = () => setStep(a.dataset.st); });
   $("pagu").oninput = syncTotals;
   $("dok").oninput = syncKak;
-  $("pw").onkeydown = e => { if (e.key === "Enter") doLogin(); };
   syncMode(); syncTotals(); syncKak(); renderHist(); me();
 }
 function mode() { return $("mode").value; }
 function setStep(id) {
-  document.querySelectorAll(".steps a").forEach(a => a.getAttribute("data-st") === id ? a.setAttribute("aria-current", "step") : a.removeAttribute("aria-current"));
+  document.querySelectorAll(".steps-list a, .steps a").forEach(a => a.getAttribute("data-st") === id ? a.setAttribute("aria-current", "step") : a.removeAttribute("aria-current"));
 }
 function syncMode() {
   const t = mode() === "tender";
@@ -101,34 +103,32 @@ function fill(k) {
   $("nama").value = "Kafe Arunika (demo)"; $("dok").value = "web + reservasi + galeri menu"; $("cat").value = "Demo internal";
   $("paket").value = "standard"; syncPaket();
 }
-function clearInvalid() { document.querySelectorAll("[aria-invalid]").forEach(e => e.removeAttribute("aria-invalid")); }
-function markInvalid(id) { if ($(id)) { $(id).setAttribute("aria-invalid", "true"); $(id).focus(); } }
+function showErr(msg) { const e = $("err"); if (!e) return; e.textContent = msg; e.hidden = !msg; }
+function clearInvalid() {
+  showErr("");
+  document.querySelectorAll("[aria-invalid]").forEach(el => { el.removeAttribute("aria-invalid"); el.classList.remove("is-invalid"); });
+}
+function markInvalid(id) { const el = $(id); if (el) { el.setAttribute("aria-invalid", "true"); el.classList.add("is-invalid"); el.focus(); } }
 async function me() {
   try {
     const r = await fetch("/api/me", { headers: authH() });
     if (!r.ok) throw 0;
     const u = await r.json();
     $("who").textContent = `${u.nama} (${u.peran})`;
-    $("role").textContent = `Masuk sebagai ${u.nama} — peran ${u.peran}.`;
-    $("logoutBtn").hidden = false; setStep("s2");
-  } catch { $("who").textContent = "belum login"; $("logoutBtn").hidden = true; setStep("s1"); }
-}
-async function doLogin() {
-  $("err").textContent = ""; clearInvalid();
-  const nama = $("user").value.trim();
-  if (!nama || !$("pw").value) { $("err").textContent = "Isi nama + kata sandi."; markInvalid(!nama ? "user" : "pw"); return; }
-  $("loginBtn").disabled = true;
-  try {
-    const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nama, pw: $("pw").value }) });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) { $("err").textContent = j.error || "Login gagal."; markInvalid("pw"); return; }
-    TOK = j.token; $("pw").value = "";
-    me();
-  } finally { $("loginBtn").disabled = false; }
+    $("sessBar").hidden = true;
+    $("loginLink").hidden = true; $("logoutBtn").hidden = false; setStep("s2");
+  } catch {
+    $("who").textContent = "belum login";
+    $("sessBar").hidden = false;
+    $("loginLink").hidden = false; $("logoutBtn").hidden = true; setStep("s2");
+  }
 }
 async function doLogout() {
   await fetch("/api/logout", { method: "POST", headers: authH() });
-  TOK = ""; me();
+  TOK = "";
+  try { sessionStorage.removeItem("bm_token"); } catch {}
+  document.cookie = "bm_token=; Path=/; Max-Age=0; SameSite=Strict";
+  me();
 }
 async function readDoc(file) {
   if (!file) return ["", ""];
@@ -140,25 +140,25 @@ async function readDoc(file) {
   return [new TextDecoder("utf-8", { fatal: false }).decode(buf.slice(0, 200 * 1024)), file.name.slice(0, 80)];
 }
 async function submit() {
-  $("err").textContent = ""; clearInvalid(); $("go").disabled = true;
+  clearInvalid(); $("go").disabled = true;
   try {
     let dokText = $("dok").value, dokNama = "";
     const f = $("file").files[0];
     if (f) [dokText, dokNama] = await readDoc(f);
     const t = mode() === "tender";
     const body = { mode: t ? "tender" : "website", nama: $("nama").value.trim(), industri: $("ind").value, durasi_minggu: parseInt($("dur").value || (t ? 12 : 4), 10), diskon_persen: t ? 0 : (parseFloat($("disk").value) || 0), pagu: parseInt($("pagu").value || 0, 10), dokumen_text: dokText, dokumen_nama: dokNama, catatan: $("cat").value.trim(), legal: { nib: $("nib").value.trim(), npwp: $("npwp").value.trim(), akta: $("akta").value.trim() } };
-    if (!body.nama || body.nama.length < 2) { $("err").textContent = "Nama instansi minimal 2 karakter."; markInvalid("nama"); return; }
-    if (t) { const ks = komps(); if (!ks.length) { $("err").textContent = "Isi qty minimal 1 komponen pada Langkah 3."; setStep("s3"); markInvalid("komp"); const i = $("komp").querySelector("input"); if (i) i.focus(); return; } body.komponen = ks; }
+    if (!body.nama || body.nama.length < 2) { showErr("Nama instansi minimal 2 karakter."); markInvalid("nama"); return; }
+    if (t) { const ks = komps(); if (!ks.length) { showErr("Isi qty minimal 1 komponen pada Langkah 3."); setStep("s3"); markInvalid("komp"); const i = $("komp").querySelector("input"); if (i) i.focus(); return; } body.komponen = ks; }
     else {
       body.paket = $("paket").value; body.fitur = picked();
-      if (!body.fitur.length) { $("err").textContent = "Pilih minimal 1 fitur."; return; }
+      if (!body.fitur.length) { showErr("Pilih minimal 1 fitur."); return; }
     }
     const r = await fetch("/api/draft", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, authH()), body: JSON.stringify(body) });
     const j = await r.json();
     if (!r.ok) {
-      $("err").textContent = j.error || "Gagal.";
+      showErr(j.error || "Gagal.");
       const m = { nama: "nama", paket: "paket", dur: "dur", disk: "disk", fitur: "fitur", ind: "ind", komp: "komp", dok: "dok", pagu: "pagu" };
-      if (r.status === 401) { setStep("s1"); markInvalid("user"); }
+      if (r.status === 401) { location.href = "/login"; return; }
       else if (j.field && m[j.field]) markInvalid(m[j.field]);
       return;
     }
@@ -186,32 +186,32 @@ async function submit() {
     setStep("s5");
     document.getElementById("s5").scrollIntoView({ behavior: "smooth", block: "start" });
     saveHist();
-  } catch (e) { $("err").textContent = e.message || "Jaringan gagal."; }
+  } catch (e) { showErr(e.message || "Jaringan gagal."); }
   finally { $("go").disabled = false; }
 }
 function dl() {
-  if (!MD) { $("err").textContent = "Buat draft dulu (Langkah 5 masih kosong)."; return; }
+  if (!MD) { showErr("Buat draft dulu (Langkah 5 masih kosong)."); return; }
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([MD], { type: "text/markdown" })); a.download = "draft-proposal.md"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 async function dx() {
-  if (!MD) { $("err").textContent = "Buat draft dulu (Langkah 5 masih kosong)."; return; }
+  if (!MD) { showErr("Buat draft dulu (Langkah 5 masih kosong)."); return; }
   $("dx").disabled = true;
   try {
     const r = await fetch("/api/export", { method: "POST", headers: Object.assign({ "Content-Type": "application/json" }, authH()), body: JSON.stringify({ format: "docx", markdown: MD }) });
-    if (!r.ok) { $("err").textContent = (await r.json()).error || "Export gagal."; return; }
+    if (!r.ok) { showErr((await r.json()).error || "Export gagal."); return; }
     const a = document.createElement("a"); a.href = URL.createObjectURL(await r.blob()); a.download = "draft-proposal.docx"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   } finally { $("dx").disabled = false; }
 }
 async function showAudit() {
   const r = await fetch("/api/audit", { headers: authH() });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) { $("err").textContent = j.error || "Gagal."; return; }
+  if (!r.ok) { showErr(j.error || "Gagal."); return; }
   $("audit").replaceChildren(...j.audit.slice(0, 20).map(x => { const d = document.createElement("div"); d.textContent = `${new Date(x.ts * 1000).toLocaleString("id-ID")} — ${x.aksi} — ${x.detail}`; return d; }));
 }
 function loadH() { try { return JSON.parse(localStorage.getItem(HKEY)) || []; } catch { return []; } }
 function saveHist() {
   const h = [{ t: LAST.t, nama: LAST.nama, mode: LAST.mode, total: LAST.total, score: LAST.score, md: LAST.md }, ...loadH()].slice(0, 20);
-  try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch { $("err").textContent = "Riwayat penuh — hapus riwayat dulu."; return; }
+  try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch { showErr("Riwayat penuh — hapus riwayat dulu."); return; }
   renderHist();
 }
 function renderHist() {
@@ -228,9 +228,9 @@ function renderHist() {
   }));
 }
 $("mode").onchange = syncMode; $("paket").onchange = syncPaket; $("disk").oninput = syncEst;
-$("loginBtn").onclick = doLogin; $("logoutBtn").onclick = doLogout;
+if ($("logoutBtn")) $("logoutBtn").onclick = doLogout;
 $("go").onclick = submit; $("dl").onclick = dl; $("dx").onclick = dx;
-$("pr").onclick = () => { if (!MD) { $("err").textContent = "Buat draft dulu (Langkah 5 masih kosong)."; return; } window.print(); };
+$("pr").onclick = () => { if (!MD) { showErr("Buat draft dulu (Langkah 5 masih kosong)."); return; } window.print(); };
 $("wipe").onclick = () => { localStorage.removeItem(HKEY); renderHist(); };
 $("auditBtn").onclick = showAudit;
 init();

@@ -16,12 +16,15 @@ Jalur chat (opsional): Tim → IBM Bob → MCP → Langflow flows → draft + re
 ```
 README.md                  ← satu-satunya *.md di repo
 .env.example .gitignore requirements.txt (pyyaml saja)
-api/ server.py knowledge.py auth.py gates.py export_docx.py
-web/ index.html app.js styles.css
+api/ server.py knowledge.py auth.py gates.py export_docx.py langflow_client.py
+web/ index.html login.html app.html agent.html app.js agent.js styles.css
+  → UI memakai Bootstrap 5 (framework CSS via CDN) + tema kustom di styles.css
 knowledge/*.example        ← 9 template sanitasi (tanpa embel .md/.yaml)
-langflow/flows/*.json      ← generate_proposal_draft, revise_proposal, generate_prd_from_brief
+langflow/flows/*.json      ← 3 kanonis (generate_proposal_draft, revise_proposal,
+                             generate_prd_from_brief) + 1 eksperimen RAG
+                             (bidmaster_proposal_generator_rag)
 langflow/mcp.json.example  ← template endpoint MCP (tanpa secret)
-skills/registry.yaml       ← daftar MCP tools
+skills/registry.yaml       ← daftar MCP tools (3 kanonis)
 ```
 
 `docs/`, `simulator/`, `outputs/`, `AGENTS.md`, `SKILL.md`, arsip flow lama: lokal saja, tidak di-push. `knowledge/*.md` / `*.yaml` asli (data perusahaan): tidak di-push, hanya `*.example` sanitasi.
@@ -63,7 +66,7 @@ Header `# CONTOH SANITASI` di tiap `.example` di-strip otomatis oleh loader — 
 
 ## Cara kerja di balik layar
 
-1. Form di browser mengirim data JSON ke server (`POST /api/draft`).
+1. Form di browser (Bootstrap untuk layout, `styles.css` untuk tema) mengirim data JSON ke server (`POST /api/draft`).
 2. Server memeriksa isian satu per satu. Kalau ada yang salah, server menolak dan menunjuk field-nya.
 3. Kalau lolos, server menghitung total dari katalog: harga satuan × qty.
 4. Server menempel hasil ke template dokumen (token `{...}` diganti isi asli).
@@ -72,6 +75,14 @@ Header `# CONTOH SANITASI` di tiap `.example` di-strip otomatis oleh loader — 
 7. Hasil kembali ke browser: draft + skor + status LOLOS/BLOKIR. BLOKIR berarti perbaiki dulu.
 8. Login memakai password hash dan sesi 12 jam. Setiap buat draft dan export tercatat di audit.
 9. Export DOCX dibuat langsung oleh server tanpa library tambahan.
+10. Jalur chat (`/agent`) meneruskan pesan ke Langflow via `api/langflow_client.py`. Tanpa `LANGFLOW_URL` + `LANGFLOW_API_KEY`, endpoint mengembalikan 503 dan form deterministik tetap jalan.
+
+## Flow Langflow + watsonx
+
+- 3 flow kanonis tetap jadi kontrak (`skills/registry.yaml`): `generate_proposal_draft`, `revise_proposal`, `generate_prd_from_brief`.
+- Flow baru `bidmaster_proposal_generator_rag` adalah eksperimen pola RAG (File → Split → Chroma + Embedding → Prompt → Language Model). Struktur graf valid, tapi belum setara flow kanonis: belum ada LLM compliance-checker khusus dan awalnya tanpa `endpoint_name` (sudah diisi) plus sisa token `{variable_name}` di prompt (sudah dibersihkan).
+- Sebelum dipakai: import ke Langflow, upload ulang file knowledge, isi direktori persist Chroma, uji di Playground, baru expose bila lolos.
+- Kunci IBM watsonx tidak disimpan di repo atau backend. Isi di dalam Langflow pada komponen Language Model + Embedding Model: provider `ibm_watsonx`, nama model, `project_id`, endpoint region (`base_url_ibm_watsonx`), dan API key via Global Variables Langflow. Backend hanya butuh `LANGFLOW_URL` + `LANGFLOW_API_KEY` di `.env` lokal.
 
 ## Keamanan
 

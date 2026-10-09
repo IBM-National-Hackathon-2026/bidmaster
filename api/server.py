@@ -6,15 +6,31 @@ Alat internal perusahaan untuk menang tender (mode tender default).
 Login tim + audit trail; gate korporat: KAK coverage, pagu, legalitas.
 """
 import json
+import os
 import time
 from datetime import date
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+# Load .env jika ada (prioritas ke environment yang sudah di-set)
+_env_path = Path(__file__).resolve().parent.parent / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text(encoding="utf-8").splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _, _v = _line.partition("=")
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 from api.auth import audit as audit_log, login as do_login, logout as do_logout, who
 from api.export_docx import md_to_docx_bytes
 from api.gates import gate, kak_coverage, kak_items, legal_check
 from api.knowledge import TAG, load_knowledge, load_tender
+from api.langflow_client import (
+    generate_draft as lf_draft,
+    revise_proposal as lf_revise,
+    generate_prd as lf_prd,
+    is_configured as lf_ready,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "web"
@@ -307,7 +323,10 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype + "; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
         self.send_header("Content-Security-Policy",
-            "default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'")
+            "default-src 'self'; "
+            "style-src 'self' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "base-uri 'none'; object-src 'none'; frame-ancestors 'none'")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "no-referrer")
@@ -335,9 +354,15 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/", "/index.html"):
             return self._send(200, (WEB / "index.html").read_bytes(), "text/html")
-        if self.path in ("/app.js", "/styles.css"):
-            ct = "text/javascript" if self.path.endswith(".js") else "text/css"
-            return self._send(200, (WEB / self.path[1:]).read_bytes(), ct)
+        p = self.path.split("?", 1)[0].split("#", 1)[0]
+        if p in ("/login", "/login.html", "/app", "/app.html"):
+            name = "login.html" if "login" in p else "app.html"
+            return self._send(200, (WEB / name).read_bytes(), "text/html")
+        if p in ("/agent", "/agent.html"):
+            return self._send(200, (WEB / "agent.html").read_bytes(), "text/html")
+        if p in ("/app.js", "/styles.css", "/agent.js"):
+            ct = "text/javascript" if p.endswith(".js") else "text/css"
+            return self._send(200, (WEB / p[1:]).read_bytes(), ct)
         if self.path == "/api/health":
             return self._send(200, json.dumps({"ok": True}))
         if self.path == "/api/catalog":
@@ -351,6 +376,11 @@ class H(BaseHTTPRequestHandler):
             if not u:
                 return self._send(401, json.dumps({"error": "Login dulu."}))
             return self._send(200, json.dumps(u))
+        if self.path == "/api/agent/status":
+            return self._send(200, json.dumps({
+                "configured": lf_ready(),
+                "flows": ["generate_proposal_draft", "revise_proposal", "generate_prd_from_brief"],
+            }))
         if self.path == "/api/audit":
             from api.auth import history
             u = who(_token(self))
@@ -361,7 +391,7 @@ class H(BaseHTTPRequestHandler):
         return self._send(404, json.dumps({"error": "Not found"}))
 
     def do_POST(self):
-        if self.path not in ("/api/login", "/api/logout", "/api/draft", "/api/export"):
+        if self.path not in ("/api/login", "/api/logout", "/api/draft", "/api/export", "/api/agent"):
             return self._send(404, json.dumps({"error": "Not found"}))
         if limited(self.client_address[0]):
             return self._send(429, json.dumps({"error": "Terlalu sering, coba 1 menit lagi."}))
@@ -393,6 +423,36 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, md_to_docx_bytes(md),
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 {"Content-Disposition": "attachment; filename=draft-proposal.docx"})
+        if self.path == "/api/agent":
+            if not lf_ready():
+                return self._send(503, json.dumps({
+                    "error": "Langflow belum dikonfigurasi. Isi LANGFLOW_URL dan LANGFLOW_API_KEY di file .env.",
+                    "code": "LF_NOT_CONFIGURED",
+                }))
+            if not isinstance(data, dict):
+                return self._send(400, json.dumps({"error": "Body harus JSON object."}))
+            msg = str(data.get("message", "")).strip()[:4000]
+            if not msg:
+                return self._send(400, json.dumps({"error": "Field 'message' tidak boleh kosong."}))
+            flow = str(data.get("flow", "generate_proposal_draft"))
+            session_id = str(data.get("session_id", ""))[:64]
+            flow_fns = {
+                "generate_proposal_draft": lf_draft,
+                "revise_proposal": lf_revise,
+                "generate_prd_from_brief": lf_prd,
+            }
+            fn = flow_fns.get(flow)
+            if not fn:
+                return self._send(400, json.dumps({"error": f"Flow '{flow}' tidak dikenal."}))
+            result = fn(msg, session_id)
+            if not result.get("ok"):
+                return self._send(502, json.dumps({
+                    "error": result.get("error", "Langflow gagal merespons."),
+                    "code": "LF_ERROR",
+                }))
+            audit_log(u["id"], "agent", f"flow={flow} len={len(msg)}")
+            return self._send(200, json.dumps({"text": result["text"], "flow": flow}))
+
         data, problem = validate(data)
         if problem:
             return self._send(400, json.dumps(problem))

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Buat Draft — BidMaster</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="/">
+      <span class="brand-icon">B</span>
+      BidMaster
+    </a>
+    <nav class="nav" aria-label="Navigasi utama">
+      <a href="/">Beranda</a>
+      <a href="/app" class="active">Buat Draft</a>
+      <a href="/app#h-hist">Riwayat</a>
+      <a href="/agent">Bob Agent</a>
+    </nav>
+    <div class="top-actions">
+      <span id="who">memeriksa sesi…</span>
+      <a class="btn ghost sm" id="loginLink" href="/login" hidden>Masuk</a>
+      <button type="button" class="btn sm secondary" id="logoutBtn" hidden>Keluar</button>
+    </div>
+  </div>
+</header>
+
+<main class="app-main container">
+  <!-- Session warning bar -->
+  <div class="sess-bar alert alert-warning" id="sessBar" hidden>
+    ⚠️ Belum login —
+    <a href="/login">masuk dulu</a> sebelum membuat draft.
+    <span id="role"></span>
+  </div>
+
+  <!-- Wizard stepper -->
+  <nav class="wizard-nav card noprint" id="h-steps" aria-label="Langkah pengisian">
+    <ol class="steps-list">
+      <li><a href="#s2" data-st="s2" aria-current="step"><b>Langkah 1</b>Instansi &amp; <span class="term" tabindex="0" data-tip="Pagu = batas tertinggi nilai belanja yang ditetapkan panitia. Total penawaran tidak boleh lewat dari ini.">pagu</span></a></li>
+      <li><a href="#s3" data-st="s3"><b>Langkah 2</b>Komponen harga</a></li>
+      <li><a href="#s4" data-st="s4"><b>Langkah 3</b><span class="term" tabindex="0" data-tip="KAK = Kerangka Acuan Kerja. Dokumen panitia berisi latar belakang, kebutuhan, ruang lingkup, dan keluaran yang diminta.">KAK</span> + legalitas</a></li>
+      <li><a href="#s5" data-st="s5"><b>Langkah 4</b>Hasil &amp; gate</a></li>
+    </ol>
+    <details class="glos-details">
+      <summary>Kamus istilah</summary>
+      <dl class="glos-grid">
+        <dt>Tender</dt><dd>Lomba penawaran resmi. Panitia umumkan kebutuhan, perusahaan kirim proposal + harga. Yang menang = lolos administrasi, teknis, dan harga wajar.</dd>
+        <dt>KAK <small>(Kerangka Acuan Kerja)</small></dt><dd>Dokumen panitia: apa yang diminta, ruang lingkup, keluaran. Setiap baris kebutuhan harus ada komponen harga yang cocok.</dd>
+        <dt>Pagu</dt><dd>Batas tertinggi belanja. Total di atas pagu = otomatis diblokir gate.</dd>
+        <dt>RAB <small>(Rincian Anggaran Belanja)</small></dt><dd>Tabel rincian: komponen × qty × harga satuan = subtotal. Angka hanya dari katalog, bukan karangan.</dd>
+        <dt>NIB <small>(Nomor Induk Berusaha)</small></dt><dd>Nomor identitas resmi perusahaan dari OSS. Wajib tender; kosong = gate blokir.</dd>
+        <dt>Gate korporat</dt><dd>Pemeriksaan otomatis sebelum final: pagu + KAK terpetakan + legalitas lengkap. BLOKIR = draft tidak boleh dikirim ke panitia.</dd>
+        <dt>Compliance</dt><dd>Skor kelengkapan dokumen (bab lengkap, harga dari katalog, tag konfirmasi). Bukan jaminan menang tender.</dd>
+        <dt>[perlu konfirmasi]</dt><dd>Tanda fakta belum pasti — harus dicek manusia sebelum kirim.</dd>
+      </dl>
+    </details>
+  </nav>
+
+  <!-- Catalog mode bar -->
+  <div class="mode-bar noprint" id="h-mode" role="group" aria-label="Mode katalog">
+    <label for="mode">Mode katalog</label>
+    <select id="mode">
+      <option value="tender">Tender (per-komponen) — default</option>
+      <option value="website">Website (paket fix) — demo</option>
+    </select>
+    <p class="hint" style="flex-basis:100%">Tender = harga per komponen × qty (untuk panitia). Website = paket fix (demo internal saja).</p>
+  </div>
+
+  <!-- Form -->
+  <form id="f" onsubmit="return false">
+
+    <!-- Step 1: Instansi & Pagu -->
+    <section class="card step" id="s2" aria-labelledby="h1">
+      <div class="card-header">
+        <h2 id="h1">Langkah 1 — Instansi &amp; pagu</h2>
+        <p class="sub">Isi siapa pemilik paket dan batas belanjanya.</p>
+      </div>
+      <div class="field-grid row g-3">
+        <div class="col-12 col-md-6">
+          <label for="nama" class="form-label">Nama instansi <span class="req">* wajib</span></label>
+          <input id="nama" class="form-control" maxlength="80" required autocomplete="organization" placeholder="Dinas Pelayanan Publik Kota Arunika">
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="ind" class="form-label">Sektor <span class="req">* wajib</span></label>
+          <select id="ind" class="form-select"></select>
+        </div>
+      </div>
+      <div class="field-grid row g-3">
+        <div class="col-12 col-md-6">
+          <label for="pagu">
+            <span class="term" tabindex="0" data-tip="Pagu = batas tertinggi nilai belanja panitia. Isi 0 bila pengumuman tidak mencantumkan pagu.">Pagu</span>
+            (Rp, 0 = tanpa pagu)
+          </label>
+          <input id="pagu" class="form-control" type="number" min="0" max="10000000000" step="100000" value="0">
+          <p class="hint">Contoh: 20000000 = Rp 20 juta. Total di atas ini → gate BLOKIR.</p>
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="dur" class="form-label">Durasi pengerjaan (minggu) <span class="req">* wajib</span></label>
+          <input id="dur" class="form-control" type="number" min="1" max="12" value="12">
+          <p class="hint" id="durHint">1–12 minggu, dibagi 3 tahap otomatis.</p>
+        </div>
+      </div>
+      <p class="mut" style="margin-top: 12px;">
+        Contoh cepat:
+        <button type="button" class="secondary" data-ex="tender">Isi contoh tender</button>
+        <button type="button" class="secondary" data-ex="kafe">Isi contoh website</button>
+      </p>
+    </section>
+
+    <!-- Step 2: Komponen Harga -->
+    <section class="card step" id="s3" aria-labelledby="h2">
+      <div class="card-header">
+        <h2 id="h2">Langkah 2 — Komponen harga</h2>
+        <p class="sub">Pilih komponen, isi <span class="term" tabindex="0" data-tip="Qty = jumlah yang ditawarkan, mis. 10 orang-hari. Satuan = cara menghitungnya.">qty</span>. Harga satuan terkunci dari katalog.</p>
+      </div>
+      <div id="tenBox">
+        <div class="tblwrap table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Kode</th>
+                <th>Komponen</th>
+                <th>Satuan</th>
+                <th>Harga satuan</th>
+                <th>Qty</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="komp"></tbody>
+          </table>
+        </div>
+        <p class="hint" style="margin-top: 8px;">Subtotal per baris terhitung otomatis. Total muncul di bar lengket bawah.</p>
+      </div>
+      <div id="webBox" hidden>
+        <div>
+          <label for="paket" class="form-label">Paket website <span class="req">* wajib (demo)</span></label>
+          <select id="paket" class="form-select"></select>
+        </div>
+        <label for="disk" class="form-label">Diskon % (maks <span id="diskMax">10</span>)</label>
+        <input id="disk" class="form-control" type="number" min="0" max="10" step="0.5" value="0" style="max-width:180px">
+        <p class="mut" id="est" aria-live="polite" style="margin-top: 8px;"></p>
+      </div>
+    </section>
+
+    <!-- Step 2b: Fitur website (conditional) -->
+    <section class="card step" id="fitCard" aria-labelledby="h3" hidden>
+      <div class="card-header">
+        <h2 id="h3">Fitur website (demo) <span class="req">* min 1</span></h2>
+      </div>
+      <div class="chips" id="fitur" role="group" aria-label="Pilih fitur"></div>
+    </section>
+
+    <!-- Step 3: KAK + Legalitas -->
+    <section class="card step" id="s4" aria-labelledby="h4">
+      <div class="card-header">
+        <h2 id="h4">Langkah 3 — KAK + legalitas</h2>
+        <p class="sub">
+          <span class="term" tabindex="0" data-tip="KAK = Kerangka Acuan Kerja dari panitia. Tulis satu kebutuhan per baris agar mudah dipetakan ke komponen harga.">KAK</span>:
+          satu kebutuhan per baris. Legalitas: wajib lengkap untuk tender.
+        </p>
+      </div>
+      <label for="file" class="form-label">Upload KAK (.txt / .md / .csv / .json, maks 200 KB)</label>
+      <input id="file" class="form-control" type="file" accept=".txt,.md,.csv,.json,.pdf,.doc,.docx">
+      <label for="dok" class="form-label">atau tempel teks KAK</label>
+      <textarea id="dok" class="form-control" rows="4" maxlength="200000" placeholder="Contoh per baris:&#10;Pengembangan backend API&#10;Pengujian aplikasi&#10;Pelatihan pengguna"></textarea>
+      <p class="hint" id="kakHint" aria-live="polite">Belum ada baris KAK.</p>
+
+      <div class="field-grid row g-3" style="margin-top: 8px;">
+        <div class="col-12 col-md-6">
+          <label for="nib" class="form-label">
+            <span class="term" tabindex="0" data-tip="NIB = Nomor Induk Berusaha, identitas resmi perusahaan dari OSS.">NIB</span>
+            <span class="req">* wajib tender</span>
+          </label>
+          <input id="nib" class="form-control" maxlength="40" placeholder="8120101234567">
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="npwp" class="form-label">
+            <span class="term" tabindex="0" data-tip="NPWP = Nomor Pokok Wajib Pajak perusahaan.">NPWP</span>
+            <span class="req">* wajib tender</span>
+          </label>
+          <input id="npwp" class="form-control" maxlength="40" placeholder="01.234.567.8-901.000">
+        </div>
+      </div>
+      <label for="akta" class="form-label">
+        <span class="term" tabindex="0" data-tip="Akta pendirian = dokumen notaris pendirian perusahaan.">Akta pendirian</span>
+        <span class="req">* wajib tender</span>
+      </label>
+      <input id="akta" class="form-control" maxlength="40" placeholder="No. 12/2021 Notaris …">
+      <label for="cat" class="form-label">Catatan internal (maks 500, tidak masuk dokumen final)</label>
+      <input id="cat" class="form-control" maxlength="500" placeholder="Diskusi pagu, strategi harga…">
+    </section>
+
+    <!-- Error message -->
+    <p class="err-msg alert alert-danger" id="err" role="alert" aria-live="assertive" hidden>
+
+    <!-- Sticky total bar -->
+    <div class="estbar noprint" aria-live="polite">
+      <span>Total <b id="estTotal">Rp 0</b></span>
+      <span>Pagu <b id="estPagu">—</b></span>
+      <span id="estState">Isi qty + KAK + legalitas</span>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-row noprint">
+      <button type="button" id="go">Buat draft proposal</button>
+      <button type="button" class="secondary" id="dl">Export .md</button>
+      <button type="button" class="secondary" id="dx">Export .docx</button>
+      <button type="button" class="secondary" id="pr">Print / PDF</button>
+    </div>
+  </form>
+
+  <!-- Step 4: Hasil + Gate -->
+  <section class="card step" id="s5" aria-labelledby="h5" aria-live="polite">
+    <div class="card-header">
+      <h2 id="h5">Langkah 4 — Hasil &amp; gate korporat</h2>
+    </div>
+    <p><span id="score"></span> <span class="mut" id="meta"></span></p>
+    <div class="pills" id="pills"></div>
+    <div id="gate" class="mut"></div>
+    <pre id="out">Masuk → isi instansi + qty + KAK + legalitas → klik "Buat draft proposal".</pre>
+  </section>
+
+  <!-- Riwayat & Audit -->
+  <section class="card step noprint" id="h-hist" aria-labelledby="h6">
+    <div class="card-header">
+      <h2 id="h6">Riwayat &amp; audit</h2>
+      <p class="sub">Riwayat = tersimpan di browser ini. Audit = catatan server siapa yang membuat dan mengekspor.</p>
+    </div>
+    <div id="hist" class="mut">Belum ada.</div>
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <button type="button" class="secondary" id="wipe">Hapus riwayat lokal</button>
+      <button type="button" class="secondary" id="auditBtn">Lihat audit server</button>
+    </div>
+    <div id="audit" class="mut" style="margin-top: 12px;"></div>
+  </section>
+
+  <p class="mut" style="font-size:.8rem; margin-top: 8px;">
+    Login tim wajib untuk membuat draft. Upload hanya di memori lalu dibuang. Fakta tak pasti → [perlu konfirmasi]. Harga final + kirim ke panitia butuh persetujuan manusia. Draft BLOKIR gate tidak boleh difinalkan.
+  </p>
+</main>
+
+<footer class="foot">
+  BidMaster · alat internal Business Development · draft → gate → approve manusia
+</footer>
+
+<script src="/app.js" defer></script>
+</body>
+</html>
