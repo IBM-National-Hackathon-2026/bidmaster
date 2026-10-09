@@ -19,8 +19,8 @@ import urllib.error
 import urllib.request
 from typing import Optional
 
-# Timeout dalam detik — Langflow bisa lambat saat cold start
-_TIMEOUT = 120
+# Timeout dalam detik — flow RAG + LLM butuh menit (ingest tiap run).
+_TIMEOUT = 300
 
 
 def _cfg():
@@ -81,7 +81,7 @@ def _run(flow_endpoint: str, message: str, session_id: str = "") -> dict:
     except urllib.error.URLError as e:
         return {"ok": False, "error": f"Tidak dapat menghubungi Langflow: {e.reason}"}
     except TimeoutError:
-        return {"ok": False, "error": "Langflow tidak merespons dalam 120 detik."}
+        return {"ok": False, "error": "Langflow tidak merespons dalam 300 detik."}
 
     try:
         data = json.loads(raw)
