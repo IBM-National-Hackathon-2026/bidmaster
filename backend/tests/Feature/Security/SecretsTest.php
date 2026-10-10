@@ -38,7 +38,7 @@ class SecretsTest extends TestCase
             || ! str_contains($env, 'APP_ENV=production'),
             'Template .env dev boleh debug; docker/prod wajib APP_DEBUG=false (dicek di compose).'
         );
-        $compose = file_get_contents(base_path('../docker/compose.yaml'));
+        $compose = file_get_contents(dirname(base_path()).'/compose.yaml');
         $this->assertMatchesRegularExpression('/APP_DEBUG:\s*"?false"?/', $compose);
     }
 

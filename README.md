@@ -41,7 +41,7 @@ npm run dev                                      # UI di :5173 (proxy /api → :
 ## Cara pakai Docker
 
 ```sh
-SEED_ADMIN_PASS=xxx LANGFLOW_API_KEY=xxx docker compose -f docker/compose.yaml up --build
+SEED_ADMIN_PASS=xxx LANGFLOW_API_KEY=xxx docker compose up --build
 # UI http://localhost:8080 (nginx → frontend + proxy /api → backend)
 ```
 
