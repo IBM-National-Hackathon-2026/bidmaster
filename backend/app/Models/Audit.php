@@ -1,0 +1,14 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Audit extends Model
+{
+    protected $table = 'audits';
+
+    public $timestamps = false;
+
+    protected $fillable = ['ts', 'member_id', 'aksi', 'detail'];
+}

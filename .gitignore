@@ -1,11 +1,11 @@
 # ===== BidMaster .gitignore — CORE ONLY =====
-# Prinsip: GitHub hanya berisi inti runnable + README.md satu-satunya *.md.
-# Sisanya (docs SDLC, submission, simulator, outputs, arsip, secret) tetap lokal.
+# GitHub hanya berisi inti runnable + README.md satu-satunya *.md.
 
 # --- Secrets & lokal ---
 .env
 .env.*
 !.env.example
+backend/.env
 *.pem
 *.key
 *token*.json
@@ -17,21 +17,17 @@ data.db*
 *.db-wal
 *.db-journal
 
-# --- Single README rule: abaikan semua markdown kecuali README root ---
+# --- Single README rule ---
 *.md
 !/README.md
-# knowledge/*.example TIDAK berakhiran .md -> tetap ter-track
-# sebagai data runtime sanitasi. Sengaja.
 
-# --- Data perusahaan asli: jangan push (yang di-push hanya *.example) ---
+# --- Data perusahaan asli (yang di-push hanya *.example) ---
 knowledge/*.yaml
 
-# --- Non-core: docs SDLC + submission form (update lokal saja, tidak push) ---
+# --- Non-core: docs, submission, arsip, hasil ---
 docs/
 AGENTS.md
 SKILL.md
-
-# --- Non-core: simulator demo lokal, outputs, arsip ---
 simulator/
 outputs/
 langflow/archive/
@@ -39,19 +35,28 @@ langflow/components/
 langflow/IMPORT_GUIDE.md
 langflow/mcp.json
 
-# --- Python / OS / IDE / Node ---
+# --- Stack lama (pensiun, diganti backend/ + frontend/) ---
+api/
+web/
+requirements.txt
+
+# --- Build & deps ---
 __pycache__/
 *.py[cod]
-*.egg-info/
-.venv/
-venv/
+backend/vendor/
+backend/storage/logs/
+.phpunit.result.cache
+frontend/node_modules/
+frontend/dist/
+node_modules/
+
+# --- OS / IDE ---
 .DS_Store
 Thumbs.db
 desktop.ini
 .vscode/
 .idea/
 *.code-workspace
-node_modules/
 *.log
 *.bak
 *.bak-*

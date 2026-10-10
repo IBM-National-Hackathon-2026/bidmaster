@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8080
+      DB_CONNECTION: sqlite
+      KNOWLEDGE_DIR: /knowledge
+      SEED_ADMIN_PASS: ${SEED_ADMIN_PASS:-bidmaster123}
+      LANGFLOW_URL: ${LANGFLOW_URL:-http://host.docker.internal:7860}
+      LANGFLOW_API_KEY: ${LANGFLOW_API_KEY:-}
+      LANGFLOW_FLOW: ${LANGFLOW_FLOW:-generate_proposal_draft}
+    volumes:
+      - bidmaster-sqlite:/app/database
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  bidmaster-sqlite:

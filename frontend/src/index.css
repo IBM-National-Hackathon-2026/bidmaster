@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #e5322d;
+  --color-brand-dark: #c42722;
+  --color-brand-light: #fef2f2;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: #f6f7fa;
+  color: #1a1f36;
+  -webkit-font-smoothing: antialiased;
+}
+
+.term {
+  border-bottom: 1px dotted var(--color-brand);
+  cursor: help;
+}

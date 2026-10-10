@@ -1,0 +1,140 @@
+import { useEffect, useRef, useState } from "react";
+import { api, authHeaders } from "../lib/utils";
+
+type Msg = { role: "user" | "bot"; text: string; err?: boolean };
+
+const HINTS = [
+  "Buatkan draft proposal untuk kafe di Surabaya, butuh web + reservasi, budget 10jt",
+  "Revisi proposal: tambahkan fitur galeri menu",
+  "Buatkan PRD dari brief website tadi",
+  "Tender dinas pemerintah, pagu 50 juta, durasi 3 bulan",
+];
+
+function md(text: string): string {
+  let s = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+  s = s.replace(/^### (.+)$/gm, "<h3>$1</h3>").replace(/^## (.+)$/gm, "<h2>$1</h2>").replace(/^# (.+)$/gm, "<h1>$1</h1>");
+  s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (_, h: string, rows: string) => {
+    const th = h.split("|").map((c) => c.trim()).filter(Boolean).map((c) => `<th>${c}</th>`).join("");
+    const tr = rows.trim().split("\n").map((r) =>
+      `<tr>${r.split("|").map((c) => c.trim()).filter(Boolean).map((c) => `<td>${c}</td>`).join("")}</tr>`).join("");
+    return `<table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`;
+  });
+  return s.split(/\n{2,}/).map((b) => {
+    const t = b.trim();
+    if (!t) return "";
+    if (/^<(h[1-6]|table|pre|ul)/.test(t)) return t;
+    if (/^([-*+] )/.test(t)) return `<ul>${t.split("\n").map((l) => `<li>${l.replace(/^[-*+] /, "")}</li>`).join("")}</ul>`;
+    return `<p>${t.replace(/\n/g, "<br>")}</p>`;
+  }).filter(Boolean).join("\n");
+}
+
+export default function Agent() {
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState<boolean | null>(null);
+  const [logged, setLogged] = useState<boolean | null>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const session = useRef("bm-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7));
+
+  useEffect(() => {
+    api("/api/me").then(() => setLogged(true)).catch(() => setLogged(false));
+    api<{ configured: boolean }>("/api/agent/status").then((j) => setReady(j.configured)).catch(() => setReady(false));
+  }, []);
+  useEffect(() => { box.current?.scrollTo({ top: box.current.scrollHeight }); }, [msgs, busy]);
+
+  async function send(text: string) {
+    const t = text.trim();
+    if (!t || busy) return;
+    if (!logged) { setMsgs((m) => [...m, { role: "bot", text: "**Harus login dulu.** Silakan masuk lewat halaman Login.", err: true }]); return; }
+    setMsgs((m) => [...m, { role: "user", text: t }]);
+    setInput("");
+    setBusy(true);
+    try {
+      const j = await api<{ text: string }>("/api/agent", {
+        method: "POST", headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ message: t, flow: "bidmaster_proposal_generator", session_id: session.current }),
+      });
+      setMsgs((m) => [...m, { role: "bot", text: j.text }]);
+    } catch (e) {
+      setMsgs((m) => [...m, { role: "bot", text: `**Gagal:** ${e instanceof Error ? e.message : "coba lagi."}`, err: true }]);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex h-[calc(100vh-60px)] overflow-hidden">
+      <aside className="w-64 shrink-0 bg-white border-r border-slate-200 hidden md:flex flex-col">
+        <div className="p-4 border-b border-slate-200 text-xs">
+          <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${ready ? "bg-green-600" : ready === false ? "bg-red-600" : "bg-slate-300"}`} />
+          {ready === null ? "Memeriksa…" : ready ? "Langflow terhubung" : "Langflow tidak terhubung"}
+        </div>
+        <div className="p-4">
+          <h3 className="text-sm font-bold mb-2">Flow aktif</h3>
+          <div className="bg-brand-light text-brand font-semibold text-xs rounded-lg px-2.5 py-2">📄 BidMaster Proposal Generator</div>
+        </div>
+        <div className="p-4 border-t border-slate-200 mt-auto text-xs text-slate-500">
+          Session <code className="bg-slate-100 px-1 rounded">{session.current.slice(0, 18)}…</code>
+        </div>
+      </aside>
+      <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
+        {logged === false && (
+          <div className="m-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-900">
+            🔒 Belum login — <a href="/login" className="text-brand font-semibold">masuk dulu</a>.
+          </div>
+        )}
+        {ready === false && (
+          <div className="m-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-900">
+            ⚠️ Langflow belum terhubung — isi <code>LANGFLOW_URL</code> + <code>LANGFLOW_API_KEY</code> di backend <code>.env</code>.
+          </div>
+        )}
+        <div ref={box} className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
+          {msgs.length === 0 && (
+            <div className="flex flex-col items-center text-center my-auto gap-3">
+              <div className="w-[72px] h-[72px] rounded-full text-white text-3xl font-extrabold flex items-center justify-center" style={{ background: "linear-gradient(135deg,#e5322d,#c42722)" }}>B</div>
+              <h3 className="text-xl font-bold">Halo! Saya Bob.</h3>
+              <p className="text-slate-500 text-sm max-w-md">Ceritakan kebutuhan tender — draft, revisi, dan PRD lewat satu flow Langflow.</p>
+            </div>
+          )}
+          {msgs.map((m, i) => (
+            <div key={i} className={`flex gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+              <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[0.7rem] font-bold text-white ${m.role === "user" ? "bg-slate-900" : ""}`}
+                style={m.role === "user" ? undefined : { background: "linear-gradient(135deg,#e5322d,#c42722)" }}>{m.role === "user" ? "K" : "B"}</div>
+              <div className="max-w-[72%]">
+                {m.role === "user"
+                  ? <div className="bg-slate-900 text-white rounded-2xl rounded-br px-3.5 py-2.5 text-sm whitespace-pre-wrap">{m.text}</div>
+                  : <div className={`bg-white border rounded-2xl rounded-bl px-3.5 py-2.5 text-sm prose-sm max-w-none ${m.err ? "border-red-600 text-red-700" : "border-slate-200"}`}
+                      dangerouslySetInnerHTML={{ __html: md(m.text) }} />}
+                <div className="text-[0.72rem] text-slate-400 mt-1">{new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</div>
+              </div>
+            </div>
+          ))}
+          {busy && <div className="text-sm text-slate-500 italic">Bob sedang berpikir…</div>}
+        </div>
+        <div className="bg-white border-t border-slate-200 p-3">
+          <div className="flex gap-1.5 flex-wrap mb-2 max-w-4xl mx-auto">
+            {HINTS.map((h) => (
+              <button key={h} onClick={() => setInput(h)}
+                className="bg-slate-50 border border-slate-200 rounded-full px-3 py-1 text-xs text-slate-600 hover:border-brand hover:text-brand">
+                {h.length > 48 ? h.slice(0, 48) + "…" : h}</button>
+            ))}
+          </div>
+          <form className="flex gap-2 max-w-4xl mx-auto" onSubmit={(e) => { e.preventDefault(); send(input); }}>
+            <textarea rows={1} value={input} onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
+              placeholder="Ceritakan tentang client atau tender… (Enter kirim, Shift+Enter baris baru)"
+              maxLength={4000}
+              className="flex-1 resize-none border-[1.5px] border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand focus:outline-none" />
+            <button disabled={!input.trim() || busy || !ready}
+              className="w-11 h-11 rounded-xl bg-brand text-white flex items-center justify-center disabled:opacity-40" title="Kirim">
+              ➤
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
