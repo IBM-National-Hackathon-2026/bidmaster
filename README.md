@@ -18,7 +18,9 @@ backend/  (Laravel 13 API: auth, draft, gate, export, agent, audit + 7 testing)
 frontend/ (React 19 + TS + Vite + Tailwind + shadcn-style + React Router)
 docker/   (compose.yaml + Dockerfile backend/frontend + nginx.conf)
 knowledge/*.example        ← 9 template sanitasi (data asli *.md/*.yaml tidak di-push)
-langflow/flows/*.json      ← flow aktif bidmaster_proposal_generator_rag (+ referensi lama)
+langflow/flows/*.json      ← 1 referensi aktif (bidmaster_proposal_generator_rag;
+                             runtime memakai flow di server Langflow,
+                             bukan file repo; flow lama di archive/ lokal)
 skills/registry.yaml       ← 1 MCP tool aktif
 ```
 
