@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./auth";
 import { Nav } from "./components/Nav";
 import Agent from "./pages/Agent";
 import Landing from "./pages/Landing";
@@ -8,6 +9,7 @@ import Wizard from "./pages/Wizard";
 export default function App() {
   return (
     <BrowserRouter>
+      <AuthProvider>
       <Nav />
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -19,6 +21,7 @@ export default function App() {
       <footer className="border-t border-slate-200 text-center text-slate-500 text-xs py-6 bg-white">
         BidMaster · alat internal · draft → gate → approve manusia
       </footer>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

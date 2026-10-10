@@ -14,6 +14,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.avatar-grad {
+  background: linear-gradient(135deg, #e5322d, #c42722);
+}
+
+::selection {
+  background: #fecaca;
+}
+
+:focus-visible {
+  outline: 3px solid #16a34a;
+  outline-offset: 2px;
+}
+
 .term {
   border-bottom: 1px dotted var(--color-brand);
   cursor: help;

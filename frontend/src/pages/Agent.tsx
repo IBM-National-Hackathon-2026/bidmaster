@@ -1,4 +1,6 @@
+import { FileText, Lock, Send, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "../auth";
 import { api, authHeaders } from "../lib/utils";
 
 type Msg = { role: "user" | "bot"; text: string; err?: boolean };
@@ -35,12 +37,12 @@ export default function Agent() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState<boolean | null>(null);
-  const [logged, setLogged] = useState<boolean | null>(null);
+  const { user } = useAuth();
+  const logged = user !== null;
   const box = useRef<HTMLDivElement>(null);
-  const session = useRef("bm-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7));
+  const [sessionId] = useState(() => "bm-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7));
 
   useEffect(() => {
-    api("/api/me").then(() => setLogged(true)).catch(() => setLogged(false));
     api<{ configured: boolean }>("/api/agent/status").then((j) => setReady(j.configured)).catch(() => setReady(false));
   }, []);
   useEffect(() => { box.current?.scrollTo({ top: box.current.scrollHeight }); }, [msgs, busy]);
@@ -55,7 +57,7 @@ export default function Agent() {
     try {
       const j = await api<{ text: string }>("/api/agent", {
         method: "POST", headers: authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ message: t, flow: "bidmaster_proposal_generator", session_id: session.current }),
+        body: JSON.stringify({ message: t, flow: "bidmaster_proposal_generator", session_id: sessionId }),
       });
       setMsgs((m) => [...m, { role: "bot", text: j.text }]);
     } catch (e) {
@@ -74,35 +76,37 @@ export default function Agent() {
         </div>
         <div className="p-4">
           <h3 className="text-sm font-bold mb-2">Flow aktif</h3>
-          <div className="bg-brand-light text-brand font-semibold text-xs rounded-lg px-2.5 py-2">📄 BidMaster Proposal Generator</div>
+          <div className="bg-brand-light text-brand font-semibold text-xs rounded-lg px-2.5 py-2 flex items-center gap-2"><FileText size={15} aria-hidden /> BidMaster Proposal Generator</div>
         </div>
         <div className="p-4 border-t border-slate-200 mt-auto text-xs text-slate-500">
-          Session <code className="bg-slate-100 px-1 rounded">{session.current.slice(0, 18)}…</code>
+          Session <code className="bg-slate-100 px-1 rounded">{sessionId.slice(0, 18)}…</code>
         </div>
       </aside>
       <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
-        {logged === false && (
-          <div className="m-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-900">
-            🔒 Belum login — <a href="/login" className="text-brand font-semibold">masuk dulu</a>.
+        {!logged && (
+          <div className="m-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-900 flex items-start gap-2">
+            <Lock size={16} className="mt-0.5 shrink-0" aria-hidden />
+            <span>Belum login — <a href="/login" className="text-brand font-semibold">masuk dulu</a>.</span>
           </div>
         )}
         {ready === false && (
-          <div className="m-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-900">
-            ⚠️ Langflow belum terhubung — isi <code>LANGFLOW_URL</code> + <code>LANGFLOW_API_KEY</code> di backend <code>.env</code>.
+          <div className="m-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-900 flex items-start gap-2">
+            <TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
+            <span>Langflow belum terhubung — isi <code>LANGFLOW_URL</code> + <code>LANGFLOW_API_KEY</code> di backend <code>.env</code>.</span>
           </div>
         )}
         <div ref={box} className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
           {msgs.length === 0 && (
             <div className="flex flex-col items-center text-center my-auto gap-3">
-              <div className="w-[72px] h-[72px] rounded-full text-white text-3xl font-extrabold flex items-center justify-center" style={{ background: "linear-gradient(135deg,#e5322d,#c42722)" }}>B</div>
+              <div className="w-[72px] h-[72px] rounded-full text-white text-3xl font-extrabold flex items-center justify-center avatar-grad" aria-hidden="true">B</div>
               <h3 className="text-xl font-bold">Halo! Saya Bob.</h3>
               <p className="text-slate-500 text-sm max-w-md">Ceritakan kebutuhan tender — draft, revisi, dan PRD lewat satu flow Langflow.</p>
             </div>
           )}
           {msgs.map((m, i) => (
             <div key={i} className={`flex gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
-              <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[0.7rem] font-bold text-white ${m.role === "user" ? "bg-slate-900" : ""}`}
-                style={m.role === "user" ? undefined : { background: "linear-gradient(135deg,#e5322d,#c42722)" }}>{m.role === "user" ? "K" : "B"}</div>
+              <div className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[0.7rem] font-bold text-white ${m.role === "user" ? "bg-slate-900" : "avatar-grad"}`}
+                aria-hidden="true">{m.role === "user" ? "K" : "B"}</div>
               <div className="max-w-[72%]">
                 {m.role === "user"
                   ? <div className="bg-slate-900 text-white rounded-2xl rounded-br px-3.5 py-2.5 text-sm whitespace-pre-wrap">{m.text}</div>
@@ -129,8 +133,8 @@ export default function Agent() {
               maxLength={4000}
               className="flex-1 resize-none border-[1.5px] border-slate-300 rounded-xl px-3.5 py-2.5 text-sm focus:border-brand focus:outline-none" />
             <button disabled={!input.trim() || busy || !ready}
-              className="w-11 h-11 rounded-xl bg-brand text-white flex items-center justify-center disabled:opacity-40" title="Kirim">
-              ➤
+              className="w-11 h-11 rounded-xl bg-brand hover:bg-brand-dark text-white flex items-center justify-center disabled:opacity-40 transition-colors" title="Kirim" aria-label="Kirim pesan">
+              <Send size={18} aria-hidden />
             </button>
           </form>
         </div>

@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth";
 import { Alert, Button, Card, Input, Label } from "../components/ui/controls";
-import { api } from "../lib/utils";
 
 export default function Login() {
   const nav = useNavigate();
+  const { login, user, ready } = useAuth();
+  useEffect(() => { if (ready && user) nav("/app"); }, [ready, user, nav]);
   const [nama, setNama] = useState("");
   const [pw, setPw] = useState("");
   const [err, setErr] = useState("");
@@ -17,12 +19,7 @@ export default function Login() {
     if (pw.length < 4) return setErr("Kata sandi minimal 4 karakter.");
     setBusy(true);
     try {
-      const j = await api<{ token: string }>("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nama: nama.trim(), pw }),
-      });
-      try { sessionStorage.setItem("bm_token", j.token); } catch {}
+      await login(nama.trim(), pw);
       nav("/app");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Login gagal.");

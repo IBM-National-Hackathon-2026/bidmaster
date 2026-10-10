@@ -1,11 +1,12 @@
+import { Bot, FileText, KeyRound, ShieldCheck, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/controls";
 
 const tools = [
-  { to: "/app", icon: "📄", t: "Buat Draft Tender", d: "11 bab proposal + RAB per-komponen dari form, qty, dan dokumen KAK.", go: "Mulai buat draft →" },
-  { to: "/app#hasil", icon: "🛡️", t: "Gate Korporat", d: "KAK terpetakan, total ≤ pagu, legalitas lengkap — BLOKIR berarti perbaiki.", go: "Lihat cara gate →" },
-  { to: "/agent", icon: "🤖", t: "Bob Agent — AI", d: "Bahasa natural via Langflow: draft, revisi, PRD dalam satu flow.", go: "Bicara dengan Bob →" },
-  { to: "/login", icon: "🔐", t: "Login & Audit Tim", d: "Sesi token 12 jam, peran, dan log audit setiap aksi.", go: "Masuk sekarang →" },
+  { to: "/app", Icon: FileText, t: "Buat Draft Tender", d: "11 bab proposal + RAB per-komponen dari form, qty, dan dokumen KAK.", go: "Mulai buat draft →" },
+  { to: "/app#hasil", Icon: ShieldCheck, t: "Gate Korporat", d: "KAK terpetakan, total ≤ pagu, legalitas lengkap — BLOKIR berarti perbaiki.", go: "Lihat cara gate →" },
+  { to: "/agent", Icon: Bot, t: "Bob Agent — AI", d: "Bahasa natural via Langflow: draft, revisi, PRD dalam satu flow.", go: "Bicara dengan Bob →" },
+  { to: "/login", Icon: KeyRound, t: "Login & Audit Tim", d: "Sesi token 12 jam, peran, dan log audit setiap aksi.", go: "Masuk sekarang →" },
 ];
 
 const steps = [
@@ -18,7 +19,7 @@ export default function Landing() {
   return (
     <main className="max-w-6xl mx-auto px-6 pb-20">
       <section className="text-center pt-16 pb-10">
-        <span className="inline-block bg-brand-light text-brand text-xs font-semibold px-3 py-1 rounded-full border border-red-200 mb-5">⚡ Alat internal Business Development</span>
+        <span className="inline-flex items-center gap-1.5 bg-brand-light text-brand text-xs font-semibold px-3 py-1 rounded-full border border-red-200 mb-5"><Zap size={13} aria-hidden /> Alat internal Business Development</span>
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Draft tender selesai<br /><span className="text-brand">sebelum rapat berikutnya</span></h1>
         <p className="text-slate-500 mt-4 max-w-xl mx-auto">Form terstruktur. Harga dikunci katalog. Gate KAK, pagu, legalitas otomatis.</p>
         <div className="flex gap-3 justify-center mt-6 flex-wrap">
@@ -32,7 +33,7 @@ export default function Landing() {
         <div className="grid md:grid-cols-4 gap-4 mt-6">
           {tools.map((t) => (
             <Link key={t.t} to={t.to} className="bg-white border-[1.5px] border-slate-200 rounded-2xl p-6 no-underline text-inherit shadow-sm hover:border-brand hover:-translate-y-0.5 transition-all flex flex-col gap-3">
-              <div className="w-12 h-12 bg-brand-light rounded-xl flex items-center justify-center text-2xl">{t.icon}</div>
+              <div className="w-12 h-12 bg-brand-light rounded-xl flex items-center justify-center text-brand"><t.Icon size={24} aria-hidden /></div>
               <h3 className="font-bold">{t.t}</h3>
               <p className="text-sm text-slate-500 flex-1">{t.d}</p>
               <span className="text-brand font-semibold text-sm">{t.go}</span>

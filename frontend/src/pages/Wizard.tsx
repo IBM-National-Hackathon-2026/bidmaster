@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, OctagonX } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Button, Card, Input, Label, Select, Term, Textarea } from "../components/ui/controls";
 import { api, authHeaders, fmtRp } from "../lib/utils";
 
@@ -49,7 +50,7 @@ export default function Wizard() {
     api<Catalog>("/api/catalog").then((c) => { setCat(c); setInd("Pemerintahan"); }).catch(() => setErr("Gagal memuat katalog."));
   }, []);
 
-  const price = (k: string) => cat?.tender.komponen.find((x) => x.kode === k)?.harga_dasar ?? 0;
+  const price = useCallback((k: string) => cat?.tender.komponen.find((x) => x.kode === k)?.harga_dasar ?? 0, [cat]);
   const picked = useMemo(() => Object.entries(qty).filter(([, v]) => v > 0), [qty]);
   const total = useMemo(() => {
     if (!cat) return 0;
@@ -58,7 +59,7 @@ export default function Wizard() {
       return p ? Math.round(p.price_idr * (100 - Math.min(disk, cat.discount_max)) / 100) : 0;
     }
     return picked.reduce((a, [k, v]) => a + price(k) * v, 0);
-  }, [cat, mode, paket, disk, picked]);
+  }, [cat, mode, paket, disk, picked, price]);
   const kakLines = useMemo(() => dok.split(/[\n;,]+/).map((s) => s.trim()).filter((s) => s.length >= 8).length, [dok]);
 
   function fillDemo() {
@@ -263,8 +264,8 @@ export default function Wizard() {
           <div className="sticky bottom-3 bg-slate-900 text-white rounded-xl px-4 py-2.5 flex gap-4 flex-wrap text-sm mt-4">
             <span>Total <b>{fmtRp(total)}</b></span>
             <span>Pagu <b>{pagu ? fmtRp(pagu) : "tanpa pagu"}</b></span>
-            <span className={pagu && total > pagu ? "text-red-300 font-bold" : ""}>
-              {mode === "tender" && picked.length === 0 ? "Isi qty minimal 1 komponen" : pagu && total > pagu ? "⚠ LEWAT pagu — gate BLOKIR" : "Aman dari pagu"}</span>
+            <span className={`flex items-center gap-1.5 ${pagu && total > pagu ? "text-red-300 font-bold" : ""}`}>
+              {mode === "tender" && picked.length === 0 ? "Isi qty minimal 1 komponen" : pagu && total > pagu ? <><AlertTriangle size={15} aria-hidden /> LEWAT pagu — gate BLOKIR</> : "Aman dari pagu"}</span>
           </div>
           <div className="mt-3 flex gap-2 flex-wrap">
             <Button variant="secondary" onClick={() => setStep(2)}>← Kembali</Button>
@@ -286,9 +287,9 @@ export default function Wizard() {
               {res.compliance.checks.map((c) => <Badge key={c.name} ok={c.ok}>{c.name}</Badge>)}
             </div>
             <div className={`border-[1.5px] border-dashed rounded-[10px] p-3 mt-2 ${res.korporat.gate.passed ? "border-green-600 bg-green-50" : "border-red-600 bg-red-50"}`}>
-              <p className={res.korporat.gate.passed ? "text-green-700 font-bold" : "text-red-700 font-bold"}>
-                Gate: {res.korporat.gate.passed ? "LOLOS ✓" : "BLOKIR ⛔"}</p>
-              {res.korporat.gate.blocks.map((b) => <div key={b} className="text-red-700 text-sm">⛔ {b}</div>)}
+              <p className={`font-bold flex items-center gap-1.5 ${res.korporat.gate.passed ? "text-green-700" : "text-red-700"}`}>
+                {res.korporat.gate.passed ? "Gate: LOLOS ✓" : <><OctagonX size={16} aria-hidden /> Gate: BLOKIR</>}</p>
+              {res.korporat.gate.blocks.map((b) => <div key={b} className="text-red-700 text-sm flex items-start gap-1.5"><OctagonX size={14} className="mt-0.5 shrink-0" aria-hidden /> {b}</div>)}
               {res.korporat.uncovered.slice(0, 5).map((u: string) => <div key={u} className="text-sm">• KAK tak terpetakan: {u.slice(0, 120)}</div>)}
             </div>
             <pre className="whitespace-pre-wrap bg-slate-900 text-slate-100 p-4 rounded-[10px] overflow-auto max-h-[60vh] text-[0.83rem] font-mono mt-3">{res.markdown}</pre>
