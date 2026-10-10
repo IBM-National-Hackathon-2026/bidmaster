@@ -1,16 +1,32 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Sora";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/sora-300-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Sora";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("/fonts/sora-800-latin.woff2") format("woff2");
+}
+
 @theme {
-  --color-brand: #e5484d;
-  --color-brand-dark: #c42722;
-  --color-brand-light: #2a1517;
-  --color-night: #0b0d10;
-  --color-surface: #13161b;
-  --color-surface-2: #1a1e24;
-  --color-line: rgba(255, 255, 255, 0.08);
-  --color-ink: #e8eaee;
-  --color-mut: #9aa0aa;
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-brand: #ffb020;
+  --color-brand-dark: #d9940a;
+  --color-brand-light: #231a08;
+  --color-night: #0a0f22;
+  --color-surface: #111736;
+  --color-surface-2: #1a2150;
+  --color-mist: #c9d1f0;
+  --color-line: rgba(201, 209, 240, 0.12);
+  --color-ink: #eef0f8;
+  --color-mut: #8e97b8;
+  --font-sans: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 body {
@@ -21,15 +37,15 @@ body {
 }
 
 .avatar-grad {
-  background: linear-gradient(135deg, #e5484d, #8f1d22);
+  background: linear-gradient(135deg, #1a2150, #0f1b3d);
 }
 
 ::selection {
-  background: rgba(229, 72, 77, 0.35);
+  background: rgba(255, 176, 32, 0.35);
 }
 
 :focus-visible {
-  outline: 2px solid #e5484d;
+  outline: 2px solid #ffb020;
   outline-offset: 2px;
 }
 
@@ -52,9 +68,9 @@ body {
   50% { transform: translate(30px, -20px) scale(1.08); }
 }
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.35); }
-  70% { box-shadow: 0 0 0 16px rgba(229, 72, 77, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(229, 72, 77, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(255, 176, 32, 0.35); }
+  70% { box-shadow: 0 0 0 16px rgba(255, 176, 32, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 176, 32, 0); }
 }
 @keyframes typing-bounce {
   0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
@@ -68,12 +84,30 @@ body {
 .anim-fade-up { animation: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .anim-msg { animation: msg-in 0.22s ease-out; }
 .anim-pulse-ring { animation: pulse-ring 2.4s ease-out infinite; }
+.d1 { animation-delay: 80ms; }
+.d2 { animation-delay: 160ms; }
+.d3 { animation-delay: 240ms; }
+.d4 { animation-delay: 320ms; }
+.auth-side {
+  background: linear-gradient(150deg, #2a2111 0%, #141a3a 55%, #0a0f22 100%);
+}
 
 .hero-glow {
   position: absolute;
   border-radius: 9999px;
   filter: blur(90px);
   pointer-events: none;
+}
+.glow-amber {
+  background: radial-gradient(circle, rgba(255, 176, 32, 0.14), transparent 65%);
+  animation: float-slow 9s ease-in-out infinite;
+}
+.glow-mist {
+  background: radial-gradient(circle, rgba(201, 209, 240, 0.1), transparent 65%);
+  animation: float-slow 11s ease-in-out infinite reverse;
+}
+.glow-center {
+  background: radial-gradient(ellipse, rgba(255, 176, 32, 0.08), transparent 65%);
 }
 
 .typing-dot {

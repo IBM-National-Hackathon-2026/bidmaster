@@ -2,6 +2,7 @@ import { CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
+import { LogoMark, Wordmark } from "../components/Logo";
 import { Alert, Button, Card, Input, Label } from "../components/ui/controls";
 
 export default function Login() {
@@ -32,9 +33,13 @@ export default function Login() {
 
   return (
     <main className="min-h-[calc(100vh-60px)] grid lg:grid-cols-2 relative overflow-hidden">
-      <div className="hero-glow w-[480px] h-[480px] left-[-160px] bottom-[-160px]" style={{ background: "radial-gradient(circle, rgba(229,72,77,0.13), transparent 65%)" }} aria-hidden="true" />
-      <div className="hidden lg:flex flex-col justify-center p-12 relative overflow-hidden" style={{ background: "linear-gradient(150deg, #3d1215 0%, #1a0d0f 55%, #0b0d10 100%)" }} aria-hidden="true">
+      <div className="hero-glow glow-amber w-[480px] h-[480px] left-[-160px] bottom-[-160px]" aria-hidden="true" />
+      <div className="hidden lg:flex flex-col justify-center p-12 relative overflow-hidden auth-side" aria-hidden="true">
         <div className="max-w-sm anim-fade-up">
+          <div className="flex items-center gap-3 mb-6">
+            <LogoMark size={44} inverted />
+            <Wordmark className="text-2xl text-white" />
+          </div>
           <h2 className="text-3xl font-extrabold mb-3 text-white">Satu alat untuk semua kebutuhan tender</h2>
           <p className="text-slate-300 text-[0.95rem]">Draft 11 bab + RAB dari form, harga terkunci katalog, gate otomatis, audit tercatat.</p>
           <ul className="mt-7 space-y-3 text-sm text-slate-200 list-none">

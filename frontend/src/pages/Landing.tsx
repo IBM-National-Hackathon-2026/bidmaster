@@ -19,23 +19,23 @@ export default function Landing() {
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
       <section className="relative text-center pt-16 pb-10 overflow-visible" aria-label="Pengantar">
-        <div className="hero-glow w-[420px] h-[420px] left-[-120px] top-[-80px]" style={{ background: "radial-gradient(circle, rgba(229,72,77,0.16), transparent 65%)", animation: "float-slow 9s ease-in-out infinite" }} aria-hidden="true" />
-        <div className="hero-glow w-[380px] h-[380px] right-[-100px] top-[40px]" style={{ background: "radial-gradient(circle, rgba(80,120,200,0.12), transparent 65%)", animation: "float-slow 11s ease-in-out infinite reverse" }} aria-hidden="true" />
+        <div className="hero-glow glow-amber w-[420px] h-[420px] left-[-120px] top-[-80px]" aria-hidden="true" />
+        <div className="hero-glow glow-mist w-[380px] h-[380px] right-[-100px] top-[40px]" aria-hidden="true" />
         <div className="relative">
           <span className="anim-fade-up inline-flex items-center gap-1.5 bg-brand-light text-brand text-xs font-semibold px-3 py-1 rounded-full border border-brand/30 mb-5">
             <Zap size={13} aria-hidden /> Alat internal Business Development
           </span>
-          <h1 className="anim-fade-up text-4xl md:text-5xl font-extrabold tracking-tight text-white" style={{ animationDelay: "80ms" }}>
+          <h1 className="anim-fade-up d1 text-4xl md:text-5xl font-extrabold tracking-tight text-white">
             Draft tender selesai<br /><span className="text-brand">sebelum rapat berikutnya</span>
           </h1>
-          <p className="anim-fade-up text-slate-400 mt-4 max-w-xl mx-auto" style={{ animationDelay: "160ms" }}>
+          <p className="anim-fade-up d2 text-slate-400 mt-4 max-w-xl mx-auto">
             Isi form terstruktur. Harga dikunci katalog. Gate KAK, pagu, legalitas otomatis.
           </p>
-          <div className="anim-fade-up flex gap-3 justify-center mt-6 flex-wrap" style={{ animationDelay: "240ms" }}>
+          <div className="anim-fade-up d3 flex gap-3 justify-center mt-6 flex-wrap">
             <Link to="/login"><Button size="lg">Masuk &amp; Mulai <ArrowRight size={17} aria-hidden /></Button></Link>
             <Link to="/app"><Button size="lg" variant="secondary">Lihat Alur Kerja</Button></Link>
           </div>
-          <p className="anim-fade-up text-xs text-slate-500 mt-3" style={{ animationDelay: "320ms" }}>
+          <p className="anim-fade-up d4 text-xs text-slate-500 mt-3">
             Login demo: <code className="bg-white/10 px-1.5 py-0.5 rounded">admin / bidmaster123</code>
           </p>
         </div>

@@ -1,6 +1,7 @@
 import { LogIn, LogOut } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
+import { LogoMark, Wordmark } from "./Logo";
 
 const link = ({ isActive }: { isActive: boolean }) =>
   `px-3 py-1.5 rounded-md text-sm font-medium no-underline transition-colors ${
@@ -13,9 +14,9 @@ export function Nav() {
   return (
     <header className="sticky top-0 z-50 bg-night/85 backdrop-blur-md border-b border-white/10">
       <div className="max-w-6xl mx-auto flex items-center gap-3 px-4 sm:px-6 h-15">
-        <Link to="/" className="font-extrabold text-xl flex items-center gap-2 no-underline text-white" aria-label="BidMaster beranda">
-          <span className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm avatar-grad">B</span>
-          <span className="hidden sm:inline">BidMaster</span>
+        <Link to="/" className="flex items-center gap-2.5 no-underline" aria-label="BidMaster beranda">
+          <LogoMark size={34} />
+          <Wordmark className="text-xl text-white" />
         </Link>
         <nav className="flex gap-1 mx-auto" aria-label="Navigasi utama">
           <NavLink to="/" end className={link}>Beranda</NavLink>
