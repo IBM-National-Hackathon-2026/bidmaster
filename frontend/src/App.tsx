@@ -18,7 +18,7 @@ export default function App() {
         <Route path="/agent" element={<Agent />} />
         <Route path="*" element={<Landing />} />
       </Routes>
-      <footer className="border-t border-slate-200 text-center text-slate-500 text-xs py-6 bg-white">
+      <footer className="border-t border-white/10 text-center text-slate-500 text-xs py-6 bg-night">
         BidMaster · alat internal · draft → gate → approve manusia
       </footer>
       </AuthProvider>

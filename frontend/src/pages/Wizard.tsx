@@ -139,26 +139,26 @@ export default function Wizard() {
     q === "" || (k.kode + " " + k.nama).toLowerCase().includes(q.toLowerCase()));
 
   return (
-    <main className="max-w-4xl mx-auto px-4 pb-24">
+    <main key={mode + step} className="max-w-4xl mx-auto px-4 pb-24 anim-fade-up">
       <ol className="flex gap-1.5 my-4 list-none p-0">
         {steps.map((s, i) => (
           <li key={s} className="flex-1 min-w-0">
             <button onClick={() => setStep(i + 1)}
               aria-current={step === i + 1 ? "step" : undefined}
-              className={`w-full text-left bg-white border-[1.5px] rounded-[10px] px-2.5 py-2 text-xs leading-snug ${step === i + 1 ? "border-brand bg-brand-light" : "border-slate-200"}`}>
-              <b className="block text-[0.72rem] text-slate-500 font-semibold">Langkah {i + 1}</b>{s}
+              className={`w-full text-left bg-surface border-[1.5px] rounded-[10px] px-2.5 py-2 text-xs leading-snug text-slate-200 transition-colors ${step === i + 1 ? "border-brand bg-brand-light" : "border-white/10"}`}>
+              <b className="block text-[0.72rem] text-slate-400 font-semibold">Langkah {i + 1}</b>{s}
             </button>
           </li>
         ))}
       </ol>
-      <details className="border border-slate-200 rounded-[10px] px-4 py-2.5 bg-slate-50 mb-4">
-        <summary className="cursor-pointer font-semibold text-sm">Kamus istilah</summary>
+      <details className="border border-white/10 rounded-[10px] px-4 py-2.5 bg-white/5 mb-4">
+        <summary className="cursor-pointer font-semibold text-sm text-slate-200">Kamus istilah</summary>
         <dl className="grid sm:grid-cols-2 gap-x-5 mt-2">
-          {GLOS.map(([t, d]) => (<div key={t}><dt className="font-bold text-sm">{t}</dt><dd className="text-sm text-slate-500 mb-1.5">{d}</dd></div>))}
+          {GLOS.map(([t, d]) => (<div key={t}><dt className="font-bold text-sm text-slate-100">{t}</dt><dd className="text-sm text-slate-400 mb-1.5">{d}</dd></div>))}
         </dl>
       </details>
 
-      <div className="bg-white border border-slate-200 rounded-lg px-4 py-3 mb-4 flex items-center gap-3 flex-wrap">
+      <div className="bg-surface border border-white/10 rounded-lg px-4 py-3 mb-4 flex items-center gap-3 flex-wrap">
         <label htmlFor="mode" className="text-sm m-0">Mode katalog</label>
         <Select id="mode" value={mode} onChange={(e) => setMode(e.target.value)} className="w-auto min-w-60">
           <option value="tender">Tender (per-komponen) — default</option>
@@ -168,7 +168,7 @@ export default function Wizard() {
 
       {step === 1 && (
         <Card>
-          <h2 className="font-bold text-lg">Langkah 1 — Instansi &amp; pagu</h2>
+          <h2 className="font-bold text-lg text-white">Langkah 1 — Instansi &amp; pagu</h2>
           <div className="grid sm:grid-cols-2 gap-x-4">
             <div><Label htmlFor="nama">Nama instansi *</Label>
               <Input id="nama" value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Dinas Pelayanan Publik Kota Arunika" /></div>
@@ -179,31 +179,31 @@ export default function Wizard() {
             <div><Label htmlFor="pagu"><Term tip="Batas tertinggi belanja panitia. 0 = tanpa pagu.">Pagu</Term> (Rp)</Label>
               <Input id="pagu" type="number" min={0} max={10000000000} step={100000} value={pagu}
                 onChange={(e) => setPagu(parseInt(e.target.value || "0", 10))} />
-              <p className="text-xs text-slate-500 mt-1">cth 20000000 = Rp 20 jt</p></div>
+              <p className="text-xs text-slate-400 mt-1">cth 20000000 = Rp 20 jt</p></div>
             <div><Label htmlFor="dur">Durasi (minggu) *</Label>
               <Input id="dur" type="number" min={1} max={12} value={dur}
                 onChange={(e) => setDur(parseInt(e.target.value || "12", 10))} /></div>
           </div>
-          <p className="text-sm text-slate-500 mt-3">Contoh cepat: <Button variant="secondary" size="sm" onClick={fillDemo}>Isi contoh tender</Button></p>
+          <p className="text-sm text-slate-400 mt-3">Contoh cepat: <Button variant="secondary" size="sm" onClick={fillDemo}>Isi contoh tender</Button></p>
           <div className="mt-4"><Button onClick={() => setStep(2)}>Lanjut →</Button></div>
         </Card>
       )}
 
       {step === 2 && mode === "tender" && (
         <Card>
-          <h2 className="font-bold text-lg">Langkah 2 — Komponen harga</h2>
-          <p className="text-sm text-slate-500">Harga satuan terkunci katalog. Cari + isi qty.</p>
+          <h2 className="font-bold text-lg text-white">Langkah 2 — Komponen harga</h2>
+          <p className="text-sm text-slate-400">Harga satuan terkunci katalog. Cari + isi qty.</p>
           <Input placeholder="Cari kode/nama…" value={q} onChange={(e) => setQ(e.target.value)} className="mt-2" />
-          <div className="overflow-x-auto border border-slate-200 rounded-lg mt-2">
+          <div className="overflow-x-auto border border-white/10 rounded-lg mt-2">
             <table className="w-full text-sm min-w-[560px]">
-              <thead><tr className="text-left text-xs uppercase text-slate-500 bg-slate-50">
+              <thead><tr className="text-left text-xs uppercase text-slate-400 bg-white/5">
                 <th className="px-3 py-2">Kode</th><th className="px-3 py-2">Komponen</th><th className="px-3 py-2">Harga</th><th className="px-3 py-2">Qty</th><th className="px-3 py-2">Subtotal</th>
               </tr></thead>
               <tbody>
                 {komps.map((k) => (
-                  <tr key={k.kode} className="border-t border-slate-100">
-                    <td className="px-3 py-2 font-mono text-xs">{k.kode}</td>
-                    <td className="px-3 py-2">{k.nama}<span className="text-slate-400 text-xs"> / {k.satuan}</span></td>
+                  <tr key={k.kode} className="border-t border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="px-3 py-2 font-mono text-xs text-slate-300">{k.kode}</td>
+                    <td className="px-3 py-2 text-slate-200">{k.nama}<span className="text-slate-500 text-xs"> / {k.satuan}</span></td>
                     <td className="px-3 py-2 whitespace-nowrap">{fmtRp(k.harga_dasar)}</td>
                     <td className="px-3 py-2"><Input type="number" min={0} max={1000} className="max-w-24 py-1.5"
                       value={qty[k.kode] ?? 0} aria-label={"Qty " + k.kode}
@@ -220,7 +220,7 @@ export default function Wizard() {
 
       {step === 2 && mode === "website" && (
         <Card>
-          <h2 className="font-bold text-lg">Langkah 2 — Paket website (demo)</h2>
+          <h2 className="font-bold text-lg text-white">Langkah 2 — Paket website (demo)</h2>
           <Label htmlFor="paket">Paket *</Label>
           <Select id="paket" value={paket} onChange={(e) => { setPaket(e.target.value); const p = cat?.website.packages.find((x) => x.id === e.target.value); if (p) setDur(p.timeline_weeks); }}>
             {cat?.website.packages.map((p) => <option key={p.id} value={p.id}>{p.name} — {fmtRp(p.price_idr)} / {p.timeline_weeks} mgg</option>)}
@@ -233,7 +233,7 @@ export default function Wizard() {
             {cat?.website.features.map((f) => (
               <button key={f} onClick={() => setFitur(fitur.includes(f) ? fitur.filter((x) => x !== f) : [...fitur, f])}
                 aria-pressed={fitur.includes(f)}
-                className={`border-[1.5px] rounded-full px-3.5 py-2 text-sm min-h-10 ${fitur.includes(f) ? "bg-slate-900 text-white border-slate-900" : "bg-white border-slate-300"}`}>{f}</button>
+                className={`border-[1.5px] rounded-full px-3.5 py-2 text-sm min-h-10 transition-colors ${fitur.includes(f) ? "bg-brand text-white border-brand" : "bg-white/5 text-slate-200 border-white/15 hover:border-brand/60"}`}>{f}</button>
             ))}
           </div>
           <div className="mt-4 flex gap-2"><Button variant="secondary" onClick={() => setStep(1)}>← Kembali</Button><Button onClick={() => setStep(3)}>Lanjut →</Button></div>
@@ -242,13 +242,13 @@ export default function Wizard() {
 
       {step === 3 && (
         <Card>
-          <h2 className="font-bold text-lg">Langkah 3 — <Term tip="Kerangka Acuan Kerja dari panitia. Satu kebutuhan per baris.">KAK</Term> + legalitas</h2>
+          <h2 className="font-bold text-lg text-white">Langkah 3 — <Term tip="Kerangka Acuan Kerja dari panitia. Satu kebutuhan per baris.">KAK</Term> + legalitas</h2>
           <Label htmlFor="file">Upload KAK (maks 200KB)</Label>
           <Input id="file" type="file" accept=".txt,.md,.csv,.json,.pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           <Label htmlFor="dok">atau tempel teks KAK</Label>
           <Textarea id="dok" rows={4} value={dok} onChange={(e) => setDok(e.target.value)}
             placeholder={"Contoh per baris:\nPengembangan backend API\nPengujian aplikasi"} />
-          <p className="text-xs text-slate-500 mt-1">{kakLines ? `${kakLines} baris KAK — tiap baris harus cocok 1 komponen.` : "Belum ada baris KAK."}</p>
+          <p className="text-xs text-slate-400 mt-1">{kakLines ? `${kakLines} baris KAK — tiap baris harus cocok 1 komponen.` : "Belum ada baris KAK."}</p>
           <div className="grid sm:grid-cols-2 gap-x-4">
             <div><Label htmlFor="nib"><Term tip="Nomor Induk Berusaha dari OSS.">NIB</Term> *</Label>
               <Input id="nib" value={legal.nib} onChange={(e) => setLegal({ ...legal, nib: e.target.value })} placeholder="8120101234567" /></div>
@@ -261,7 +261,7 @@ export default function Wizard() {
             <Input value={catatan} onChange={(e) => setCatatan(e.target.value)} maxLength={500} placeholder="Diskusi pagu, strategi harga…" className="mt-1" />
           </details>
           {err !== "" && <div className="mt-3"><Alert kind="error">{err}</Alert></div>}
-          <div className="sticky bottom-3 bg-slate-900 text-white rounded-xl px-4 py-2.5 flex gap-4 flex-wrap text-sm mt-4">
+          <div className="sticky bottom-3 bg-[#101318] border border-white/10 text-white rounded-xl px-4 py-2.5 flex gap-4 flex-wrap text-sm mt-4 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
             <span>Total <b>{fmtRp(total)}</b></span>
             <span>Pagu <b>{pagu ? fmtRp(pagu) : "tanpa pagu"}</b></span>
             <span className={`flex items-center gap-1.5 ${pagu && total > pagu ? "text-red-300 font-bold" : ""}`}>
@@ -276,23 +276,23 @@ export default function Wizard() {
 
       {step === 4 && (
         <Card>
-          <h2 className="font-bold text-lg" id="hasil">Langkah 4 — Hasil &amp; gate korporat</h2>
+          <h2 className="font-bold text-lg text-white" id="hasil">Langkah 4 — Hasil &amp; gate korporat</h2>
           {err !== "" && <div className="my-2"><Alert kind="error">{err}</Alert></div>}
-          {!res && <p className="text-sm text-slate-500">Belum ada draft. Selesaikan langkah 1–3 lalu buat draft.</p>}
+          {!res && <p className="text-sm text-slate-400">Belum ada draft. Selesaikan langkah 1–3 lalu buat draft.</p>}
           {res && <>
             <p><Badge ok={res.compliance.passed && res.korporat.gate.passed}>
               Compliance {res.compliance.score.toFixed(0)}% — {res.korporat.gate.passed ? (res.compliance.passed ? "LOLOS" : "ADA PELANGGARAN") : "BLOKIR GATE"}
-            </Badge> <span className="text-sm text-slate-500">{res.meta.package} · {fmtRp(res.meta.total)} · {res.meta.duration_weeks} minggu</span></p>
+            </Badge> <span className="text-sm text-slate-400">{res.meta.package} · {fmtRp(res.meta.total)} · {res.meta.duration_weeks} minggu</span></p>
             <div className="flex gap-2 flex-wrap my-2">
               {res.compliance.checks.map((c) => <Badge key={c.name} ok={c.ok}>{c.name}</Badge>)}
             </div>
-            <div className={`border-[1.5px] border-dashed rounded-[10px] p-3 mt-2 ${res.korporat.gate.passed ? "border-green-600 bg-green-50" : "border-red-600 bg-red-50"}`}>
-              <p className={`font-bold flex items-center gap-1.5 ${res.korporat.gate.passed ? "text-green-700" : "text-red-700"}`}>
+            <div className={`border-[1.5px] border-dashed rounded-[10px] p-3 mt-2 ${res.korporat.gate.passed ? "border-green-500/60 bg-green-500/10" : "border-red-500/60 bg-red-500/10"}`}>
+              <p className={`font-bold flex items-center gap-1.5 ${res.korporat.gate.passed ? "text-green-300" : "text-red-300"}`}>
                 {res.korporat.gate.passed ? "Gate: LOLOS ✓" : <><OctagonX size={16} aria-hidden /> Gate: BLOKIR</>}</p>
-              {res.korporat.gate.blocks.map((b) => <div key={b} className="text-red-700 text-sm flex items-start gap-1.5"><OctagonX size={14} className="mt-0.5 shrink-0" aria-hidden /> {b}</div>)}
-              {res.korporat.uncovered.slice(0, 5).map((u: string) => <div key={u} className="text-sm">• KAK tak terpetakan: {u.slice(0, 120)}</div>)}
+              {res.korporat.gate.blocks.map((b) => <div key={b} className="text-red-300 text-sm flex items-start gap-1.5"><OctagonX size={14} className="mt-0.5 shrink-0" aria-hidden /> {b}</div>)}
+              {res.korporat.uncovered.slice(0, 5).map((u: string) => <div key={u} className="text-sm text-slate-300">• KAK tak terpetakan: {u.slice(0, 120)}</div>)}
             </div>
-            <pre className="whitespace-pre-wrap bg-slate-900 text-slate-100 p-4 rounded-[10px] overflow-auto max-h-[60vh] text-[0.83rem] font-mono mt-3">{res.markdown}</pre>
+            <pre className="whitespace-pre-wrap bg-black/40 border border-white/10 text-slate-100 p-4 rounded-[10px] overflow-auto max-h-[60vh] text-[0.83rem] font-mono mt-3">{res.markdown}</pre>
             <div className="mt-3 flex gap-2 flex-wrap">
               <Button variant="secondary" onClick={() => exportDocx("md")}>Export .md</Button>
               <Button variant="secondary" onClick={() => exportDocx("docx")}>Export .docx</Button>
