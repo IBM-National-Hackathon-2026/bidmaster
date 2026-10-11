@@ -142,14 +142,17 @@ function DownloadButton({ text, nama, saran }: { text: string; nama: string; sar
         <span className="text-[0.68rem] font-semibold">{busy ? "…" : T.agen.unduhJawaban}</span>
       </button>
       {open && (
-        <div className="absolute z-20 mt-1 left-0 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[11rem] anim-fade-up">
-          <button onClick={() => go("docx")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-2">
-            <FileText size={13} aria-hidden /> {T.agen.unduhDocx}
-          </button>
-          <button onClick={() => go("md")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-2">
-            <Download size={13} aria-hidden /> {T.agen.unduhMd}
-          </button>
-        </div>
+        <>
+          <button type="button" aria-hidden tabIndex={-1} onClick={() => setOpen(false)} className="fixed inset-0 z-10 cursor-default" />
+          <div className="absolute z-20 mt-1 left-0 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[11rem] anim-fade-up">
+            <button onClick={() => go("docx")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-2">
+              <FileText size={13} aria-hidden /> {T.agen.unduhDocx}
+            </button>
+            <button onClick={() => go("md")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-2">
+              <Download size={13} aria-hidden /> {T.agen.unduhMd}
+            </button>
+          </div>
+        </>
       )}
     </div>
   );
