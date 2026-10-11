@@ -1,7 +1,6 @@
 import { FileText, Lock, Send, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../auth";
-import { LogoMark } from "../components/Logo";
 import { api, authHeaders } from "../lib/utils";
 
 type Msg = { role: "user" | "bot"; text: string; err?: boolean };
@@ -100,7 +99,7 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
         <div ref={box} className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
           {msgs.length === 0 && (
             <div className="flex flex-col items-center text-center my-auto gap-3 anim-fade-up">
-              <div className="anim-pulse-ring rounded-full" aria-hidden="true"><LogoMark size={72} inverted /></div>
+              <img src="/BidMaster-Ikon-1024.png" alt="Bob" className="w-[72px] h-[72px] rounded-2xl anim-pulse-ring" />
               <h3 className="text-xl font-bold text-white">Halo! Saya Bob.</h3>
               <p className="text-slate-400 text-sm max-w-md">Ceritakan kebutuhan tender — draft, revisi, dan PRD lewat satu flow Langflow.</p>
             </div>
@@ -110,7 +109,7 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
               <div className="w-7 h-7 shrink-0 flex items-center justify-center" aria-hidden="true">
                 {m.role === "user"
                   ? <span className="w-7 h-7 rounded-full bg-slate-600 flex items-center justify-center text-[0.7rem] font-bold text-white">K</span>
-                  : <LogoMark size={28} inverted />}</div>
+                  : <img src="/BidMaster-Ikon-1024.png" alt="Bob" className="w-7 h-7 rounded-lg" />}</div>
               <div className="max-w-[72%]">
                 {m.role === "user"
                   ? <div className="bg-brand text-white rounded-2xl rounded-br px-3.5 py-2.5 text-sm whitespace-pre-wrap shadow-[0_4px_20px_rgba(229,72,77,0.25)]">{m.text}</div>

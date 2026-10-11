@@ -35,6 +35,7 @@ export default function Login() {
   return (
     <main className="min-h-[calc(100vh-120px)] flex items-center justify-center p-4">
       <Card className="anim-fade-up w-full max-w-md p-8">
+        <img src="/BidMaster-Logo.png" alt="BidMaster AI" className="h-11 w-auto mb-5" />
         <h1 className="text-2xl font-extrabold text-white">{T.auth.judul}</h1>
         <p className="text-base text-slate-400 mt-1 mb-5">{T.auth.sub}</p>
         <form onSubmit={submit} noValidate>

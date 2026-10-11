@@ -4,7 +4,6 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 import { T } from "../ui-text";
 import { api } from "../lib/utils";
-import { LogoMark } from "./Logo";
 
 const link = ({ isActive }: { isActive: boolean }) =>
   `px-3 py-2 rounded-md text-sm font-medium no-underline transition-colors min-h-11 inline-flex items-center ${
@@ -40,12 +39,8 @@ export function Nav() {
   return (
     <header className="sticky top-0 z-50 bg-night/90 backdrop-blur-md border-b border-white/10">
       <div className="max-w-6xl mx-auto flex items-center gap-2 px-4 sm:px-6 h-16">
-        <Link to="/app" className="flex items-center gap-2.5 no-underline" aria-label="BidMaster AI beranda">
-          <LogoMark size={34} />
-          <span className="leading-tight hidden sm:block">
-            <span className="block font-extrabold text-white text-[0.95rem]">BidMaster AI</span>
-            <span className="block text-[0.68rem] text-slate-400">Asisten proposal tender</span>
-          </span>
+        <Link to="/app" className="flex items-center no-underline shrink-0" aria-label="BidMaster AI beranda">
+          <img src="/BidMaster-Logo.png" alt="BidMaster AI" className="h-9 w-auto" />
         </Link>
         <nav className="flex gap-1 mx-auto" aria-label="Navigasi utama">
           <NavLink to="/app" className={link}>{T.nav.baru}</NavLink>
