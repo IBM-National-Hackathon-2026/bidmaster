@@ -93,7 +93,7 @@ export default function Proposal() {
       )}
       {step === 1 && p && <Step1 p={p} setP={setP} autosave={autosave} reload={() => load(p.id)} />}
       {step === 2 && p && (
-        <Step2 p={p} goHarga={() => setStep(3)} agent={<Agent compact />} />
+        <Step2 p={p} setP={setP} goHarga={() => setStep(3)} agent={<Agent compact />} />
       )}
       {step === 3 && p && <Step3 p={p} />}
       {p && (

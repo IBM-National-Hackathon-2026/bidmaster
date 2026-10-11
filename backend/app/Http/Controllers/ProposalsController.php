@@ -75,7 +75,9 @@ class ProposalsController
             'pagu' => $proposal->pagu, 'durasi_minggu' => $proposal->durasi_minggu,
             'req_nama' => $proposal->req_nama, 'req_satuan' => $proposal->req_satuan, 'req_jumlah' => $proposal->req_jumlah,
             'req_teks' => $proposal->req_teks, 'pendukung' => $proposal->pendukung ?? [],
-            'items' => $proposal->items ?? [], 'status' => $proposal->status,
+            'req_units' => $proposal->req_units ?? [],
+            'items' => $proposal->items ?? [], 'decisions' => $proposal->decisions ?? [],
+            'approvals' => $proposal->approvals ?? [], 'status' => $proposal->status,
             'current_version' => $proposal->current_version,
             'updated_at' => $proposal->updated_at?->toIso8601String()];
     }
@@ -183,7 +185,13 @@ class ProposalsController
             $proposal->req_teks = implode("\n", array_map(fn ($unit) => $unit['teks'], $parsed['units']));
             $proposal->req_satuan = $parsed['satuan'];
             $proposal->req_jumlah = $parsed['jumlah'];
+            $proposal->req_units = array_map(fn ($unit) => [
+                'label' => $unit['label'], 'teks' => $unit['teks'],
+                'halaman' => $unit['halaman'] ?? null, 'paragraf' => $unit['paragraf'] ?? null,
+            ], $parsed['units']);
             $proposal->items = [];
+            $proposal->decisions = [];
+            $proposal->approvals = [];
             $proposal->status = 'draf';
         } else {
             $pend = $proposal->pendukung ?? [];
@@ -198,6 +206,167 @@ class ProposalsController
         return response()->json(['proposal' => $this->full($proposal->fresh()),
             'file' => ['nama' => $parsed['nama'], 'satuan' => $parsed['satuan'],
                 'jumlah' => $parsed['jumlah'], 'status' => 'berhasil dibaca']]);
+    }
+
+    public function quotes(Request $request)
+    {
+        $codes = [];
+        foreach (explode(',', (string) $request->query('codes', '')) as $c) {
+            $c = strtoupper(trim($c));
+            if (preg_match('/^K\d{2}$/', $c)) {
+                $codes[] = $c;
+            }
+        }
+        $codes = array_values(array_unique(array_slice($codes, 0, 10)));
+        $dir = config('bidmaster.knowledge_dir');
+        $map = [];
+        $file = $dir.'/knowledge_perusahaan.md';
+        if (is_file($file)) {
+            foreach (explode("\n", file_get_contents($file)) as $line) {
+                if (preg_match('/^(K\d{2})\s*\|\s*(.+)$/', trim($line), $m)) {
+                    $map[$m[1]] = trim($m[2]);
+                }
+            }
+        }
+        $out = [];
+        foreach ($codes as $c) {
+            if (isset($map[$c])) {
+                $out[] = ['kode' => $c, 'teks' => $map[$c]];
+            }
+        }
+
+        return response()->json(['quotes' => $out]);
+    }
+
+    public function source(Request $request, Proposal $proposal)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $units = $proposal->req_units ?? [];
+        if ($units === []) {
+            foreach (preg_split('/\R/', $proposal->req_teks) as $i => $line) {
+                $line = trim($line);
+                if ($line !== '') {
+                    $units[] = ['label' => 'baris '.($i + 1), 'teks' => $line];
+                }
+            }
+        }
+        $baris = $request->query('baris');
+        $halaman = $request->query('halaman');
+        $paragraf = $request->query('paragraf');
+        $kutipan = mb_substr(trim((string) $request->query('kutipan', '')), 0, 500);
+        $idx = null;
+        $label = '';
+        foreach ($units as $i => $u) {
+            if ($baris !== null && ($u['label'] ?? '') === 'baris '.(int) $baris) {
+                $idx = $i;
+                $label = $u['label'];
+                break;
+            }
+            if ($halaman !== null && ($u['halaman'] ?? null) == (int) $halaman
+                && ($u['paragraf'] ?? null) == (int) $paragraf) {
+                $idx = $i;
+                $label = $u['label'];
+                break;
+            }
+        }
+        if ($idx === null) {
+            return response()->json(['error' => 'Sumber tidak ditemukan di dokumen.'], 404);
+        }
+        $pick = fn ($i) => isset($units[$i]) ? ['label' => $units[$i]['label'], 'teks' => $units[$i]['teks']] : null;
+
+        return response()->json(['label' => $label,
+            'target' => $units[$idx]['teks'], 'kutipan' => $kutipan,
+            'atas' => array_values(array_filter([$pick($idx - 2), $pick($idx - 1)])),
+            'bawah' => array_values(array_filter([$pick($idx + 1), $pick($idx + 2)]))]);
+    }
+
+    public function decide(Request $request, Proposal $proposal, string $item)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $u = $request->attributes->get('member');
+        $d = $request->isJson() ? $request->json()->all() : [];
+        $putusan = $d['putusan'] ?? '';
+        if (! in_array($putusan, ['benar', 'ubah', 'tanya'], true)) {
+            return response()->json(['error' => 'Putusan harus benar/ubah/tanya.', 'field' => 'putusan'], 400);
+        }
+        $items = $proposal->items ?? [];
+        $found = null;
+        foreach ($items as $it) {
+            if (($it['id'] ?? '') === $item) {
+                $found = $it;
+                break;
+            }
+        }
+        if (! $found) {
+            return response()->json(['error' => 'Butir tidak ditemukan.'], 404);
+        }
+        $alasan = mb_substr(trim((string) ($d['alasan'] ?? '')), 0, 300);
+        if ($putusan === 'ubah') {
+            $status = $d['status'] ?? '';
+            if (! in_array($status, ['sesuai', 'sebagian', 'berisiko'], true)) {
+                return response()->json(['error' => 'Status harus Sesuai/Sebagian/Berisiko.', 'field' => 'status'], 400);
+            }
+            if ($alasan === '') {
+                return response()->json(['error' => 'Alasan wajib diisi saat mengubah status.', 'field' => 'alasan'], 400);
+            }
+        } else {
+            $status = $found['status'];
+        }
+        $decisions = $proposal->decisions ?? [];
+        $decisions[$item] = ['putusan' => $putusan, 'status_awal' => $found['status'],
+            'status_akhir' => $putusan === 'tanya' ? $found['status'] : $status,
+            'alasan' => $alasan,
+            'catatan' => mb_substr(trim((string) ($d['catatan'] ?? '')), 0, 500),
+            'pertanyaan' => $putusan === 'tanya' ? mb_substr(trim((string) ($d['pertanyaan'] ?? $alasan)), 0, 300) : '',
+            'oleh' => $u['nama'], 'pada' => date('c')];
+        $proposal->decisions = $decisions;
+        $proposal->approvals = [];
+        $proposal->save();
+        $this->audits->log($u['id'], 'keputusan',
+            "#{$proposal->id} {$item}: {$found['status']} → {$decisions[$item]['status_akhir']} ({$putusan}) {$alasan}");
+
+        return response()->json(['proposal' => $this->full($proposal->fresh())]);
+    }
+
+    public function approveSesuai(Request $request, Proposal $proposal)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $u = $request->attributes->get('member');
+        $d = $request->isJson() ? $request->json()->all() : [];
+        if (($d['konfirmasi'] ?? false) !== true) {
+            return response()->json(['error' => 'Konfirmasi wajib dicentang.', 'field' => 'konfirmasi'], 400);
+        }
+        $items = $proposal->items ?? [];
+        $decisions = $proposal->decisions ?? [];
+        $n = 0;
+        foreach ($items as $it) {
+            $id = $it['id'] ?? '';
+            if ($id === '' || isset($decisions[$id])) {
+                continue;
+            }
+            if ($it['status'] === 'sesuai' && $it['keyakinan'] === 'tinggi' && ! $it['perlu_konfirmasi']) {
+                $decisions[$id] = ['putusan' => 'benar', 'status_awal' => 'sesuai',
+                    'status_akhir' => 'sesuai', 'alasan' => 'Disetujui massal (Sesuai, keyakinan Tinggi).',
+                    'catatan' => '', 'pertanyaan' => '', 'oleh' => $u['nama'], 'pada' => date('c'),
+                    'massal' => true];
+                $n++;
+            }
+        }
+        if ($n === 0) {
+            return response()->json(['error' => 'Tidak ada butir yang memenuhi syarat.'], 400);
+        }
+        $proposal->decisions = $decisions;
+        $proposal->approvals = [];
+        $proposal->save();
+        $this->audits->log($u['id'], 'keputusan_massal', "#{$proposal->id} {$n} butir Sesuai-Tinggi disetujui");
+
+        return response()->json(['proposal' => $this->full($proposal->fresh()), 'disetujui' => $n]);
     }
 
     public function analyze(Request $request, Proposal $proposal)

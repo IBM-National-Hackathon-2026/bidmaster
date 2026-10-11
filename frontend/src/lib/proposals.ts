@@ -9,11 +9,17 @@ export type Item = {
   perlu_konfirmasi: boolean;
 };
 
+export type Decision = {
+  putusan: string; status_awal: string; status_akhir: string; alasan: string;
+  catatan: string; pertanyaan: string; oleh?: string; pada?: string;
+};
+
 export type Proposal = {
   id: number; instansi: string; jenis_instansi: string; pagu: number | null;
   durasi_minggu: number; req_nama: string; req_satuan: string; req_jumlah: number;
   req_teks: string; pendukung: { nama: string; satuan: string; jumlah: number }[];
-  items: Item[]; status: string; current_version: number; updated_at?: string;
+  items: Item[]; decisions: Record<string, Decision>; approvals: unknown[];
+  status: string; current_version: number; updated_at?: string;
 };
 
 const J = { "Content-Type": "application/json" };
