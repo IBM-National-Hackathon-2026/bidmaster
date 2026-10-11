@@ -214,7 +214,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
             <div className="flex gap-2 mt-2">
               {(["persen", "nominal"] as const).map((t) => (
                 <button key={t} onClick={() => setTipe(t)} aria-pressed={tipe === t}
-                  className={`rounded-lg px-3 py-2 text-xs font-semibold border min-h-10 ${tipe === t ? "border-brand text-brand" : "border-slate-300 text-slate-600"}`}>
+                  className={`rounded-lg px-3.5 py-2.5 text-xs font-semibold border min-h-11 ${tipe === t ? "border-brand text-brand" : "border-slate-300 text-slate-600"}`}>
                   {t === "persen" ? T.harga.diskonPersen : T.harga.diskonNominal}</button>
               ))}
               <Input type="number" min={0} aria-label="Nilai diskon" value={nilai}
@@ -264,9 +264,10 @@ export default function Step3({ p, setP, refresh, goStep }: {
           {versions.length > 0 && (
             <div className="mt-3 text-sm text-slate-600">
               {T.harga.versi}: {versions.map((v) => (
-                <span key={v.versi} className="mr-2">v{v.versi}
-                  <button onClick={() => unduhVersi(v.versi, "docx")} className="text-brand underline ml-1">.docx</button>
-                  <button onClick={() => unduhVersi(v.versi, "md")} className="text-brand underline ml-1">.md</button>
+                <span key={v.versi} className="inline-flex items-center gap-1 mr-3">
+                  <span className="text-slate-700">v{v.versi}</span>
+                  <button onClick={() => unduhVersi(v.versi, "docx")} className="text-brand underline inline-flex items-center min-h-11 px-1.5">.docx</button>
+                  <button onClick={() => unduhVersi(v.versi, "md")} className="text-brand underline inline-flex items-center min-h-11 px-1.5">.md</button>
                 </span>
               ))}
             </div>
@@ -305,7 +306,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
               <li key={s} className={`flex items-start gap-2 ${syarat[i].ok ? "text-green-700" : "text-slate-600"}`}>
                 <span aria-hidden>{syarat[i].ok ? "✓" : "○"}</span>
                 {syarat[i].aksi && !syarat[i].ok
-                  ? <button onClick={syarat[i].aksi} className="underline text-left">{s}</button>
+                  ? <button onClick={syarat[i].aksi} className="underline text-left min-h-11 inline-flex items-center">{s}</button>
                   : <span>{s}</span>}
               </li>
             ))}

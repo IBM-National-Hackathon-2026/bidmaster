@@ -68,7 +68,7 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <div className={`flex overflow-hidden ${compact ? "h-[70vh] rounded-xl border border-slate-200" : "h-[calc(100vh-60px)]"}`}>
+    <div className={`flex overflow-hidden ${compact ? "h-[70vh] supports-[height:100dvh]:h-[70dvh] rounded-xl border border-slate-200" : "h-[calc(100vh-60px)] supports-[height:100dvh]:h-[calc(100dvh-60px)]"}`}>
       <aside className="w-64 shrink-0 bg-surface border-r border-slate-200 hidden md:flex flex-col">
         <div className="p-4 border-b border-slate-200 text-xs text-slate-600">
           <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${ready ? "bg-green-400" : ready === false ? "bg-red-400" : "bg-slate-500"} ${ready ? "animate-pulse" : ""}`} />
@@ -110,7 +110,7 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
                 {m.role === "user"
                   ? <span className="w-7 h-7 rounded-full bg-slate-600 flex items-center justify-center text-[0.7rem] font-bold text-white">K</span>
                   : <img src="/BidMaster-Ikon-1024.png" alt="Bob" className="w-7 h-7 rounded-lg" />}</div>
-              <div className="max-w-[72%]">
+              <div className="max-w-[85%] sm:max-w-[72%]">
                 {m.role === "user"
                   ? <div className="bg-brand text-white rounded-2xl rounded-br px-3.5 py-2.5 text-sm whitespace-pre-wrap shadow-[0_4px_20px_rgba(255,176,32,0.25)]">{m.text}</div>
                   : <div className={`bg-surface border rounded-2xl rounded-bl px-3.5 py-2.5 text-sm max-w-none text-slate-800 ${m.err ? "border-red-300 text-red-800" : "border-slate-200"}`}
@@ -124,11 +124,11 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
             <span className="text-sm text-slate-600 italic">Bob sedang berpikir…</span>
           </div>}
         </div>
-        <div className="bg-surface border-t border-slate-200 p-3 relative">
+        <div className="bg-white border-t border-slate-200 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] relative">
           <div className="flex gap-1.5 flex-wrap mb-2 max-w-4xl mx-auto">
             {HINTS.map((h) => (
               <button key={h} onClick={() => setInput(h)}
-                className="bg-slate-100 border border-slate-200 rounded-full px-3 py-1 text-xs text-slate-600 hover:border-brand/60 hover:text-brand transition-colors">
+                className="bg-slate-100 border border-slate-200 rounded-full px-3.5 py-2 text-xs text-slate-600 hover:border-brand/60 hover:text-brand transition-colors min-h-11 inline-flex items-center">
                 {h.length > 48 ? h.slice(0, 48) + "…" : h}</button>
             ))}
           </div>
@@ -137,7 +137,7 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
               placeholder="Ceritakan tentang client atau tender… (Enter kirim, Shift+Enter baris baru)"
               maxLength={4000}
-              className="flex-1 resize-none border-[1.5px] border-slate-200 bg-white rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20" />
+              className="flex-1 resize-none border-[1.5px] border-slate-200 bg-white rounded-xl px-3.5 py-2.5 text-base text-slate-800 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20" />
             <button disabled={!input.trim() || busy || !ready}
               className="w-11 h-11 rounded-xl bg-brand hover:bg-brand-dark text-white flex items-center justify-center disabled:opacity-40 transition-all hover:scale-105 active:scale-95 shadow-[0_4px_20px_rgba(255,176,32,0.3)]" title="Kirim" aria-label="Kirim pesan">
               <Send size={18} aria-hidden />

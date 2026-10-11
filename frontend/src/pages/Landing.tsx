@@ -29,21 +29,23 @@ export default function Landing() {
           <path d="M17 11H36L47 22V50A3 3 0 0 1 44 53H17A3 3 0 0 1 14 50V14A3 3 0 0 1 17 11Z" fill="none" stroke="#1C2D5C" strokeWidth="0.5" />
           <path d="M21 22V43M21 22H27.5A5 5 0 0 1 27.5 32H21M21 32H29A5.5 5.5 0 0 1 29 43H21" fill="none" stroke="#1C2D5C" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <header className="relative max-w-[1160px] mx-auto px-6 pt-6 flex flex-wrap items-center justify-between gap-4">
-          <span className="flex items-center gap-3">
+        <header className="relative max-w-[1160px] mx-auto px-6 pt-6 flex items-center justify-between gap-4">
+          <span className="flex items-center gap-3 shrink-0">
             <LogoPutih />
             <span className="font-display text-2xl text-white tracking-tight"><span className="font-light">Bid</span><span className="font-extrabold">Master</span></span>
           </span>
-          <nav aria-label="Navigasi utama" className="flex flex-wrap items-center gap-x-7 gap-y-2 text-[15px] font-medium text-[#C9D1F0]">
-            <a className="hover:text-white transition-colors" href="#cara">Cara kerja</a>
-            <a className="hover:text-white transition-colors" href="#demo">Coba langsung</a>
-            <a className="hover:text-white transition-colors" href="#fitur">Fitur</a>
-            <a className="hover:text-white transition-colors" href="#agen">Agen</a>
-            <a className="hover:text-white transition-colors" href="#faq">FAQ</a>
+          <nav aria-label="Navigasi utama" className="flex items-center gap-x-7 text-[15px] font-medium text-[#C9D1F0]">
+            <span className="hidden md:flex items-center gap-x-7">
+              <a className="hover:text-white transition-colors" href="#cara">Cara kerja</a>
+              <a className="hover:text-white transition-colors" href="#demo">Coba langsung</a>
+              <a className="hover:text-white transition-colors" href="#fitur">Fitur</a>
+              <a className="hover:text-white transition-colors" href="#agen">Agen</a>
+              <a className="hover:text-white transition-colors" href="#faq">FAQ</a>
+            </span>
             <Link to="/login" className="inline-flex items-center min-h-11 px-5 bg-[#FFB020] text-[#0F1B3D] rounded-xl font-semibold no-underline hover:brightness-105">Masuk</Link>
           </nav>
         </header>
-        <div className="relative max-w-[1160px] mx-auto px-6 pt-[88px] pb-[150px]">
+        <div className="relative max-w-[1160px] mx-auto px-6 pt-14 sm:pt-[88px] pb-[120px] sm:pb-[150px]">
           <div className="max-w-[760px] flex flex-col gap-7">
             <span className="anim-fade-up inline-flex self-start items-center gap-2.5 px-3.5 py-1.5 border border-[#2C3E75] rounded-full text-[13px] font-semibold text-[#C9D1F0]">
               <span className="w-2 h-2 rounded-full bg-[#FFB020]" />{LANDING.badge}
@@ -60,7 +62,7 @@ export default function Landing() {
       </section>
 
       {/* DEMO */}
-      <section id="demo" className="relative px-6" style={{ marginTop: "-100px" }}>
+      <section id="demo" className="relative px-4 sm:px-6 -mt-16 sm:-mt-[100px]">
         <div className="max-w-[1160px] mx-auto bg-white border border-[#D9DDEE] rounded-[22px] overflow-hidden" style={{ boxShadow: "0 30px 70px -30px rgba(15,27,61,0.45)" }}>
           <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 bg-[#EEF0F8] border-b border-[#D9DDEE]">
             <div className="flex items-center gap-2" aria-hidden="true">
@@ -72,7 +74,7 @@ export default function Landing() {
             <div className="text-xs font-semibold text-[#4A5578] px-2.5 py-[3px] border border-[#C9D1F0] rounded-full">Demo interaktif</div>
           </div>
           <div className="flex flex-wrap items-stretch">
-            <div className="flex-1 basis-[280px] min-w-0 p-6 flex flex-col gap-[18px] border-r border-[#E3E6F2]">
+            <div className="flex-1 basis-[280px] min-w-0 p-5 sm:p-6 flex flex-col gap-[18px] border-b lg:border-b-0 lg:border-r border-[#E3E6F2]">
               <div className="font-display font-bold text-[15px] tracking-wide uppercase text-[#4A5578]">1. Brief singkat</div>
               <div className="flex flex-col gap-2.5">
                 <div className="text-sm font-semibold text-[#0F1B3D]">Jenis proposal</div>
@@ -95,7 +97,7 @@ export default function Landing() {
               <Button onClick={() => setJadi(true)} className="min-h-12 bg-[#0F1B3D] hover:bg-[#1a2450] text-white font-bold">Buat draft contoh</Button>
               {!jadi && <p className="text-sm text-[#4A5578] m-0">{LANDING.demoSiap}</p>}
             </div>
-            <div className="flex-[2] basis-[420px] min-w-0 p-6 bg-[#F5F7FD] flex flex-col gap-3.5">
+            <div className="flex-[2] basis-[420px] min-w-0 p-5 sm:p-6 bg-[#F5F7FD] flex flex-col gap-3.5">
               <div className="font-display font-bold text-[15px] tracking-wide uppercase text-[#4A5578]">2. Draft proposal</div>
               {!jadi ? (
                 <div className="min-h-[360px] flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed border-[#C9D1F0] rounded-2xl text-center">
@@ -162,7 +164,7 @@ export default function Landing() {
       </section>
 
       {/* CARA KERJA */}
-      <section id="cara" className="max-w-[1160px] mx-auto px-6 pt-[120px]">
+      <section id="cara" className="max-w-[1160px] mx-auto px-6 pt-16 sm:pt-[120px]">
         <div className="flex flex-col gap-3 max-w-[640px]">
           <div className="text-[13px] font-bold uppercase tracking-[0.14em] text-[#8A5A00]">Cara kerja</div>
           <h2 className="m-0 font-display font-extrabold text-[#0F1B3D] tracking-tight leading-[1.12] text-[clamp(30px,3.6vw,44px)]">Dari dokumen tender ke proposal siap kirim dalam tiga langkah.</h2>
@@ -179,7 +181,7 @@ export default function Landing() {
       </section>
 
       {/* FITUR */}
-      <section id="fitur" className="max-w-[1160px] mx-auto px-6 pt-[120px]">
+      <section id="fitur" className="max-w-[1160px] mx-auto px-6 pt-16 sm:pt-[120px]">
         <div className="flex flex-col gap-3 max-w-[640px]">
           <div className="text-[13px] font-bold uppercase tracking-[0.14em] text-[#8A5A00]">Fitur</div>
           <h2 className="m-0 font-display font-extrabold text-[#0F1B3D] tracking-tight leading-[1.12] text-[clamp(30px,3.6vw,44px)]">Satu tools untuk tim yang proposalnya tidak boleh salah.</h2>
@@ -205,8 +207,8 @@ export default function Landing() {
       </section>
 
       {/* AGEN */}
-      <section id="agen" className="max-w-[1160px] mx-auto px-6 pt-[120px]">
-        <div className="rounded-[28px] p-12 flex flex-wrap gap-10 items-center" style={{ background: "#0F1B3D" }}>
+      <section id="agen" className="max-w-[1160px] mx-auto px-6 pt-16 sm:pt-[120px]">
+        <div className="rounded-[28px] p-7 sm:p-12 flex flex-wrap gap-10 items-center" style={{ background: "#0F1B3D" }}>
           <div className="flex-1 basis-[380px] min-w-0 flex flex-col gap-[18px]">
             <div className="text-[13px] font-bold uppercase tracking-[0.14em] text-[#FFB020]">{LANDING.agenJudul.split(" ").slice(0, 2).join(" ")}</div>
             <h2 className="m-0 font-display font-extrabold text-white tracking-tight leading-[1.14] text-[clamp(28px,3.4vw,40px)]">{LANDING.agenJudul}</h2>
@@ -222,7 +224,7 @@ export default function Landing() {
       </section>
 
       {/* UNTUK SIAPA */}
-      <section className="max-w-[1160px] mx-auto px-6 pt-[120px]">
+      <section className="max-w-[1160px] mx-auto px-6 pt-16 sm:pt-[120px]">
         <div className="flex flex-col gap-3 max-w-[640px]">
           <div className="text-[13px] font-bold uppercase tracking-[0.14em] text-[#8A5A00]">Untuk siapa</div>
           <h2 className="m-0 font-display font-extrabold text-[#0F1B3D] tracking-tight leading-[1.12] text-[clamp(30px,3.6vw,44px)]">Dibuat untuk tim yang proposalnya tidak boleh telat.</h2>
@@ -238,7 +240,7 @@ export default function Landing() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="max-w-[1160px] mx-auto px-6 pt-[120px]">
+      <section id="faq" className="max-w-[1160px] mx-auto px-6 pt-16 sm:pt-[120px]">
         <div className="flex flex-col gap-3 max-w-[640px]">
           <div className="text-[13px] font-bold uppercase tracking-[0.14em] text-[#8A5A00]">FAQ</div>
           <h2 className="m-0 font-display font-extrabold text-[#0F1B3D] tracking-tight leading-[1.12] text-[clamp(30px,3.6vw,44px)]">Pertanyaan yang sering muncul.</h2>
@@ -254,8 +256,8 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-[1160px] mx-auto px-6 pt-[120px] pb-24">
-        <div className="rounded-[28px] p-12 flex flex-wrap items-center justify-between gap-7" style={{ background: "#FFB020" }}>
+      <section className="max-w-[1160px] mx-auto px-6 pt-16 sm:pt-[120px] pb-24">
+        <div className="rounded-[28px] p-7 sm:p-12 flex flex-wrap items-center justify-between gap-7" style={{ background: "#FFB020" }}>
           <div className="flex-1 basis-[400px] min-w-0 flex flex-col gap-2.5">
             <h2 className="m-0 font-display font-extrabold text-[#0F1B3D] tracking-tight leading-[1.14] text-[clamp(28px,3.4vw,40px)]">{LANDING.ctaJudul}</h2>
             <p className="m-0 text-[17px] text-[#3A2A00]">{LANDING.ctaKet}</p>

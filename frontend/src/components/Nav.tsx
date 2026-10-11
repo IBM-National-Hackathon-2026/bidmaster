@@ -14,7 +14,7 @@ function HowDialog({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-labelledby="cara-judul"
-        className="bg-surface border border-slate-200 rounded-2xl p-6 max-w-md w-full"
+        className="bg-surface border border-slate-200 rounded-2xl p-6 max-w-md w-full max-h-[90dvh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}>
         <h2 id="cara-judul" className="font-bold text-lg text-[#0F1B3D]">{T.app.caraKerjaJudul}</h2>
         <p className="text-base text-slate-700 mt-2">{T.app.caraKerjaIsi}</p>
@@ -38,11 +38,12 @@ export function Nav() {
   }, []);
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
-      <div className="max-w-6xl mx-auto flex items-center gap-2 px-4 sm:px-6 h-16">
+      <div className="max-w-6xl mx-auto flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 h-16">
         <Link to="/app" className="flex items-center no-underline shrink-0" aria-label="BidMaster AI beranda">
-          <img src="/BidMaster-Logo.png" alt="BidMaster AI" className="h-9 w-auto" />
+          <img src="/BidMaster-Ikon-1024.png" alt="BidMaster AI" className="h-8 w-auto sm:hidden" />
+          <img src="/BidMaster-Logo.png" alt="BidMaster AI" className="h-9 w-auto hidden sm:block" />
         </Link>
-        <nav className="flex gap-1 mx-auto" aria-label="Navigasi utama">
+        <nav className="flex gap-0.5 sm:gap-1 mx-auto overflow-x-auto max-w-full" aria-label="Navigasi utama">
           <NavLink to="/" end className={link}>Beranda</NavLink>
           <NavLink to="/app" className={link}>{T.nav.baru}</NavLink>
           <NavLink to="/riwayat" className={link}>{T.nav.riwayat}</NavLink>

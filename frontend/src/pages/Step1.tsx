@@ -95,7 +95,7 @@ export default function Step1({ p, setP, autosave, reload }: {
           <div className="mt-2 text-sm text-slate-700" role="status">
             <b>{p.req_nama || file?.name}</b>
             {p.req_jumlah > 0 && <span> · {p.req_jumlah} {p.req_satuan} · {T.unggah.berhasil}</span>}
-            <button onClick={() => inputRef.current?.click()} className="ml-3 text-brand text-sm font-semibold underline">{T.unggah.ganti}</button>
+            <button onClick={() => inputRef.current?.click()} className="ml-2 text-brand text-sm font-semibold underline inline-flex items-center min-h-11 px-1">{T.unggah.ganti}</button>
           </div>
         )}
 
@@ -142,7 +142,7 @@ export default function Step1({ p, setP, autosave, reload }: {
 
         <div className="mt-3 text-xs text-slate-600 border border-slate-200 rounded-lg px-3 py-2">
           {company !== "" ? company + ". " : ""}{T.unggah.perusahaanBox}{" "}
-          <button onClick={useContoh} className="text-brand font-semibold underline">{T.unggah.contoh}</button>
+          <button onClick={useContoh} className="text-brand font-semibold underline inline-flex items-center min-h-11 px-1">{T.unggah.contoh}</button>
         </div>
 
         {err !== "" && <div className="mt-3" role="alert"><Alert kind="error">{err}</Alert></div>}

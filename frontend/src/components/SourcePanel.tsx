@@ -21,7 +21,7 @@ export function SourceButton({ s, onOpen }: {
     <button
       onClick={(e) => onOpen(s, e.currentTarget)}
       aria-label={`Lihat sumber: ${label}`}
-      className="text-[0.72rem] font-semibold text-brand border border-brand/50 rounded-full px-2.5 py-1 min-h-8 hover:bg-brand-light transition-colors">
+      className="text-[0.72rem] font-semibold text-brand border border-brand/50 rounded-full px-3 py-1.5 min-h-11 inline-flex items-center hover:bg-brand-light transition-colors">
       {label}
     </button>
   );

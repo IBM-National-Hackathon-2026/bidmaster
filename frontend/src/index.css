@@ -57,6 +57,7 @@ body {
   background: var(--color-night);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 .avatar-grad {

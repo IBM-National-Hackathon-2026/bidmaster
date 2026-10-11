@@ -107,7 +107,7 @@ export default function Step2({ p, setP, goHarga, agent }: {
         <div className="flex gap-1.5 flex-wrap mt-3" role="group" aria-label="Filter butir">
           {T.tinjau.filter.map((f, i) => (
             <button key={f} onClick={() => setFilter(i)} aria-pressed={filter === i}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold border-[1.5px] min-h-9 ${filter === i ? "bg-brand text-white border-brand" : "border-slate-300 text-slate-600 hover:border-brand/60"}`}>
+              className={`rounded-full px-3.5 py-2 text-xs font-semibold border-[1.5px] min-h-11 ${filter === i ? "bg-brand text-white border-brand" : "border-slate-300 text-slate-600 hover:border-brand/60"}`}>
               {f}</button>
           ))}
         </div>
@@ -120,7 +120,7 @@ export default function Step2({ p, setP, goHarga, agent }: {
 
       {massal && (
         <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center p-4" onClick={() => setMassal(false)}>
-          <div role="dialog" aria-modal="true" className="bg-surface border border-slate-200 rounded-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" className="bg-surface border border-slate-200 rounded-2xl p-6 max-w-sm w-full max-h-[90dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <p className="text-base text-slate-800">{kandidatMassal} {T.tinjau.massalTanya}</p>
             <div className="mt-4 flex gap-2 justify-end">
               <Button variant="secondary" size="sm" onClick={() => setMassal(false)}>{T.umum.kembali}</Button>
@@ -174,7 +174,7 @@ export default function Step2({ p, setP, goHarga, agent }: {
                   <div className="flex gap-1.5 flex-wrap mt-1.5" role="group" aria-label={T.tinjau.putusanJudul}>
                     {[[ "benar", T.tinjau.putusanBenar], ["ubah", T.tinjau.putusanUbah], ["tanya", T.tinjau.putusanTanya]].map(([v, label]) => (
                       <button key={v} onClick={() => startDec(it.id, v)} aria-pressed={form?.putusan === v}
-                        className={`rounded-lg px-3 py-2 text-xs font-semibold border-[1.5px] min-h-10 ${form?.putusan === v ? "border-brand text-brand bg-brand-light" : "border-slate-300 text-slate-600"}`}>
+                        className={`rounded-lg px-3.5 py-2.5 text-xs font-semibold border-[1.5px] min-h-11 ${form?.putusan === v ? "border-brand text-brand bg-brand-light" : "border-slate-300 text-slate-600"}`}>
                         {label as string}</button>
                     ))}
                   </div>
@@ -185,7 +185,7 @@ export default function Step2({ p, setP, goHarga, agent }: {
                           {(["sesuai", "sebagian", "berisiko"] as const).map((s) => (
                             <button key={s} onClick={() => setDec((m) => ({ ...m, [it.id]: { ...m[it.id], status: s } }))}
                               aria-pressed={form.status === s}
-                              className={`rounded-full px-3 py-1.5 text-xs font-semibold border min-h-9 ${form.status === s ? "border-brand text-brand" : "border-slate-300 text-slate-600"}`}>
+                              className={`rounded-full px-3.5 py-2 text-xs font-semibold border min-h-11 ${form.status === s ? "border-brand text-brand" : "border-slate-300 text-slate-600"}`}>
                               {STATUS_LABEL[s]}</button>
                           ))}
                         </div>

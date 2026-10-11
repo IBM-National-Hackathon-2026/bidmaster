@@ -24,7 +24,7 @@ export function Steps({ current, can, reasons }: {
                 Langkah {n}
                 {n < current && ok && <Check size={12} className="text-green-600" aria-hidden />}
               </span>
-              <span className="text-xs text-slate-700">{t}</span>
+              <span className="text-xs text-slate-700 truncate block">{t}</span>
               {!ok && <span className="block text-[0.7rem] text-slate-600">{reasons[i]}</span>}
             </div>
           </li>
