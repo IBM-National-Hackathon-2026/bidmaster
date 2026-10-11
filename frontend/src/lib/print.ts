@@ -30,13 +30,32 @@ export function mdToHtml(text: string): string {
  * Cetak markdown lewat portal tersembunyi di document.body.
  * Lebih andal daripada mengandalkan elemen yang mungkin belum ter-mount.
  */
-export function printMarkdown(markdown: string, title: string) {
+export function printMarkdown(markdown: string, title: string, opts: { logo?: string; company?: string } = {}) {
   const host = document.createElement("div");
   host.className = "print-portal";
 
   const page = document.createElement("div");
   page.className = "print-page";
-  page.innerHTML = mdToHtml(markdown);
+
+  if (opts.logo) {
+    const cover = document.createElement("div");
+    cover.className = "print-cover";
+    const img = document.createElement("img");
+    img.src = opts.logo;
+    img.alt = opts.company ?? "";
+    cover.appendChild(img);
+    if (opts.company) {
+      const nm = document.createElement("p");
+      nm.className = "print-cover-name";
+      nm.textContent = opts.company;
+      cover.appendChild(nm);
+    }
+    page.appendChild(cover);
+  }
+
+  const body = document.createElement("div");
+  body.innerHTML = mdToHtml(markdown);
+  page.appendChild(body);
 
   const foot = document.createElement("div");
   foot.className = "print-foot";

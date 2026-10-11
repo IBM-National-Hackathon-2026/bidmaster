@@ -219,6 +219,7 @@ export const T = {
     unduhMd: "Markdown (.md)",
     unduhSiap: "Bob bisa mengubah jawaban ini jadi file siap unduh.",
     unduhSukses: "File siap diunduh.",
+    unduhSelesai: "Tersimpan",
     unduhGagal: "Gagal membuat file. Coba lagi.",
     saranFile: "Bob menyiapkan jawaban dalam format dokumen. Unduh sebagai file:",
     umumBadge: "Jawaban umum",

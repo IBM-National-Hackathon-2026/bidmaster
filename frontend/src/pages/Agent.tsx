@@ -28,13 +28,14 @@ function slug(s: string): string {
   return t || "jawaban-bob";
 }
 
-/** Unduh teks jawaban Bob sebagai .docx (server) atau .md (klien). */
-export async function unduhJawaban(text: string, format: "docx" | "md", nama: string): Promise<void> {
+/** Unduh teks jawaban Bob sebagai .docx (server, ber-cover) atau .md (klien). */
+export async function unduhJawaban(text: string, format: "docx" | "md", judul: string): Promise<void> {
+  const nama = slug(judul);
   if (format === "md") {
     const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `${slug(nama)}.md`;
+    a.download = `${nama}.md`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -44,7 +45,7 @@ export async function unduhJawaban(text: string, format: "docx" | "md", nama: st
   const r = await fetch("/api/agent/file", {
     method: "POST",
     headers: authHeaders({ "Content-Type": "application/json" }),
-    body: JSON.stringify({ markdown: text, format: "docx", nama }),
+    body: JSON.stringify({ markdown: text, format: "docx", judul, nama }),
   });
   if (!r.ok) {
     const j = (await r.json().catch(() => ({}))) as { error?: string };
@@ -53,11 +54,19 @@ export async function unduhJawaban(text: string, format: "docx" | "md", nama: st
   const blob = await r.blob();
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `${slug(nama)}.docx`;
+  a.download = `${nama}.docx`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+/** Judul dokumen dari heading pertama jawaban, fallback ke nama konteks. */
+export function judulDari(text: string, fallback: string): string {
+  const h = text.match(/^\s*#{1,3}\s+(.+)$/m)?.[1]?.trim();
+  const t = (h || fallback || "Dokumen Bob").replace(/[*_`#]/g, "").replace(/\s+/g, " ").trim();
+
+  return t.slice(0, 120) || "Dokumen Bob";
 }
 
 /** Markdown ringan → HTML dengan blok & spasi yang benar. */
@@ -115,46 +124,45 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-/** Tombol unduh jawaban Bob sebagai .docx / .md. */
+/** Tombol unduh jawaban Bob sebagai .docx / .md — selalu terlihat, tanpa dropdown
+ *  (dropdown sebelumnya terpotong oleh kontainer chat yang bisa di-scroll). */
 function DownloadButton({ text, nama, saran }: { text: string; nama: string; saran?: boolean }) {
   const [busy, setBusy] = useState<"docx" | "md" | null>(null);
-  const [open, setOpen] = useState(false);
+  const [done, setDone] = useState<"docx" | "md" | null>(null);
   async function go(format: "docx" | "md") {
     if (busy) return;
     setBusy(format);
     try {
-      await unduhJawaban(text, format, nama);
+      await unduhJawaban(text, format, judulDari(text, nama));
+      setDone(format);
       toast(T.agen.unduhSukses, "ok");
+      setTimeout(() => setDone(null), 2600);
     } catch (e) {
       toast(e instanceof Error ? e.message : T.agen.unduhGagal, "warn");
     } finally {
       setBusy(null);
-      setOpen(false);
     }
   }
-  return (
-    <div className="relative">
+  const chip = (format: "docx" | "md", label: string) => {
+    const ok = done === format;
+    return (
       <button
-        onClick={() => setOpen((v) => !v)} disabled={busy !== null}
-        aria-label={T.agen.unduhJawaban} aria-expanded={open}
-        className={`transition-opacity p-1.5 rounded-md inline-flex items-center gap-1 ${saran ? "opacity-100 bg-brand-light text-brand" : "opacity-0 group-hover:opacity-100 focus:opacity-100 text-slate-500 hover:text-brand hover:bg-slate-100"}`}>
-        <Download size={13} aria-hidden />
-        <span className="text-[0.68rem] font-semibold">{busy ? "…" : T.agen.unduhJawaban}</span>
+        onClick={() => go(format)} disabled={busy !== null}
+        aria-label={`${T.agen.unduhJawaban} ${label}`}
+        className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 min-h-9 text-[0.7rem] font-semibold transition-all cursor-pointer disabled:opacity-50 ${
+          ok ? "border-green-300 bg-green-50 text-green-700"
+            : "border-slate-300 bg-white text-slate-600 hover:text-brand hover:border-brand hover:bg-brand-light hover:shadow-sm active:scale-95"}`}>
+        {ok ? <Check size={13} aria-hidden /> : busy === format ? <RefreshCw size={13} className="animate-spin" aria-hidden /> : <Download size={13} aria-hidden />}
+        {ok ? T.agen.unduhSelesai : busy === format ? "…" : label}
       </button>
-      {open && (
-        <>
-          <button type="button" aria-hidden tabIndex={-1} onClick={() => setOpen(false)} className="fixed inset-0 z-10 cursor-default" />
-          <div className="absolute z-20 mt-1 left-0 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[11rem] anim-fade-up">
-            <button onClick={() => go("docx")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-2">
-              <FileText size={13} aria-hidden /> {T.agen.unduhDocx}
-            </button>
-            <button onClick={() => go("md")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-2">
-              <Download size={13} aria-hidden /> {T.agen.unduhMd}
-            </button>
-          </div>
-        </>
-      )}
-    </div>
+    );
+  };
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-xl border px-1.5 py-1 ${saran ? "border-brand/35 bg-brand-light" : "border-slate-200 bg-slate-50"}`}>
+      <span className="text-[0.68rem] font-semibold text-slate-500 pl-1">{T.agen.unduhJawaban}</span>
+      {chip("docx", T.agen.unduhDocx)}
+      {chip("md", T.agen.unduhMd)}
+    </span>
   );
 }
 

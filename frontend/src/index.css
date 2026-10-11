@@ -302,4 +302,7 @@ body {
 .print-page code { background: #eef0f8; padding: 1pt 3pt; border-radius: 3pt; font-size: 9pt; }
 .print-page hr { border: none; border-top: 1px solid #e2e6f2; margin: 10pt 0; }
 .print-page .print-foot { margin-top: 16pt; border-top: 1px solid #d7ddee; padding-top: 6pt; font-size: 8.5pt; color: #6b7280; display: flex; justify-content: space-between; }
+.print-page .print-cover { text-align: center; padding: 40pt 0 20pt; border-bottom: 1px solid #d7ddee; margin-bottom: 18pt; break-after: page; page-break-after: always; }
+.print-page .print-cover img { width: 190px; height: auto; margin: 0 auto; }
+.print-page .print-cover-name { font-size: 15pt; font-weight: 800; color: #0f1b3d; margin-top: 10pt; }
 .print-page h1, .print-page h2, .print-page h3, .print-page table, .print-page tr { break-inside: avoid; page-break-inside: avoid; }

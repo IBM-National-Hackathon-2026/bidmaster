@@ -578,13 +578,7 @@ class ProposalsController
 
     private function logoPath(): string
     {
-        $p = storage_path('app/company-logo.png');
-        if (is_file($p)) {
-            return $p;
-        }
-        $alt = config('bidmaster.knowledge_dir').'/../frontend/public/NusaTech-Logo.png';
-
-        return is_file($alt) ? $alt : '';
+        return \App\Services\DocxExportService::logoPath();
     }
 
     /** @return array{ok:bool,kurang:list<string>} */

@@ -147,6 +147,42 @@ class AgentTest extends TestCase
         $this->assertDatabaseHas('audits', ['aksi' => 'agent-file']);
     }
 
+    public function test_agent_file_docx_bercover_logo_dan_header(): void
+    {
+        $this->fakeLangflow();
+        $t = $this->token();
+        $r = $this->postJson('/api/agent/file',
+            ['markdown' => "# Ringkasan\n\nIsi proposal.", 'format' => 'docx', 'judul' => 'Penawaran Dinas X'],
+            ['Authorization' => "Bearer {$t}"]);
+        $r->assertOk();
+        $zip = $this->unzipDocx($r->getContent());
+        $this->assertContains('word/document.xml', array_keys($zip));
+        // Cover berlogo + header berlogo (2 gambar tertanam).
+        $images = array_filter(array_keys($zip), fn ($k) => str_starts_with($k, 'word/media/'));
+        $this->assertGreaterThanOrEqual(2, count($images), 'Cover + header harus memuat logo');
+        $this->assertNotEmpty(array_filter(array_keys($zip), fn ($k) => (bool) preg_match('#^word/header\d*\.xml$#', $k)), 'Header hilang');
+        $this->assertNotEmpty(array_filter(array_keys($zip), fn ($k) => (bool) preg_match('#^word/footer\d*\.xml$#', $k)), 'Footer hilang');
+        $this->assertStringContainsString('Penawaran Dinas X', $zip['word/document.xml']);
+    }
+
+    /** Baca isi file docx (zip) menjadi map nama => teks. */
+    private function unzipDocx(string $bytes): array
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'bmz').'.docx';
+        file_put_contents($tmp, $bytes);
+        $zip = new \ZipArchive;
+        $zip->open($tmp);
+        $out = [];
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = (string) $zip->getNameIndex($i);
+            $out[$name] = (string) $zip->getFromIndex($i);
+        }
+        $zip->close();
+        @unlink($tmp);
+
+        return $out;
+    }
+
     public function test_agent_file_md_menghasilkan_markdown(): void
     {
         $this->fakeLangflow();

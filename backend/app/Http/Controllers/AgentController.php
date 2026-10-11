@@ -6,6 +6,7 @@ use App\Repositories\Contracts\AuditRepository;
 use App\Services\DocumentParserService;
 use App\Services\DocumentService;
 use App\Services\DocxExportService;
+use App\Services\KnowledgeService;
 use App\Services\LangflowService;
 use Illuminate\Http\Request;
 
@@ -15,6 +16,7 @@ class AgentController
         private LangflowService $lf,
         private AuditRepository $audits,
         private DocumentParserService $parser,
+        private KnowledgeService $knowledge,
     ) {}
 
     public function status()
@@ -108,18 +110,29 @@ class AgentController
             return response()->json(['error' => 'Isi dokumen 1B-200KB.', 'field' => 'markdown'], 422);
         }
         $format = ($data['format'] ?? 'docx') === 'md' ? 'md' : 'docx';
-        $nama = DocumentService::slug((string) ($data['nama'] ?? 'jawaban-bob'));
+        $judul = mb_substr(trim((string) ($data['judul'] ?? '')), 0, 160);
+        $nama = DocumentService::slug($judul !== '' ? $judul : (string) ($data['nama'] ?? 'jawaban-bob'));
         $u = $request->attributes->get('member');
         $this->audits->log($u['id'], 'agent-file', $format.' '.strlen($md).' chr');
 
         if ($format === 'md') {
-            return response($md, 200, [
+            $head = $judul !== '' ? "# {$judul}\n\n" : '';
+            $isi = str_starts_with(ltrim($md), '# ') ? $md : $head.$md;
+
+            return response($isi, 200, [
                 'Content-Type' => 'text/markdown; charset=UTF-8',
                 'Content-Disposition' => "attachment; filename={$nama}.md",
             ]);
         }
 
-        return response($docx->toBytes($md), 200, [
+        $company = $this->knowledge->json('perusahaan.json');
+        $bytes = $docx->toBytes($md, [
+            'title' => $judul !== '' ? $judul : ($company['nama_resmi'] ?? 'Dokumen'),
+            'subtitle' => $judul !== '' ? 'Disiapkan oleh '.($company['nama_resmi'] ?? '') : '',
+            'company' => $company,
+        ]);
+
+        return response($bytes, 200, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'Content-Disposition' => "attachment; filename={$nama}.docx",
         ]);

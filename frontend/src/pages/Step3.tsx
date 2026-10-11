@@ -144,7 +144,9 @@ export default function Step3({ p, setP, refresh, goStep }: {
         method: "POST", headers: authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ lampiran_sumber: lampS, lampiran_klarifikasi: lampK }),
       });
-      printMarkdown(j.markdown, `${p.instansi || "Proposal"} · #${p.id}`);
+      printMarkdown(j.markdown, `${p.instansi || "Proposal"} · #${p.id}`, {
+        logo: "/NusaTech-Logo.png", company: "PT Solusi Teknologi Nusantara",
+      });
     } catch (e) {
       const m = e instanceof Error ? e.message : T.umum.cobaLagi;
       setErr(m); toast(m, "error");
@@ -478,7 +480,7 @@ function PreviewDoc({ md: markdown, onClose }: { md: string; onClose: () => void
         <div className="flex items-center gap-2 p-4 border-b sticky top-0 bg-white rounded-t-xl z-10">
           <h2 className="font-bold flex-1">{T.harga.pratinjau}</h2>
           <Button size="sm" variant="secondary" onClick={onClose}>{T.harga.kembaliPerbaiki}</Button>
-          <Button size="sm" variant="secondary" onClick={() => printMarkdown(markdown, T.harga.pratinjau)}>{T.harga.unduhCetak}</Button>
+          <Button size="sm" variant="secondary" onClick={() => printMarkdown(markdown, T.harga.pratinjau, { logo: "/NusaTech-Logo.png", company: "PT Solusi Teknologi Nusantara" })}>{T.harga.unduhCetak}</Button>
         </div>
         <div className="p-8 text-[0.95rem] leading-relaxed chat-md" dangerouslySetInnerHTML={{ __html: mdToHtml(markdown) }} />
       </div>

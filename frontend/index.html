@@ -7,7 +7,9 @@
     <meta name="description" content="BidMaster — susun draft tender 11 bab + RAB per-komponen, gate KAK/pagu/legalitas otomatis." />
     <meta name="theme-color" content="#EEF0F8" />
     <meta name="referrer" content="no-referrer" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'" />
+    <!-- Catatan: frame-ancestors hanya berlaku via HTTP header (di-set backend),
+         tidak bisa lewat <meta> — menghindari peringatan konsol. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'" />
     <title>BidMaster — Susun Draft Tender dalam Menit</title>
   </head>
   <body>
