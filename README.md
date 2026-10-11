@@ -88,6 +88,20 @@ Tab **Tanya Bob** (Langkah 2) + halaman penuh **`/bob`**. Fitur: **mode Proposal
 
 Design pattern: Controller tipis → Service layer → Repository (interface + Eloquent) → Strategy (gates) → Middleware (TokenAuth, RequireRole, SecurityHeaders, throttle) → validasi di frontend + backend.
 
+## Performa
+
+Dioptimalkan agar tetap responsif saat analisis/Bob berjalan lama:
+
+- **Server multi-worker** — `php -S` dijalankan dengan `PHP_CLI_SERVER_WORKERS=8` (pcntl). Sebelumnya *single-threaded*: satu request lambat (analisis 1–3 menit atau Bob) memblokir **seluruh** situs. Kini request lain tetap terlayani.
+- **OPcache untuk CLI** (`opcache.enable_cli=1`, `validate_timestamps=0`) — file PHP tidak dikompilasi ulang tiap request.
+- **Cache Laravel** — `config:cache`, `route:cache`, `view:cache` dijalankan saat start.
+- **SQLite WAL + busy_timeout** — banyak worker boleh baca bersamaan tanpa "database is locked".
+- **Aset ter-gzip + cache** — nginx meng-gzip JS/CSS/SVG/JSON (bundel JS 342 KB → **~104 KB** transfer) dan memberi `Cache-Control: immutable` pada aset ber-hash (Vite), `30d` untuk font/gambar.
+- **Code-splitting per rute** — landing + shell dimuat lebih dulu; halaman aplikasi (`/app`, `/bob`, `/riwayat`, `/login`) di-*lazy-load*.
+- **Dedupe status mesin** — `/api/agent/status` diambil sekali dan dibagi ke Nav + Bob (bukan dua kali).
+
+Atur jumlah worker bila perlu: `PHP_CLI_SERVER_WORKERS=4 docker compose up`.
+
 ## Ketahanan galat mesin AI
 
 Galat Langflow diklasifikasi menjadi pesan Indonesia ramah (bukan JSON mentah) + retry otomatis sekali:

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
 import { Button } from "../components/ui/controls";
 import { toast } from "../components/ui/toast";
-import { api, authHeaders } from "../lib/utils";
+import { api, agentStatus, authHeaders } from "../lib/utils";
 import { T } from "../ui-text";
 
 export type Msg = { role: "user" | "bot"; text: string; err?: boolean; lampiran?: string; mode?: Mode; saranFile?: boolean };
@@ -184,7 +184,7 @@ export function ChatBob({ variant = "compact", context }: {
   const [sessionId, setSessionId] = useState(() => "bm-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7));
 
   useEffect(() => {
-    api<{ configured: boolean }>("/api/agent/status").then((j) => setReady(j.configured)).catch(() => setReady(false));
+    agentStatus().then((ok) => setReady(ok));
   }, []);
   useEffect(() => {
     const el = box.current;

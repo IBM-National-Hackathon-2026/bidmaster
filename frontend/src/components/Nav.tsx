@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 import { T } from "../ui-text";
-import { api } from "../lib/utils";
+import { agentStatus } from "../lib/utils";
 
 const link = ({ isActive }: { isActive: boolean }) =>
   `px-3.5 py-2 rounded-xl text-sm font-semibold no-underline transition-all min-h-11 inline-flex items-center ${
@@ -33,8 +33,7 @@ export function Nav() {
   const [how, setHow] = useState(false);
   const [engine, setEngine] = useState<boolean | null>(null);
   useEffect(() => {
-    api<{ configured: boolean }>("/api/agent/status")
-      .then((j) => setEngine(j.configured)).catch(() => setEngine(false));
+    agentStatus().then((ok) => setEngine(ok));
   }, []);
   return (
     <header className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-[#C9DDEE]">

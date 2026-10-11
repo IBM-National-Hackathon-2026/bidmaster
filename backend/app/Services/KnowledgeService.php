@@ -12,10 +12,16 @@ class KnowledgeService
 {
     public const TAG = '[perlu konfirmasi';
 
+    /** @var array<string,string> cache baca file per-request (file knowledge statis) */
+    private array $cache = [];
+
     public function __construct(private string $dir) {}
 
     public function read(string $name): string
     {
+        if (isset($this->cache[$name])) {
+            return $this->cache[$name];
+        }
         $p = $this->dir.DIRECTORY_SEPARATOR.$name;
         if (is_file($p)) {
             $txt = file_get_contents($p);
@@ -28,12 +34,13 @@ class KnowledgeService
             $lines = explode("\n", $txt);
             foreach ($lines as $i => $ln) {
                 if (trim($ln) === '') {
-                    return ltrim(implode("\n", array_slice($lines, $i + 1)))."\n";
+                    $txt = ltrim(implode("\n", array_slice($lines, $i + 1)))."\n";
+                    break;
                 }
             }
         }
 
-        return $txt;
+        return $this->cache[$name] = $txt;
     }
 
     /**

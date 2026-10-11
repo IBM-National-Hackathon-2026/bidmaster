@@ -30,3 +30,16 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   if (!r.ok) throw Object.assign(new Error(j.error ?? "Gagal."), { status: r.status, data: j });
   return j;
 }
+
+/** Status mesin Langflow, di-dedupe: banyak komponen memakainya (Nav, Bob). */
+let statusCache: Promise<boolean> | null = null;
+export function agentStatus(force = false): Promise<boolean> {
+  if (force) statusCache = null;
+  statusCache ??= api<{ configured: boolean }>("/api/agent/status")
+    .then((j) => j.configured)
+    .catch(() => {
+      statusCache = null; // gagal → boleh dicoba lagi
+      return false;
+    });
+  return statusCache;
+}

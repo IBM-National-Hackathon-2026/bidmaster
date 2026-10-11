@@ -9,6 +9,9 @@ services:
       APP_URL: http://localhost:8080
       DB_CONNECTION: sqlite
       KNOWLEDGE_DIR: /knowledge
+      # Jumlah worker php -S (pcntl). >1 agar request lambat (analisis/Bob)
+      # tidak memblokir request lain. Turunkan bila RAM terbatas.
+      PHP_CLI_SERVER_WORKERS: ${PHP_CLI_SERVER_WORKERS:-8}
       SEED_ADMIN_PASS: ${SEED_ADMIN_PASS:-bidmaster123}
       LANGFLOW_URL: ${LANGFLOW_URL:-http://host.docker.internal:7860}
       LANGFLOW_API_KEY: ${LANGFLOW_API_KEY:-}
