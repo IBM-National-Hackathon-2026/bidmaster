@@ -20,11 +20,11 @@ export default function Proposal() {
   const [dirty, setDirty] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const load = useCallback(async (pid: number) => {
+  const load = useCallback(async (pid: number, syncStep = false) => {
     try {
       const j = await ProposalApi.get(pid);
       setP(j.proposal);
-      setStep(j.proposal.items.length > 0 ? 2 : 1);
+      if (syncStep) setStep(j.proposal.items.length > 0 ? 2 : 1);
     } catch (e) {
       setErr(e instanceof Error ? e.message : T.umum.cobaLagi);
     }
@@ -32,7 +32,7 @@ export default function Proposal() {
 
   useEffect(() => {
     if (id) {
-      load(parseInt(id, 10));
+      load(parseInt(id, 10), true);
     } else {
       ProposalApi.create({}).then((j) => {
         setP(j.proposal);
@@ -115,7 +115,7 @@ export default function Proposal() {
 
       {step === 1 && p && <Step1 p={p} setP={setP} autosave={autosave} reload={() => load(p.id)} />}
       {step === 2 && p && (
-        <Step2 p={p} setP={setP} goHarga={() => setStep(3)} agent={<Agent compact />} />
+        <Step2 p={p} setP={setP} goHarga={() => setStep(3)} agent={<Agent compact context={{ id: p.id, instansi: p.instansi }} />} />
       )}
       {step === 3 && p && <Step3 p={p} setP={setP} refresh={() => load(p.id)} goStep={(n) => { setStep(n); window.scrollTo({ top: 0 }); }} />}
 

@@ -277,8 +277,29 @@ body {
 
 @media print {
   body { background: #fff; }
-  body * { visibility: hidden; }
-  #print-doc, #print-doc * { visibility: visible; }
-  #print-doc { position: absolute; left: 0; top: 0; width: 100%; }
+  /* Sembunyikan aplikasi; hanya portal cetak yang tampil. */
+  #root { display: none !important; }
   .no-print { display: none !important; }
+  .print-portal { display: block !important; }
+  @page { margin: 16mm 14mm; }
 }
+
+/* Wadah cetak: tak terlihat di layar, dirender ke document.body. */
+.print-portal { display: none; }
+.print-page { color: #111827; font-size: 11pt; line-height: 1.55; font-family: var(--font-sans); }
+.print-page h1 { font-size: 17pt; font-weight: 800; margin: 0 0 8pt; color: #0f1b3d; }
+.print-page h2 { font-size: 13pt; font-weight: 700; margin: 14pt 0 6pt; color: #0f1b3d; border-bottom: 1px solid #d7ddee; padding-bottom: 3pt; }
+.print-page h3 { font-size: 11.5pt; font-weight: 700; margin: 10pt 0 4pt; color: #1a2450; }
+.print-page p { margin: 0 0 6pt; }
+.print-page ul, .print-page ol { margin: 0 0 8pt; padding-left: 16pt; }
+.print-page ul { list-style: disc; }
+.print-page ol { list-style: decimal; }
+.print-page li { margin: 2pt 0; }
+.print-page strong { font-weight: 700; }
+.print-page table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 9.5pt; }
+.print-page th, .print-page td { border: 1px solid #c7cfe2; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+.print-page th { background: #eef0f8; font-weight: 700; }
+.print-page code { background: #eef0f8; padding: 1pt 3pt; border-radius: 3pt; font-size: 9pt; }
+.print-page hr { border: none; border-top: 1px solid #e2e6f2; margin: 10pt 0; }
+.print-page .print-foot { margin-top: 16pt; border-top: 1px solid #d7ddee; padding-top: 6pt; font-size: 8.5pt; color: #6b7280; display: flex; justify-content: space-between; }
+.print-page h1, .print-page h2, .print-page h3, .print-page table, .print-page tr { break-inside: avoid; page-break-inside: avoid; }

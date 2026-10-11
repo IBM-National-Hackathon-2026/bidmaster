@@ -8,6 +8,7 @@ import { Toaster } from "./components/ui/toast";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Proposal from "./pages/Proposal";
+import Bob from "./pages/Bob";
 import Riwayat from "./pages/Riwayat";
 
 function Shell() {
@@ -28,6 +29,7 @@ function Shell() {
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<Proposal />} />
           <Route path="/app/:id" element={<Proposal />} />
+          <Route path="/bob" element={<Bob />} />
           <Route path="/riwayat" element={<Riwayat />} />
           <Route path="*" element={<Proposal />} />
         </Routes>

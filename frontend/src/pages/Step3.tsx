@@ -5,6 +5,7 @@ import { toast } from "../components/ui/toast";
 import type { Proposal } from "../lib/proposals";
 import { T } from "../ui-text";
 import { api, authHeaders, fmtRp } from "../lib/utils";
+import { mdToHtml, printMarkdown } from "../lib/print";
 
 type Row = {
   kode: string; nama: string; satuan: string; qty: number;
@@ -135,6 +136,21 @@ export default function Step3({ p, setP, refresh, goStep }: {
     }
   }
 
+  /** Cetak lewat portal tersembunyi agar tidak blank. */
+  async function cetak() {
+    setErr("");
+    try {
+      const j = await api<{ markdown: string }>(`/api/proposals/${p.id}/preview`, {
+        method: "POST", headers: authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ lampiran_sumber: lampS, lampiran_klarifikasi: lampK }),
+      });
+      printMarkdown(j.markdown, `${p.instansi || "Proposal"} · #${p.id}`);
+    } catch (e) {
+      const m = e instanceof Error ? e.message : T.umum.cobaLagi;
+      setErr(m); toast(m, "error");
+    }
+  }
+
   async function unduh(format: "docx" | "md") {
     setErr("");
     try {
@@ -176,6 +192,14 @@ export default function Step3({ p, setP, refresh, goStep }: {
   }
 
   const approvals = (p as unknown as { approvals?: { oleh: string }[] }).approvals ?? [];
+
+  // Pulihkan nama penyetuju terakhir agar tidak hilang saat proposal dimuat ulang.
+  useEffect(() => {
+    const last = approvals[approvals.length - 1];
+    if (last?.oleh) setOleh((cur) => (cur === "" ? last.oleh : cur));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [p.id, approvals.length]);
+
   const syarat: { ok: boolean; aksi?: () => void }[] = [
     { ok: true },
     { ok: ring?.pagu_ok ?? true, aksi: () => goStep(1) },
@@ -336,7 +360,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
               <Button variant="secondary" onClick={lihatPreview}>{T.harga.pratinjauLihat}</Button>
               <Button variant="accent" onClick={() => unduh("docx")} disabled={kurang.length > 0}><Download size={16} aria-hidden /> {T.harga.unduhDocx}</Button>
               <Button variant="secondary" onClick={() => unduh("md")} disabled={kurang.length > 0}>{T.harga.unduhMd}</Button>
-              <Button variant="secondary" onClick={() => window.print()}>{T.harga.unduhCetak}</Button>
+              <Button variant="secondary" onClick={cetak}>{T.harga.unduhCetak}</Button>
             </div>
             {kurang.length > 0 && (
               <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
@@ -447,25 +471,16 @@ export default function Step3({ p, setP, refresh, goStep }: {
   }
 }
 
-function PreviewDoc({ md, onClose }: { md: string; onClose: () => void }) {
+function PreviewDoc({ md: markdown, onClose }: { md: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[80] bg-black/70 overflow-y-auto p-4" onClick={onClose}>
       <div className="bg-white text-slate-900 max-w-3xl mx-auto rounded-xl my-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 p-4 border-b no-print sticky top-0 bg-white rounded-t-xl">
+        <div className="flex items-center gap-2 p-4 border-b sticky top-0 bg-white rounded-t-xl z-10">
           <h2 className="font-bold flex-1">{T.harga.pratinjau}</h2>
           <Button size="sm" variant="secondary" onClick={onClose}>{T.harga.kembaliPerbaiki}</Button>
-          <Button size="sm" variant="secondary" onClick={() => window.print()}>{T.harga.unduhCetak}</Button>
+          <Button size="sm" variant="secondary" onClick={() => printMarkdown(markdown, T.harga.pratinjau)}>{T.harga.unduhCetak}</Button>
         </div>
-        <div className="p-8 print-area text-[0.95rem] leading-relaxed" id="print-doc">
-          {md.split("\n").map((l, i) => {
-            if (l.startsWith("# ")) return <h1 key={i} className="text-2xl font-extrabold mt-4">{l.slice(2)}</h1>;
-            if (l.startsWith("## ")) return <h2 key={i} className="text-xl font-bold mt-4">{l.slice(3)}</h2>;
-            if (l.startsWith("|")) return <p key={i} className="font-mono text-xs overflow-x-auto">{l}</p>;
-            if (l.startsWith("- ")) return <li key={i} className="ml-5">{l.slice(2)}</li>;
-            if (l.trim() === "" || l.trim() === "---") return <div key={i} className="h-2" />;
-            return <p key={i} className="mt-1">{l}</p>;
-          })}
-        </div>
+        <div className="p-8 text-[0.95rem] leading-relaxed chat-md" dangerouslySetInnerHTML={{ __html: mdToHtml(markdown) }} />
       </div>
     </div>
   );

@@ -1,12 +1,14 @@
-import { Check, Copy, FileText, Lock, RefreshCw, Send, TriangleAlert } from "lucide-react";
+import { ArrowUpRight, Check, Copy, FileText, Lock, Paperclip, RefreshCw, Send, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
-import { Skeleton } from "../components/ui/controls";
+import { Button } from "../components/ui/controls";
 import { toast } from "../components/ui/toast";
 import { api, authHeaders } from "../lib/utils";
 import { T } from "../ui-text";
 
-type Msg = { role: "user" | "bot"; text: string; err?: boolean };
+export type Msg = { role: "user" | "bot"; text: string; err?: boolean; lampiran?: string };
+type Lampiran = { file: File; nama: string };
 
 const HINTS = [
   "Buatkan draft proposal untuk kafe di Surabaya, butuh web + reservasi, budget 10jt",
@@ -15,8 +17,11 @@ const HINTS = [
   "Tender dinas pemerintah, pagu 50 juta, durasi 3 bulan",
 ];
 
+const ACCEPT = [".txt", ".md", ".csv", ".json", ".pdf", ".docx"];
+const MAX_BYTES = 200 * 1024;
+
 /** Markdown ringan → HTML dengan blok & spasi yang benar. */
-function md(text: string): string {
+export function md(text: string): string {
   let s = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, c: string) => `<pre><code>${c.replace(/\n$/, "")}</code></pre>`);
   s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
@@ -36,24 +41,22 @@ function md(text: string): string {
     if (!t) return "";
     if (/^<(h[1-6]|table|pre|ul|ol|blockquote|hr)/.test(t)) return t;
     const lines = t.split("\n");
-    if (lines.every((l) => /^\s*[-*+] /.test(l))) {
-      return `<ul>${lines.map((l) => `<li>${l.replace(/^\s*[-*+] /, "")}</li>`).join("")}</ul>`;
-    }
-    if (lines.every((l) => /^\s*\d+[.)] /.test(l))) {
-      return `<ol>${lines.map((l) => `<li>${l.replace(/^\s*\d+[.)] /, "")}</li>`).join("")}</ol>`;
-    }
+    if (lines.every((l) => /^\s*[-*+] /.test(l))) return `<ul>${lines.map((l) => `<li>${l.replace(/^\s*[-*+] /, "")}</li>`).join("")}</ul>`;
+    if (lines.every((l) => /^\s*\d+[.)] /.test(l))) return `<ol>${lines.map((l) => `<li>${l.replace(/^\s*\d+[.)] /, "")}</li>`).join("")}</ol>`;
     return `<p>${lines.map((l) => l.trim()).filter(Boolean).join("<br>")}</p>`;
   }).filter(Boolean).join("\n");
 }
 
-function BotSkeleton() {
+/** Indikator "berpikir" bergaya LLM: titik mengetik + shimmer teks. */
+function Thinking() {
   return (
-    <div className="flex gap-2.5" aria-hidden>
-      <div className="w-8 h-8 shrink-0 rounded-lg skeleton" />
-      <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-3 w-[min(70%,26rem)] space-y-2.5">
-        <Skeleton className="h-3 w-4/5" />
-        <Skeleton className="h-3 w-3/5" />
-        <Skeleton className="h-3 w-2/3" />
+    <div className="flex gap-3 anim-msg" aria-live="polite">
+      <img src="/BidMaster-Ikon-1024.png" alt="" className="w-8 h-8 rounded-lg shrink-0" aria-hidden />
+      <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2.5 shadow-[0_2px_14px_rgba(15,27,61,0.06)]">
+        <span className="flex gap-1" aria-hidden>
+          <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
+        </span>
+        <span className="text-sm text-slate-500">{T.agen.berpikir}</span>
       </div>
     </div>
   );
@@ -72,15 +75,21 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
-export default function Agent({ compact = false }: { compact?: boolean }) {
+export function ChatBob({ variant = "compact", context }: {
+  variant?: "compact" | "full";
+  context?: { id: number; instansi: string };
+}) {
+  const full = variant === "full";
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState<boolean | null>(null);
+  const [lamp, setLamp] = useState<Lampiran | null>(null);
   const { user } = useAuth();
   const logged = user !== null;
   const box = useRef<HTMLDivElement>(null);
-  const [sessionId] = useState(() => "bm-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7));
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [sessionId, setSessionId] = useState(() => "bm-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7));
 
   useEffect(() => {
     api<{ configured: boolean }>("/api/agent/status").then((j) => setReady(j.configured)).catch(() => setReady(false));
@@ -90,18 +99,39 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [msgs, busy]);
 
+  function pilihFile(f: File) {
+    const ext = "." + (f.name.split(".").pop() ?? "").toLowerCase();
+    if (!ACCEPT.includes(ext)) { toast(T.validasi.fileFormat, "warn"); return; }
+    if (f.size > MAX_BYTES) { toast(T.validasi.fileBesar, "warn"); return; }
+    setLamp({ file: f, nama: f.name });
+  }
+
   async function send(text: string, retry = false) {
     const t = text.trim();
-    if (!t || busy) return;
+    if (busy) return;
+    if (t === "" && !lamp) { toast(T.agen.butuhSatu, "warn"); return; }
     if (!logged) { toast(T.agen.belumLogin, "warn"); return; }
-    if (!retry) setMsgs((m) => [...m, { role: "user", text: t }]);
+    const l = lamp;
+    if (!retry) setMsgs((m) => [...m, { role: "user", text: t, lampiran: l?.nama }]);
     setInput("");
+    setLamp(null);
     setBusy(true);
     try {
-      const j = await api<{ text: string }>("/api/agent", {
-        method: "POST", headers: authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ message: t, flow: "bidmaster_proposal_generator", session_id: sessionId }),
-      });
+      let j: { text: string };
+      if (l) {
+        const fd = new FormData();
+        fd.append("message", t);
+        fd.append("flow", "bidmaster_proposal_generator");
+        fd.append("session_id", sessionId);
+        if (context) fd.append("konteks_proposal", String(context.id));
+        fd.append("file", l.file);
+        j = await api<{ text: string }>("/api/agent", { method: "POST", headers: authHeaders(), body: fd });
+      } else {
+        j = await api<{ text: string }>("/api/agent", {
+          method: "POST", headers: authHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ message: t, flow: "bidmaster_proposal_generator", session_id: sessionId }),
+        });
+      }
       setMsgs((m) => [...m, { role: "bot", text: j.text }]);
     } catch (e) {
       setMsgs((m) => [...m, { role: "bot", text: `**${T.agen.gagal}**\n\n${e instanceof Error ? e.message : ""}`.trim(), err: true }]);
@@ -110,41 +140,69 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
     }
   }
 
-  const canSend = input.trim() !== "" && !busy && ready === true;
+  const canSend = (input.trim() !== "" || lamp !== null) && !busy && ready === true;
 
   return (
-    <div className={`flex overflow-hidden bg-white border border-[#C9DDEE] shadow-[0_10px_36px_rgba(15,27,61,0.10)]
-      ${compact ? "h-[74vh] supports-[height:100dvh]:h-[74dvh] rounded-2xl" : "h-[calc(100dvh-4rem)] supports-[height:100dvh]:h-[calc(100dvh-4rem)] rounded-2xl"}`}>
-      {/* Sidebar info (desktop) */}
-      <aside className="w-64 shrink-0 bg-[#F7F9FE] border-r border-slate-200 hidden lg:flex flex-col">
-        <div className="p-4 border-b border-slate-200 flex items-center gap-2 text-xs text-slate-600">
-          <span className={`w-2 h-2 rounded-full ${ready ? "bg-green-500 animate-pulse" : ready === false ? "bg-red-500" : "bg-slate-400"}`} />
-          {ready === null ? T.agen.memeriksa : ready ? T.agen.terhubung : T.agen.tidakTerhubung}
-        </div>
-        <div className="p-4">
-          <h3 className="text-xs font-bold uppercase tracking-wide mb-2 text-slate-500">{T.agen.flowAktif}</h3>
-          <div className="bg-brand-light text-brand font-semibold text-xs rounded-lg px-3 py-2.5 flex items-center gap-2 border border-brand/20">
-            <FileText size={15} aria-hidden /> BidMaster Proposal Generator
+    <div className={`flex overflow-hidden bg-white border border-[#C9DDEE] shadow-[0_10px_36px_rgba(15,27,61,0.10)] rounded-2xl ${
+      full ? "h-[calc(100dvh-11rem)] min-h-[32rem]" : "h-[74vh] supports-[height:100dvh]:h-[74dvh]"}`}>
+      {/* Sidebar (desktop, full) */}
+      {full && (
+        <aside className="w-72 shrink-0 bg-[#F7F9FE] border-r border-slate-200 hidden lg:flex flex-col">
+          <div className="p-4 border-b border-slate-200 flex items-center gap-2 text-xs text-slate-600">
+            <span className={`w-2 h-2 rounded-full ${ready ? "bg-green-500 animate-pulse" : ready === false ? "bg-red-500" : "bg-slate-400"}`} />
+            {ready === null ? T.agen.memeriksa : ready ? T.agen.terhubung : T.agen.tidakTerhubung}
           </div>
-        </div>
-        <div className="p-4 border-t border-slate-200 mt-auto text-xs text-slate-500">
-          {T.agen.sesi} <code className="bg-slate-200/70 px-1.5 py-0.5 rounded">{sessionId.slice(0, 16)}…</code>
-        </div>
-      </aside>
+          <div className="p-4 border-b border-slate-200">
+            <h3 className="text-xs font-bold uppercase tracking-wide mb-2 text-slate-500">{T.agen.flowAktif}</h3>
+            <div className="bg-brand-light text-brand font-semibold text-xs rounded-lg px-3 py-2.5 flex items-center gap-2 border border-brand/20">
+              <FileText size={15} aria-hidden /> BidMaster Proposal Generator
+            </div>
+          </div>
+          {context && (
+            <div className="p-4 border-b border-slate-200">
+              <h3 className="text-xs font-bold uppercase tracking-wide mb-2 text-slate-500">{T.agen.konteks}</h3>
+              <div className="text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-3 py-2">
+                <b className="text-[#0F1B3D]">{context.instansi || "(tanpa nama)"}</b>
+                <div className="text-slate-400">#{context.id}</div>
+              </div>
+            </div>
+          )}
+          <div className="p-4">
+            <h3 className="text-xs font-bold uppercase tracking-wide mb-2 text-slate-500">{T.agen.panduan}</h3>
+            <ul className="space-y-1.5 text-xs text-slate-600">
+              {T.agen.panduanIsi.map((p) => <li key={p} className="flex gap-1.5"><span className="text-brand">•</span>{p}</li>)}
+            </ul>
+          </div>
+          <div className="p-4 border-t border-slate-200 mt-auto text-xs text-slate-500">
+            {T.agen.sesi} <code className="bg-slate-200/70 px-1.5 py-0.5 rounded">{sessionId.slice(0, 16)}…</code>
+          </div>
+        </aside>
+      )}
 
-      {/* Kolom chat */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {/* Header */}
         <div className="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-slate-200 bg-white/80 backdrop-blur">
           <img src="/BidMaster-Ikon-1024.png" alt="" className="w-9 h-9 rounded-xl" aria-hidden />
           <div className="min-w-0">
-            <p className="font-bold text-[#0F1B3D] leading-tight">{T.agen.judul}</p>
-            <p className="text-xs text-slate-500 truncate">{T.agen.sub}</p>
+            <p className="font-bold text-[#0F1B3D] leading-tight">{full ? T.agen.halamanJudul : T.agen.judul}</p>
+            <p className="text-xs text-slate-500 truncate">{full ? T.agen.halamanSub : T.agen.sub}</p>
           </div>
-          <span className={`ml-auto shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ready ? "bg-green-50 text-green-700" : ready === false ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-600"}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${ready ? "bg-green-500" : ready === false ? "bg-red-500" : "bg-slate-400"}`} />
-            {ready === null ? T.agen.memeriksa : ready ? T.agen.terhubung : T.agen.tidakTerhubung}
-          </span>
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            <span className={`hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${ready ? "bg-green-50 text-green-700" : ready === false ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-600"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${ready ? "bg-green-500" : ready === false ? "bg-red-500" : "bg-slate-400"}`} />
+              {ready === null ? T.agen.memeriksa : ready ? T.agen.terhubung : T.agen.tidakTerhubung}
+            </span>
+            {!full && (
+              <Link to="/bob" className="no-underline">
+                <Button size="sm" variant="secondary"><ArrowUpRight size={14} aria-hidden /><span className="hidden sm:inline">{T.agen.bukaHalaman}</span></Button>
+              </Link>
+            )}
+            {full && msgs.length > 0 && (
+              <Button size="sm" variant="secondary" onClick={() => { setMsgs([]); setSessionId("bm-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 7)); }}>
+                <RefreshCw size={14} aria-hidden /><span className="hidden sm:inline">{T.agen.bersihkan}</span>
+              </Button>
+            )}
+          </div>
         </div>
 
         {!logged && (
@@ -160,7 +218,7 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
           </div>
         )}
 
-        {/* Area pesan — HANYA ini yang scroll */}
+        {/* Area pesan — hanya ini yang scroll */}
         <div ref={box} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-5 flex flex-col gap-5">
           {msgs.length === 0 && !busy && (
             <div className="flex flex-col items-center text-center my-auto gap-3 anim-fade-up">
@@ -171,7 +229,7 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
           )}
 
           {msgs.map((m, i) => (
-            <div key={i} className={`anim-msg group flex gap-2.5 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
+            <div key={i} className={`anim-msg group flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
               <div className="w-8 h-8 shrink-0 flex items-center justify-center" aria-hidden>
                 {m.role === "user"
                   ? <span className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-xs font-bold text-white">K</span>
@@ -179,7 +237,10 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
               </div>
               <div className="max-w-[85%] sm:max-w-[74%] min-w-0">
                 {m.role === "user"
-                  ? <div className="bg-brand text-white rounded-2xl rounded-br-md px-4 py-2.5 text-sm whitespace-pre-wrap break-words shadow-[0_4px_20px_rgba(15,27,61,0.22)]">{m.text}</div>
+                  ? <div className="bg-brand text-white rounded-2xl rounded-br-md px-4 py-2.5 text-sm whitespace-pre-wrap break-words shadow-[0_4px_20px_rgba(15,27,61,0.22)]">
+                      {m.lampiran && <span className="flex items-center gap-1.5 text-xs text-white/80 mb-1"><Paperclip size={12} aria-hidden />{m.lampiran}</span>}
+                      {m.text}
+                    </div>
                   : <div className={`bg-white border rounded-2xl rounded-bl-md px-4 py-3 shadow-[0_2px_14px_rgba(15,27,61,0.06)] ${m.err ? "border-red-300 bg-red-50" : "border-slate-200"}`}>
                       <div className={`chat-md ${m.err ? "text-red-800" : ""}`} dangerouslySetInnerHTML={{ __html: md(m.text) }} />
                       {m.err && (
@@ -196,10 +257,10 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
               </div>
             </div>
           ))}
-          {busy && <BotSkeleton />}
+          {busy && <Thinking />}
         </div>
 
-        {/* Komposer — menetap di bawah */}
+        {/* Komposer */}
         <div className="shrink-0 border-t border-slate-200 bg-white/90 backdrop-blur p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {msgs.length === 0 && (
             <div className="flex gap-1.5 flex-wrap mb-2 max-w-3xl mx-auto">
@@ -210,7 +271,28 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
               ))}
             </div>
           )}
+
+          {lamp && (
+            <div className="max-w-3xl mx-auto mb-2 anim-slide-up">
+              <div className="inline-flex items-center gap-2 bg-brand-light border border-brand/25 text-[#0F1B3D] rounded-xl px-3 py-2 text-sm">
+                <FileText size={15} className="text-brand" aria-hidden />
+                <span className="max-w-[16rem] truncate font-medium">{lamp.nama}</span>
+                <span className="text-xs text-slate-500 hidden sm:inline">{T.agen.lampiranKet}</span>
+                <button onClick={() => setLamp(null)} aria-label={T.agen.lampiranBuang} className="text-slate-500 hover:text-red-600 p-1 rounded-md">
+                  <X size={15} aria-hidden />
+                </button>
+              </div>
+            </div>
+          )}
+
           <form className="flex gap-2 max-w-3xl mx-auto items-end" onSubmit={(e) => { e.preventDefault(); send(input); }}>
+            <button type="button" onClick={() => fileRef.current?.click()} disabled={busy}
+              aria-label={T.agen.lampirkan} title={T.agen.lampirkan}
+              className="w-11 h-11 shrink-0 rounded-xl border border-slate-300 text-slate-600 hover:text-brand hover:border-brand/60 hover:bg-slate-50 flex items-center justify-center disabled:opacity-40 transition-colors">
+              <Paperclip size={18} aria-hidden />
+            </button>
+            <input ref={fileRef} type="file" hidden accept={ACCEPT.join(",")}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) pilihFile(f); e.target.value = ""; }} />
             <textarea rows={1} value={input} onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (canSend) send(input); } }}
               placeholder={T.agen.placeholder} maxLength={4000} disabled={busy}
@@ -224,4 +306,9 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
       </div>
     </div>
   );
+}
+
+/** Komponen kompat: dipakai di Langkah 2 sebagai tab "Tanya Bob". */
+export default function Agent({ compact = false, context }: { compact?: boolean; context?: { id: number; instansi: string } }) {
+  return <ChatBob variant={compact ? "compact" : "full"} context={context} />;
 }
