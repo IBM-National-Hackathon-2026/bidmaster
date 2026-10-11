@@ -43,6 +43,7 @@ export function Nav() {
           <img src="/BidMaster-Logo.png" alt="BidMaster AI" className="h-9 w-auto" />
         </Link>
         <nav className="flex gap-1 mx-auto" aria-label="Navigasi utama">
+          <NavLink to="/" end className={link}>Beranda</NavLink>
           <NavLink to="/app" className={link}>{T.nav.baru}</NavLink>
           <NavLink to="/riwayat" className={link}>{T.nav.riwayat}</NavLink>
         </nav>

@@ -77,7 +77,7 @@ export default function Riwayat() {
         ) : (
           <div className="overflow-x-auto mt-3">
             <table className="w-full text-sm min-w-[560px]">
-              <thead><tr className="text-left text-xs uppercase text-slate-600">
+              <thead><tr className="text-left text-xs uppercase text-slate-600 bg-[#EEF0F8]">
                 <th className="py-2 pr-3">{T.riwayat.kolomTanggal}</th>
                 <th className="py-2 pr-3">{T.riwayat.kolomInstansi}</th>
                 <th className="py-2 pr-3">{T.riwayat.kolomStatus}</th>

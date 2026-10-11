@@ -201,3 +201,94 @@ Penyedia wajib memiliki sertifikasi ISO/IEC 27001
 Data wajib disimpan di wilayah Indonesia
 Dukungan teknis 24 jam sehari, 7 hari seminggu
 Denda keterlambatan sebesar 10% dari nilai kontrak`;
+
+/** Teks halaman landing (publik, tanpa login). */
+export const LANDING = {
+  badge: "Tools internal untuk proposal tender",
+  h1: "Draft proposal tender jadi dalam hitungan menit, bukan hari.",
+  sub: "BidMaster AI memeriksa dokumen requirement baris per baris, menautkan tiap klaim ke sumbernya, dan menyusun RAB — manusia yang memutuskan dan menyetujui.",
+  credit: "Dikembangkan oleh PT Solusi Teknologi Nusantara (NusaTech)",
+  masuk: "Masuk & mulai",
+  cara: "Lihat cara kerja",
+  demoJudul: "Coba demo interaktif",
+  demoKet: "Pilih jenis, buat draft contoh, lalu minta agen merevisinya. Data contoh, bukan dokumen sungguhan.",
+  demoBuat: "Buat draft contoh",
+  demoReset: "Ulangi",
+  demoSiap: "Pilih jenis lalu tekan Buat draft contoh.",
+  demoKosongJudul: "Draft contoh akan muncul di sini",
+  demoKosongKet: "Pilih jenis proposal, lalu tekan Buat draft contoh.",
+  demoAgenJudul: "Agen contoh",
+  demoAgenSiap: "Agen siap bekerja setelah draft dibuat.",
+  agenSiap: "Agen siap. Buat draft contoh dulu, lalu coba perintah revisi di bawah.",
+  langkah: [
+    ["Unggah & analisis", "Tempel dokumen KAK atau requirement. Sistem memecah tiap baris kebutuhan dan mencocokkannya ke kemampuan perusahaan."],
+    ["Tinjau & putuskan", "Buka sumber tiap klaim, putuskan Benar/Ubah/Tanyakan. Butir Berisiko wajib diputuskan."],
+    ["Harga & unduh", "Tentukan harga proposal, lewati gate, unduh DOCX berlogo NusaTech."],
+  ] as [string, string][],
+  fitur: [
+    ["Sitasi per butir", "Tiap klaim punya tombol sumber ke teks asli dokumen dan knowledge perusahaan."],
+    ["Gate pemblokir", "KAK, pagu, dan legalitas diperiksa otomatis. Belum lolos = belum bisa unduh."],
+    ["Harga ditentukan manusia", "Katalog hanya acuan. Deviasi dicatat alasannya dan butuh persetujuan."],
+    ["Jejak audit penuh", "Keputusan, perubahan harga, dan unduhan tercatat siapa dan kapan."],
+    ["Export berlogo", "DOCX dengan cover, header, dan logo PT Solusi Teknologi Nusantara."],
+    ["Human-in-the-loop", "AI mengusulkan, manusia memutuskan. Butir ragu masuk daftar klarifikasi."],
+  ] as [string, string][],
+  agenJudul: "Agen yang menjawab dengan sumber, bukan sekadar chat.",
+  agenKet: "Tulis perintah sehari-hari di tab Tanya Bob. Setiap klaim jawaban punya tombol sumber yang membuka teks aslinya.",
+  untukSiapa: [
+    ["Tim pre-sales", "Periksa dokumen tender cepat dengan bukti tiap klaim, bukan sekadar ringkasan."],
+    ["Tim tender & pengadaan", "Susun penawaran sesuai persyaratan dengan struktur rapi dan mudah diperiksa."],
+    ["Reviewer & approver", "Setujui butir berisiko, harga, dan dokumen final dengan jejak yang jelas."],
+  ] as [string, string][],
+  faq: [
+    ["Apakah format proposal perusahaan kami bisa dipakai?", "Bisa. Template, knowledge K01–K18, dan katalog harga dikelola admin dan dipakai ulang di setiap proposal."],
+    ["Apa yang bisa diubah agen?", "Analisis butir, revisi draft, dan PRD. Harga final dan keputusan selalu di tangan manusia."],
+    ["Apakah dokumen tender saya privat?", "Dokumen pendukung hanya berlaku untuk proposal itu dan terhapus bersamanya. Knowledge perusahaan read-only."],
+    ["Bisa diekspor ke Word atau PDF?", "Bisa. DOCX ber-cover logo, header, dan nomor halaman; tersedia juga .md dan Cetak/PDF."],
+  ] as [string, string][],
+  ctaJudul: "Siap memeriksa tender berikutnya lebih cepat?",
+  ctaKet: "Masuk dan buat proposal pertama Anda.",
+  ctaMasuk: "Masuk & mulai",
+  ctaCara: "Lihat cara kerja",
+  footerKet: "Asisten pre-sales: unggah, periksa dengan sumber, putuskan, unduh.",
+  footerHak: "© 2026 PT Solusi Teknologi Nusantara (NusaTech). Seluruh hak dilindungi.",
+} as const;
+
+export type LandingDemoType = {
+  label: string; brief: string; title: string; summary: string;
+  scope: string[]; timeline: [string, string][];
+};
+
+/** Data contoh untuk demo interaktif di landing (statis, tanpa backend). */
+export const LANDING_DEMO: LandingDemoType[] = [
+  {
+    label: "Tender Aplikasi",
+    brief: "Aplikasi layanan publik untuk dinas. Fokus: KAK terpetakan, pagu terjaga, legalitas lengkap.",
+    title: "Penawaran Pengembangan Aplikasi Layanan Publik",
+    summary: "Kami mengusulkan pengembangan aplikasi layanan publik dengan analisis KAK per baris, RAB per komponen dari katalog, dan gate pagu serta legalitas sebelum dokumen dikirim.",
+    scope: ["Pemetaan tiap baris KAK ke komponen harga", "RAB per komponen × qty dari katalog", "Gate pagu, KAK, dan legalitas otomatis", "Export DOCX berlogo perusahaan"],
+    timeline: [["Unggah & analisis", "Menit 1–5"], ["Tinjau & putuskan", "Menit 5–10"], ["Harga & unduh", "Menit 10–15"]],
+  },
+  {
+    label: "Website",
+    brief: "Website company profile + katalog untuk klien korporat, paket fix dengan RAB estimasi.",
+    title: "Penawaran Pembuatan Website Company Profile",
+    summary: "Paket website fix dengan RAB estimasi proporsional, timeline jelas, dan klausul DP 50% sesuai aturan perusahaan.",
+    scope: ["Sitemap dan fitur utama", "Paket Basic / Standard / Premium", "Timeline dan tahapan kerja", "Syarat dan ketentuan"],
+    timeline: [["Brief & paket", "Hari 1"], ["Draft & revisi", "Hari 1–2"], ["Final & kirim", "Hari 3"]],
+  },
+  {
+    label: "Pengadaan",
+    brief: "Pengadaan perangkat dan jasa pendukung paket tender, termasuk garansi layanan.",
+    title: "Penawaran Pengadaan Perangkat Pendukung Tender",
+    summary: "Rincian komponen pengadaan per qty dengan harga acuan katalog, garansi, dan jadwal serah terima.",
+    scope: ["Daftar komponen dan spesifikasi", "Harga acuan per qty", "Garansi dan serah terima", "Jadwal pengiriman"],
+    timeline: [["Inventarisasi", "Minggu 1"], ["Pengadaan", "Minggu 2–3"], ["Serah terima", "Minggu 4"]],
+  },
+];
+
+export const LANDING_AGENT_QA: [string, string][] = [
+  ["Ubah jadi lebih formal", "Sudah. Ringkasan memakai nada formal dan mencantumkan profil PT Solusi Teknologi Nusantara."],
+  ["Tandai yang belum pasti", "Bagian yang belum pasti saya tandai [perlu konfirmasi] agar diperiksa manusia."],
+  ["Tampilkan sumbernya", "Setiap klaim punya tombol sumber ke baris dokumen atau kode knowledge K01–K18."],
+];

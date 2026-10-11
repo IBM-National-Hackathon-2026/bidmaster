@@ -33,7 +33,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button";
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("bg-white border border-slate-200 rounded-2xl p-6 shadow-[0_8px_30px_rgba(15,27,61,0.08)]", className)} {...props} />;
+  return <div className={cn("bg-white border border-[#C9DDEE] rounded-2xl p-6 shadow-[0_10px_36px_rgba(15,27,61,0.10)]", className)} {...props} />;
 }
 
 const fieldCls =

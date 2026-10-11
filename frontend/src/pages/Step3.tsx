@@ -169,7 +169,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
           )}
           <div className="overflow-x-auto mt-3">
             <table className="w-full text-sm min-w-[640px]">
-              <thead><tr className="text-left text-xs uppercase text-slate-600">
+              <thead><tr className="text-left text-xs uppercase text-slate-600 bg-[#EEF0F8]">
                 <th className="py-2 pr-2">{T.harga.kolomKomponen}</th>
                 <th className="py-2 pr-2">{T.harga.kolomQty}</th>
                 <th className="py-2 pr-2">{T.harga.kolomAcuan}</th>

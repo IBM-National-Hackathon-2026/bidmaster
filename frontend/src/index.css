@@ -14,6 +14,27 @@
   font-display: swap;
   src: url("/fonts/sora-800-latin.woff2") format("woff2");
 }
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/jakarta-400-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/jakarta-500-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/jakarta-600-latin.woff2") format("woff2");
+}
 
 @theme {
   --color-brand: #0f1b3d;
@@ -27,7 +48,8 @@
   --color-line: rgba(15, 27, 61, 0.12);
   --color-ink: #0f1b3d;
   --color-mut: #4a5578;
-  --font-sans: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Sora", "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 body {
