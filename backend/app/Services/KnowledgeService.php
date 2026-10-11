@@ -36,6 +36,20 @@ class KnowledgeService
         return $txt;
     }
 
+    /**
+     * Baca JSON dengan fallback .example
+     * (mis. perusahaan.json -> perusahaan.example). Untuk file YAML,
+     * teruskan apa adanya karena read() sudah fallback sendiri.
+     *
+     * @return array
+     */
+    public function json(string $name): array
+    {
+        $data = json_decode($this->read($name), true);
+
+        return is_array($data) ? $data : [];
+    }
+
     /** @return array{template:string,catalog:array} */
     public function website(): array
     {

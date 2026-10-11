@@ -20,8 +20,6 @@ data.db*
 # --- Single README rule ---
 *.md
 !/README.md
-# Pengecualian: knowledge perusahaan FIKTIF untuk demo (sumber KB + acuan test)
-!knowledge/knowledge_perusahaan.md
 
 # --- Data perusahaan asli (yang di-push hanya *.example) ---
 knowledge/*.yaml

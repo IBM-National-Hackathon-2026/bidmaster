@@ -6,6 +6,7 @@ use App\Models\Proposal;
 use App\Repositories\Contracts\AuditRepository;
 use App\Services\AnalysisService;
 use App\Services\DocumentParserService;
+use App\Services\KnowledgeService;
 use App\Services\LangflowService;
 use Illuminate\Http\Request;
 
@@ -16,16 +17,12 @@ class ProposalsController
         private DocumentParserService $parser,
         private AnalysisService $analysis,
         private LangflowService $lf,
+        private KnowledgeService $knowledge,
     ) {}
 
     public function company()
     {
-        $dir = config('bidmaster.knowledge_dir');
-        $file = $dir.'/perusahaan.json';
-        $data = is_file($file) ? json_decode(file_get_contents($file), true) : [];
-        if (! is_array($data)) {
-            $data = [];
-        }
+        $data = $this->knowledge->json('perusahaan.json');
 
         return response()->json([
             'nama_resmi' => $data['nama_resmi'] ?? '',
@@ -225,14 +222,10 @@ class ProposalsController
             }
         }
         $codes = array_values(array_unique(array_slice($codes, 0, 10)));
-        $dir = config('bidmaster.knowledge_dir');
         $map = [];
-        $file = $dir.'/knowledge_perusahaan.md';
-        if (is_file($file)) {
-            foreach (explode("\n", file_get_contents($file)) as $line) {
-                if (preg_match('/^(K\d{2})\s*\|\s*(.+)$/', trim($line), $m)) {
-                    $map[$m[1]] = trim($m[2]);
-                }
+        foreach (explode("\n", $this->knowledge->read('knowledge_perusahaan.md')) as $line) {
+            if (preg_match('/^(K\d{2})\s*\|\s*(.+)$/', trim($line), $m)) {
+                $map[$m[1]] = trim($m[2]);
             }
         }
         $out = [];
@@ -524,17 +517,8 @@ class ProposalsController
 
     private function companyFull(): array
     {
-        $dir = config('bidmaster.knowledge_dir');
-        $file = $dir.'/perusahaan.json';
-        $data = is_file($file) ? json_decode(file_get_contents($file), true) : [];
-        if (! is_array($data)) {
-            $data = [];
-        }
-        $profil = '';
-        $kf = $dir.'/knowledge_perusahaan.md';
-        if (is_file($kf)) {
-            $profil = mb_substr(trim(file_get_contents($kf)), 0, 1200);
-        }
+        $data = $this->knowledge->json('perusahaan.json');
+        $profil = mb_substr(trim($this->knowledge->read('knowledge_perusahaan.md')), 0, 1200);
 
         return ['data' => $data, 'profil' => $profil];
     }

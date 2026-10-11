@@ -18,6 +18,7 @@ backend/  (Laravel 13 API: auth, draft, gate, export, agent, audit + proposals +
 frontend/ (React 19 + TS + Vite + Tailwind + shadcn-style; alur Unggah→Tinjau→Harga; ui-text.ts)
 docker/   (Dockerfile backend/frontend + nginx.conf)
 knowledge/*.example        ← 9 template sanitasi (data asli *.md/*.yaml tidak di-push)
+knowledge/perusahaan.example + knowledge_perusahaan.example ← identitas + knowledge K01–K18 FIKTIF demo (sumber KB Langflow; yang asli tidak di-push)
 knowledge/perusahaan.json + knowledge_perusahaan.md ← data perusahaan FIKTIF demo (sumber KB Langflow)
 langflow/flows/*.json      ← 1 referensi aktif (bidmaster_proposal_generator_rag;
                              runtime memakai flow di server Langflow,
