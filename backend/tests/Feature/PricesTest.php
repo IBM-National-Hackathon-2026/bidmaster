@@ -102,6 +102,25 @@ class PricesTest extends TestCase
         $this->assertArrayHasKey('harga_acuan', $row);
     }
 
+    public function test_discount_selalu_objek_bukan_array_kosong(): void
+    {
+        [$id, $h] = $this->boot();
+        // Sebelum diskon diisi, API harus mengirim objek (bukan [] yang truthy di JS).
+        $r = $this->getJson("/api/proposals/{$id}/prices", $h)->assertOk();
+        $this->assertIsArray($r->json('proposal.discount'));
+        $this->assertArrayNotHasKey(0, $r->json('proposal.discount'));
+        $this->assertSame(0, $r->json('proposal.discount.nilai'));
+        $this->assertSame('', $r->json('proposal.discount.alasan'));
+
+        $this->patchJson("/api/proposals/{$id}/prices",
+            ['rows' => $this->rows(), 'diskon' => ['tipe' => 'persen', 'nilai' => 15, 'alasan' => 'kontrak lanjutan']], $h)
+            ->assertOk();
+        $d = $this->getJson("/api/proposals/{$id}", $h)->json('proposal.discount');
+        $this->assertArrayNotHasKey(0, $d);
+        $this->assertSame(15, $d['nilai']);
+        $this->assertSame('kontrak lanjutan', $d['alasan']);
+    }
+
     public function test_pagu_pakai_harga_proposal(): void
     {
         [$id, $h] = $this->boot();

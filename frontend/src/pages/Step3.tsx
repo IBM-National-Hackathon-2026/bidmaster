@@ -52,9 +52,19 @@ export default function Step3({ p, setP, refresh, goStep }: {
       .then((c) => setLegal(c.legalitas)).catch(() => {});
     api<{ ringkasan: Ringkas; proposal: Proposal }>(`/api/proposals/${p.id}/prices`, { headers: authHeaders() })
       .then((j) => {
-        setRows(j.ringkasan.rows); setRing(j.ringkasan); setP(j.proposal);
-        const d = (j.proposal as unknown as { discount?: { tipe: string; nilai: number; alasan: string } }).discount;
-        if (d) { setTipe(d.tipe); setNilai(d.nilai); setAlasanD(d.alasan); }
+        setRows((j.ringkasan.rows ?? []).map((r) => ({
+          ...r,
+          alasan: r.alasan ?? "",
+          alasan_catatan: r.alasan_catatan ?? "",
+        })));
+        setRing(j.ringkasan); setP(j.proposal);
+        const d = (j.proposal as unknown as { discount?: { tipe?: string; nilai?: number; alasan?: string } }).discount;
+        // Backend mengirim [] saat belum ada diskon — [] truthy di JS, jadi periksa bentuknya.
+        if (d && typeof d === "object" && !Array.isArray(d)) {
+          setTipe(d.tipe === "nominal" ? "nominal" : "persen");
+          setNilai(Number(d.nilai) || 0);
+          setAlasanD(typeof d.alasan === "string" ? d.alasan : "");
+        }
       }).catch((e) => setErr(e instanceof Error ? e.message : T.umum.cobaLagi))
       .finally(() => setLoading(false));
     api<{ ok: boolean; kurang: string[] }>(`/api/proposals/${p.id}/download-check`, { headers: authHeaders() })

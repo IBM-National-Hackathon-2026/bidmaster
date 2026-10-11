@@ -81,9 +81,21 @@ class ProposalsController
             'req_units' => $proposal->req_units ?? [],
             'items' => $proposal->items ?? [], 'decisions' => $proposal->decisions ?? [],
             'approvals' => $proposal->approvals ?? [], 'status' => $proposal->status,
-            'prices' => $proposal->prices ?? [], 'discount' => $proposal->discount ?? [],
+            'prices' => $proposal->prices ?? [], 'discount' => $this->discountOf($proposal),
             'current_version' => $proposal->current_version,
             'updated_at' => $proposal->updated_at?->toIso8601String()];
+    }
+
+    /** Normalisasi diskon agar selalu objek (hindari [] yang truthy di JS). */
+    private function discountOf(Proposal $proposal): array
+    {
+        $d = $proposal->discount;
+        if (! is_array($d) || $d === [] || array_is_list($d)) {
+            return ['tipe' => 'persen', 'nilai' => 0, 'alasan' => ''];
+        }
+
+        return ['tipe' => in_array($d['tipe'] ?? 'persen', ['persen', 'nominal'], true) ? $d['tipe'] : 'persen',
+            'nilai' => (int) ($d['nilai'] ?? 0), 'alasan' => (string) ($d['alasan'] ?? '')];
     }
 
     public function store(Request $request)
@@ -646,7 +658,7 @@ class ProposalsController
             'items' => $proposal->items ?? [],
             'decisions' => $decisions,
             'prices' => $proposal->prices ?? [],
-            'discount' => $proposal->discount ?? [],
+            'discount' => $this->discountOf($proposal),
             'ringkasan' => $harga->ringkasan($proposal),
             'company' => $this->companyFull()['data'],
             'profil' => $this->companyFull()['profil'],
