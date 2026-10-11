@@ -76,7 +76,7 @@ export default function Step1({ p, setP, autosave, reload }: {
   return (
     <div className="anim-fade-up">
       <Card>
-        <h2 className="font-bold text-lg text-white">{T.unggah.judul}</h2>
+        <h2 className="font-bold text-lg text-[#0F1B3D]">{T.unggah.judul}</h2>
         <div
           onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
           onDragLeave={() => setDrag(false)}
@@ -84,15 +84,15 @@ export default function Step1({ p, setP, autosave, reload }: {
           onClick={() => inputRef.current?.click()}
           role="button" tabIndex={0} aria-label={T.unggah.zona}
           onKeyDown={(e) => { if (e.key === "Enter") inputRef.current?.click(); }}
-          className={`mt-3 border-[1.5px] border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors min-h-44 flex flex-col items-center justify-center gap-2 ${drag ? "border-brand bg-brand-light" : "border-white/15 bg-white/5 hover:border-brand/60"}`}>
+          className={`mt-3 border-[1.5px] border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors min-h-44 flex flex-col items-center justify-center gap-2 ${drag ? "border-brand bg-brand-light" : "border-slate-300 bg-slate-100 hover:border-brand/60"}`}>
           <FileUp size={28} className="text-brand" aria-hidden />
-          <span className="font-semibold text-slate-100">{T.unggah.zona}</span>
-          <span className="text-xs text-slate-400">{T.unggah.format}</span>
+          <span className="font-semibold text-slate-800">{T.unggah.zona}</span>
+          <span className="text-xs text-slate-600">{T.unggah.format}</span>
           <input ref={inputRef} type="file" hidden accept=".txt,.md,.csv,.json,.pdf,.docx"
             onChange={(e) => { const f = e.target.files?.[0] ?? null; setFile(f); if (f) doUpload(f, "requirement"); }} />
         </div>
         {(p.req_nama !== "" || file) && (
-          <div className="mt-2 text-sm text-slate-200" role="status">
+          <div className="mt-2 text-sm text-slate-700" role="status">
             <b>{p.req_nama || file?.name}</b>
             {p.req_jumlah > 0 && <span> · {p.req_jumlah} {p.req_satuan} · {T.unggah.berhasil}</span>}
             <button onClick={() => inputRef.current?.click()} className="ml-3 text-brand text-sm font-semibold underline">{T.unggah.ganti}</button>
@@ -117,7 +117,7 @@ export default function Step1({ p, setP, autosave, reload }: {
             <Input id="pagu" inputMode="numeric" value={rpFormat(p.pagu)}
               placeholder="cth Rp 20.000.000"
               onChange={(e) => { const v = rpParse(e.target.value); setP({ ...p, pagu: v }); autosave({ pagu: v }); }} />
-            <p className="text-xs text-slate-400 mt-1">{T.unggah.paguHint}</p>
+            <p className="text-xs text-slate-600 mt-1">{T.unggah.paguHint}</p>
           </div>
           <div>
             <Label htmlFor="durasi">Durasi pengerjaan (minggu)</Label>
@@ -126,21 +126,21 @@ export default function Step1({ p, setP, autosave, reload }: {
           </div>
         </div>
 
-        <div className="mt-4 border border-white/10 rounded-xl p-4">
-          <h3 className="font-semibold text-sm text-slate-200">{T.unggah.pendukungJudul}</h3>
-          <p className="text-xs text-slate-400">{T.unggah.pendukungKet}</p>
+        <div className="mt-4 border border-slate-200 rounded-xl p-4">
+          <h3 className="font-semibold text-sm text-slate-700">{T.unggah.pendukungJudul}</h3>
+          <p className="text-xs text-slate-600">{T.unggah.pendukungKet}</p>
           {p.pendukung.map((d) => (
-            <div key={d.nama} className="text-sm text-slate-200 mt-1">• {d.nama} · {d.jumlah} {d.satuan}</div>
+            <div key={d.nama} className="text-sm text-slate-700 mt-1">• {d.nama} · {d.jumlah} {d.satuan}</div>
           ))}
           <div className="mt-2 flex gap-2">
             <Button variant="secondary" size="sm" onClick={() => supRef.current?.click()}>{T.unggah.tambahPendukung}</Button>
             <input ref={supRef} type="file" hidden accept=".txt,.md,.csv,.json,.pdf,.docx"
               onChange={(e) => { const f = e.target.files?.[0] ?? null; setSup(f); if (f) doUpload(f, "pendukung"); }} />
-            {sup && <span className="text-xs text-slate-400 self-center">{sup.name}</span>}
+            {sup && <span className="text-xs text-slate-600 self-center">{sup.name}</span>}
           </div>
         </div>
 
-        <div className="mt-3 text-xs text-slate-400 border border-white/10 rounded-lg px-3 py-2">
+        <div className="mt-3 text-xs text-slate-600 border border-slate-200 rounded-lg px-3 py-2">
           {company !== "" ? company + ". " : ""}{T.unggah.perusahaanBox}{" "}
           <button onClick={useContoh} className="text-brand font-semibold underline">{T.unggah.contoh}</button>
         </div>
@@ -152,19 +152,19 @@ export default function Step1({ p, setP, autosave, reload }: {
             {busy ? "Menganalisis…" : T.unggah.analisis} <ArrowRight size={15} aria-hidden />
           </Button>
           {(p.req_teks.trim() === "" || busy) && (
-            <p id="alasan-analisis" className="text-xs text-slate-400 mt-1">
+            <p id="alasan-analisis" className="text-xs text-slate-600 mt-1">
               {p.req_teks.trim() === "" ? T.unggah.perluFile : ""}
             </p>
           )}
           {busy && (
             <ol className="mt-3 space-y-1.5" aria-live="polite">
               {T.unggah.tahap.map((t, i) => (
-                <li key={t} className={`text-sm flex items-center gap-2 ${i < stage ? "text-green-300" : i === stage ? "text-white font-semibold" : "text-slate-500"}`}>
+                <li key={t} className={`text-sm flex items-center gap-2 ${i < stage ? "text-green-700" : i === stage ? "text-[#0F1B3D] font-semibold" : "text-slate-600"}`}>
                   <span className={`w-2 h-2 rounded-full ${i < stage ? "bg-green-400" : i === stage ? "bg-brand animate-pulse" : "bg-slate-600"}`} />
                   {t}{i === stage ? "…" : i < stage ? " ✓" : ""}
                 </li>
               ))}
-              <li className="text-xs text-slate-500">{T.unggah.estimasi}</li>
+              <li className="text-xs text-slate-600">{T.unggah.estimasi}</li>
             </ol>
           )}
         </div>

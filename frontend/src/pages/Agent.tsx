@@ -68,40 +68,40 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <div className={`flex overflow-hidden ${compact ? "h-[70vh] rounded-xl border border-white/10" : "h-[calc(100vh-60px)]"}`}>
-      <aside className="w-64 shrink-0 bg-surface border-r border-white/10 hidden md:flex flex-col">
-        <div className="p-4 border-b border-white/10 text-xs text-slate-300">
+    <div className={`flex overflow-hidden ${compact ? "h-[70vh] rounded-xl border border-slate-200" : "h-[calc(100vh-60px)]"}`}>
+      <aside className="w-64 shrink-0 bg-surface border-r border-slate-200 hidden md:flex flex-col">
+        <div className="p-4 border-b border-slate-200 text-xs text-slate-600">
           <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${ready ? "bg-green-400" : ready === false ? "bg-red-400" : "bg-slate-500"} ${ready ? "animate-pulse" : ""}`} />
           {ready === null ? "Memeriksa…" : ready ? "Langflow terhubung" : "Langflow tidak terhubung"}
         </div>
         <div className="p-4">
-          <h3 className="text-sm font-bold mb-2 text-slate-200">Flow aktif</h3>
+          <h3 className="text-sm font-bold mb-2 text-slate-700">Flow aktif</h3>
           <div className="bg-brand-light text-brand font-semibold text-xs rounded-lg px-2.5 py-2 flex items-center gap-2 border border-brand/20"><FileText size={15} aria-hidden /> BidMaster Proposal Generator</div>
         </div>
-        <div className="p-4 border-t border-white/10 mt-auto text-xs text-slate-400">
-          Session <code className="bg-white/10 px-1 rounded text-slate-300">{sessionId.slice(0, 18)}…</code>
+        <div className="p-4 border-t border-slate-200 mt-auto text-xs text-slate-600">
+          Session <code className="bg-slate-200 px-1 rounded text-slate-600">{sessionId.slice(0, 18)}…</code>
         </div>
       </aside>
-      <div className="flex-1 flex flex-col bg-night min-w-0 relative">
-        <div className="hero-glow w-[500px] h-[300px] left-1/2 top-[-140px] -translate-x-1/2" style={{ background: "radial-gradient(ellipse, rgba(229,72,77,0.09), transparent 65%)" }} aria-hidden="true" />
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        <div className="hero-glow w-[500px] h-[300px] left-1/2 top-[-140px] -translate-x-1/2" style={{ background: "radial-gradient(ellipse, rgba(255,176,32,0.09), transparent 65%)" }} aria-hidden="true" />
         {!logged && (
-          <div className="m-3 bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 text-sm text-amber-200 flex items-start gap-2 relative">
+          <div className="m-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 flex items-start gap-2 relative">
             <Lock size={16} className="mt-0.5 shrink-0" aria-hidden />
             <span>Belum login — <a href="/login" className="text-brand font-semibold">masuk dulu</a>.</span>
           </div>
         )}
         {ready === false && (
-          <div className="m-3 bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 text-sm text-amber-200 flex items-start gap-2 relative">
+          <div className="m-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 flex items-start gap-2 relative">
             <TriangleAlert size={16} className="mt-0.5 shrink-0" aria-hidden />
-            <span>Langflow belum terhubung — isi <code className="bg-white/10 px-1 rounded">LANGFLOW_URL</code> + <code className="bg-white/10 px-1 rounded">LANGFLOW_API_KEY</code> di backend <code className="bg-white/10 px-1 rounded">.env</code>.</span>
+            <span>Langflow belum terhubung — isi <code className="bg-slate-200 px-1 rounded">LANGFLOW_URL</code> + <code className="bg-slate-200 px-1 rounded">LANGFLOW_API_KEY</code> di backend <code className="bg-slate-200 px-1 rounded">.env</code>.</span>
           </div>
         )}
         <div ref={box} className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
           {msgs.length === 0 && (
             <div className="flex flex-col items-center text-center my-auto gap-3 anim-fade-up">
               <img src="/BidMaster-Ikon-1024.png" alt="Bob" className="w-[72px] h-[72px] rounded-2xl anim-pulse-ring" />
-              <h3 className="text-xl font-bold text-white">Halo! Saya Bob.</h3>
-              <p className="text-slate-400 text-sm max-w-md">Ceritakan kebutuhan tender — draft, revisi, dan PRD lewat satu flow Langflow.</p>
+              <h3 className="text-xl font-bold text-[#0F1B3D]">Halo! Saya Bob.</h3>
+              <p className="text-slate-600 text-sm max-w-md">Ceritakan kebutuhan tender — draft, revisi, dan PRD lewat satu flow Langflow.</p>
             </div>
           )}
           {msgs.map((m, i) => (
@@ -112,23 +112,23 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
                   : <img src="/BidMaster-Ikon-1024.png" alt="Bob" className="w-7 h-7 rounded-lg" />}</div>
               <div className="max-w-[72%]">
                 {m.role === "user"
-                  ? <div className="bg-brand text-white rounded-2xl rounded-br px-3.5 py-2.5 text-sm whitespace-pre-wrap shadow-[0_4px_20px_rgba(229,72,77,0.25)]">{m.text}</div>
-                  : <div className={`bg-surface border rounded-2xl rounded-bl px-3.5 py-2.5 text-sm max-w-none text-slate-100 ${m.err ? "border-red-500/60 text-red-200" : "border-white/10"}`}
+                  ? <div className="bg-brand text-white rounded-2xl rounded-br px-3.5 py-2.5 text-sm whitespace-pre-wrap shadow-[0_4px_20px_rgba(255,176,32,0.25)]">{m.text}</div>
+                  : <div className={`bg-surface border rounded-2xl rounded-bl px-3.5 py-2.5 text-sm max-w-none text-slate-800 ${m.err ? "border-red-300 text-red-800" : "border-slate-200"}`}
                       dangerouslySetInnerHTML={{ __html: md(m.text) }} />}
-                <div className="text-[0.72rem] text-slate-500 mt-1">{new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</div>
+                <div className="text-[0.72rem] text-slate-600 mt-1">{new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</div>
               </div>
             </div>
           ))}
           {busy && <div className="flex items-center gap-2 px-1" aria-live="polite">
             <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
-            <span className="text-sm text-slate-400 italic">Bob sedang berpikir…</span>
+            <span className="text-sm text-slate-600 italic">Bob sedang berpikir…</span>
           </div>}
         </div>
-        <div className="bg-surface border-t border-white/10 p-3 relative">
+        <div className="bg-surface border-t border-slate-200 p-3 relative">
           <div className="flex gap-1.5 flex-wrap mb-2 max-w-4xl mx-auto">
             {HINTS.map((h) => (
               <button key={h} onClick={() => setInput(h)}
-                className="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-xs text-slate-300 hover:border-brand/60 hover:text-brand transition-colors">
+                className="bg-slate-100 border border-slate-200 rounded-full px-3 py-1 text-xs text-slate-600 hover:border-brand/60 hover:text-brand transition-colors">
                 {h.length > 48 ? h.slice(0, 48) + "…" : h}</button>
             ))}
           </div>
@@ -137,9 +137,9 @@ export default function Agent({ compact = false }: { compact?: boolean }) {
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
               placeholder="Ceritakan tentang client atau tender… (Enter kirim, Shift+Enter baris baru)"
               maxLength={4000}
-              className="flex-1 resize-none border-[1.5px] border-white/10 bg-night rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20" />
+              className="flex-1 resize-none border-[1.5px] border-slate-200 bg-white rounded-xl px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-500 focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20" />
             <button disabled={!input.trim() || busy || !ready}
-              className="w-11 h-11 rounded-xl bg-brand hover:bg-brand-dark text-white flex items-center justify-center disabled:opacity-40 transition-all hover:scale-105 active:scale-95 shadow-[0_4px_20px_rgba(229,72,77,0.3)]" title="Kirim" aria-label="Kirim pesan">
+              className="w-11 h-11 rounded-xl bg-brand hover:bg-brand-dark text-white flex items-center justify-center disabled:opacity-40 transition-all hover:scale-105 active:scale-95 shadow-[0_4px_20px_rgba(255,176,32,0.3)]" title="Kirim" aria-label="Kirim pesan">
               <Send size={18} aria-hidden />
             </button>
           </form>

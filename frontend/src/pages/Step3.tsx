@@ -154,22 +154,22 @@ export default function Step3({ p, setP, refresh, goStep }: {
     <div className="anim-fade-up grid lg:grid-cols-[1fr_300px] gap-4">
       <div>
         <Card>
-          <h2 className="font-bold text-lg text-white">{T.harga.judul}</h2>
+          <h2 className="font-bold text-lg text-[#0F1B3D]">{T.harga.judul}</h2>
           <div className="flex gap-2 mt-2">
             <Input placeholder={T.harga.cari} value={cari} onChange={(e) => setCari(e.target.value)} aria-label={T.harga.tambah} />
           </div>
           {cari !== "" && (
-            <div className="mt-1 border border-white/10 rounded-lg max-h-40 overflow-y-auto">
+            <div className="mt-1 border border-slate-200 rounded-lg max-h-40 overflow-y-auto">
               {kat.filter((k) => (k.kode + " " + k.nama).toLowerCase().includes(cari.toLowerCase())).slice(0, 8).map((k) => (
                 <button key={k.kode} onClick={() => { tambah(k.kode); setCari(""); }}
-                  className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-white/5 min-h-11">
-                  {k.kode} — {k.nama} <span className="text-slate-500">({fmtRp(k.harga_dasar)})</span></button>
+                  className="w-full text-left px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-100 min-h-11">
+                  {k.kode} — {k.nama} <span className="text-slate-600">({fmtRp(k.harga_dasar)})</span></button>
               ))}
             </div>
           )}
           <div className="overflow-x-auto mt-3">
             <table className="w-full text-sm min-w-[640px]">
-              <thead><tr className="text-left text-xs uppercase text-slate-400">
+              <thead><tr className="text-left text-xs uppercase text-slate-600">
                 <th className="py-2 pr-2">{T.harga.kolomKomponen}</th>
                 <th className="py-2 pr-2">{T.harga.kolomQty}</th>
                 <th className="py-2 pr-2">{T.harga.kolomAcuan}</th>
@@ -178,13 +178,13 @@ export default function Step3({ p, setP, refresh, goStep }: {
               </tr></thead>
               <tbody>
                 {rows.map((r, i) => (
-                  <tr key={r.kode} className="border-t border-white/10 align-top">
-                    <td className="py-2 pr-2 text-slate-200">{r.nama}<br /><span className="text-xs text-slate-500">{r.kode} / {r.satuan}</span>
-                      {r.lencana !== "" && <><br /><span className="text-xs font-bold text-amber-300">{r.lencana}</span></>}
+                  <tr key={r.kode} className="border-t border-slate-200 align-top">
+                    <td className="py-2 pr-2 text-slate-700">{r.nama}<br /><span className="text-xs text-slate-600">{r.kode} / {r.satuan}</span>
+                      {r.lencana !== "" && <><br /><span className="text-xs font-bold text-amber-700">{r.lencana}</span></>}
                     </td>
                     <td className="py-2 pr-2"><Input type="number" min={1} max={1000} className="max-w-24 py-1.5" aria-label={`Jumlah ${r.kode}`}
                       value={r.qty} onChange={(e) => { const n = [...rows]; n[i] = { ...r, qty: Math.max(1, parseInt(e.target.value || "1", 10)) }; setRows(n); }} /></td>
-                    <td className="py-2 pr-2 text-slate-500 whitespace-nowrap">{fmtRp(r.harga_acuan)}</td>
+                    <td className="py-2 pr-2 text-slate-600 whitespace-nowrap">{fmtRp(r.harga_acuan)}</td>
                     <td className="py-2 pr-2">
                       <Input inputMode="numeric" aria-label={`Harga proposal ${r.kode}`} className="max-w-36 py-1.5"
                         value={fmtRp(r.harga_proposal)}
@@ -203,18 +203,18 @@ export default function Step3({ p, setP, refresh, goStep }: {
                         </div>
                       )}
                     </td>
-                    <td className="py-2 whitespace-nowrap text-slate-100">{fmtRp(r.harga_proposal * r.qty)}</td>
+                    <td className="py-2 whitespace-nowrap text-slate-800">{fmtRp(r.harga_proposal * r.qty)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <Card>
-            <h3 className="font-bold text-white">{T.harga.diskonJudul}</h3>
+            <h3 className="font-bold text-[#0F1B3D]">{T.harga.diskonJudul}</h3>
             <div className="flex gap-2 mt-2">
               {(["persen", "nominal"] as const).map((t) => (
                 <button key={t} onClick={() => setTipe(t)} aria-pressed={tipe === t}
-                  className={`rounded-lg px-3 py-2 text-xs font-semibold border min-h-10 ${tipe === t ? "border-brand text-brand" : "border-white/15 text-slate-400"}`}>
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold border min-h-10 ${tipe === t ? "border-brand text-brand" : "border-slate-300 text-slate-600"}`}>
                   {t === "persen" ? T.harga.diskonPersen : T.harga.diskonNominal}</button>
               ))}
               <Input type="number" min={0} aria-label="Nilai diskon" value={nilai}
@@ -228,15 +228,15 @@ export default function Step3({ p, setP, refresh, goStep }: {
         </Card>
 
         <Card>
-          <h3 className="font-bold text-white">{T.harga.legalJudul}</h3>
+          <h3 className="font-bold text-[#0F1B3D]">{T.harga.legalJudul}</h3>
           {[["NIB", legal.nib], ["NPWP", legal.npwp], ["Akta", legal.akta]].map(([l, v]) => (
-            <div key={l} className="text-sm mt-1 text-slate-200">{l}: {v !== "" ? v : <span className="text-slate-500">{T.harga.legalHubungi}</span>}</div>
+            <div key={l} className="text-sm mt-1 text-slate-700">{l}: {v !== "" ? v : <span className="text-slate-600">{T.harga.legalHubungi}</span>}</div>
           ))}
         </Card>
 
         <Card>
-          <h3 className="font-bold text-white">{T.harga.pratinjau}</h3>
-          <div className="flex gap-4 flex-wrap mt-2 text-sm text-slate-200">
+          <h3 className="font-bold text-[#0F1B3D]">{T.harga.pratinjau}</h3>
+          <div className="flex gap-4 flex-wrap mt-2 text-sm text-slate-700">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={lampS} onChange={(e) => setLampS(e.target.checked)} className="w-5 h-5 accent-amber-500" />
               {T.harga.lampiranSumber}</label>
@@ -250,10 +250,10 @@ export default function Step3({ p, setP, refresh, goStep }: {
             <Button variant="secondary" onClick={() => unduh("md")} disabled={kurang.length > 0}>{T.harga.unduhMd}</Button>
             <Button variant="secondary" onClick={() => window.print()}>{T.harga.unduhCetak}</Button>
           </div>
-          {kurang.length > 0 && <p className="text-xs text-amber-300 mt-1">Belum terpenuhi: {kurang.join("; ")}</p>}
+          {kurang.length > 0 && <p className="text-xs text-amber-700 mt-1">Belum terpenuhi: {kurang.join("; ")}</p>}
           {sukses !== "" && (
-            <div className="mt-3 border border-green-500/40 bg-green-500/10 rounded-xl p-4">
-              <p className="font-bold text-green-300">{T.harga.sukses}: {sukses}</p>
+            <div className="mt-3 border border-green-500/40 bg-green-50 rounded-xl p-4">
+              <p className="font-bold text-green-700">{T.harga.sukses}: {sukses}</p>
               <div className="mt-2 flex gap-2 flex-wrap">
                 <Button size="sm" variant="secondary" onClick={() => unduh("docx")}>{T.harga.suksesUlang}</Button>
                 <Button size="sm" variant="secondary" onClick={() => nav0("/app")}>{T.harga.suksesBaru}</Button>
@@ -262,7 +262,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
             </div>
           )}
           {versions.length > 0 && (
-            <div className="mt-3 text-sm text-slate-300">
+            <div className="mt-3 text-sm text-slate-600">
               {T.harga.versi}: {versions.map((v) => (
                 <span key={v.versi} className="mr-2">v{v.versi}
                   <button onClick={() => unduhVersi(v.versi, "docx")} className="text-brand underline ml-1">.docx</button>
@@ -275,11 +275,11 @@ export default function Step3({ p, setP, refresh, goStep }: {
       </div>
       <aside className="space-y-3 lg:sticky lg:top-20 self-start">
         <Card>
-          <div className="text-2xl font-extrabold text-white">{ring ? fmtRp(ring.total) : "…"}</div>
-          <div className="text-xs text-slate-400 mt-1">
+          <div className="text-2xl font-extrabold text-[#0F1B3D]">{ring ? fmtRp(ring.total) : "…"}</div>
+          <div className="text-xs text-slate-600 mt-1">
             {T.harga.subtotal}: {ring ? fmtRp(ring.subtotal) : "…"} · {T.harga.diskon}: {ring ? fmtRp(ring.diskon_rp) : "…"}
           </div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-600">
             Pagu: {p.pagu ? fmtRp(p.pagu) : T.harga.tanpaPagu}
             {ring && ring.pagu_ok !== null && (ring.pagu_ok ? ` · ${T.harga.paguDiBawah}` : ` · ${T.harga.paguLewat}`)}
           </div>
@@ -288,21 +288,21 @@ export default function Step3({ p, setP, refresh, goStep }: {
               ? <Badge ok={false}>{T.harga.perluSetuju}</Badge>
               : <Badge ok={true}>{approvals.length > 0 ? `Disetujui ${approvals.length}x` : T.harga.siap}</Badge>)}
           </div>
-          {ring?.sebab.map((s) => <div key={s} className="text-xs text-amber-300 mt-1">• {s}</div>)}
+          {ring?.sebab.map((s) => <div key={s} className="text-xs text-amber-700 mt-1">• {s}</div>)}
           <Label htmlFor="oleh">{T.harga.setujuOleh}</Label>
           <Input id="oleh" value={oleh} onChange={(e) => setOleh(e.target.value)} maxLength={80} />
-          <label className="flex items-start gap-2 mt-2 text-sm text-slate-200 cursor-pointer">
+          <label className="flex items-start gap-2 mt-2 text-sm text-slate-700 cursor-pointer">
             <input type="checkbox" checked={centang} onChange={(e) => setCentang(e.target.checked)} className="mt-1 w-5 h-5 accent-amber-500" />
             {T.harga.centang}
           </label>
           <div className="mt-2"><Button size="sm" onClick={setujui}>{T.harga.setujuOleh}</Button></div>
-          {role !== "" && role !== "admin" && <p className="text-xs text-slate-500 mt-1">{T.harga.butuhApprover}</p>}
+          {role !== "" && role !== "admin" && <p className="text-xs text-slate-600 mt-1">{T.harga.butuhApprover}</p>}
         </Card>
         <Card>
-          <h3 className="font-bold text-sm text-white">{T.harga.syaratJudul}</h3>
+          <h3 className="font-bold text-sm text-[#0F1B3D]">{T.harga.syaratJudul}</h3>
           <ul className="mt-2 space-y-1.5 text-sm">
             {T.harga.syarat.map((s, i) => (
-              <li key={s} className={`flex items-start gap-2 ${syarat[i].ok ? "text-green-300" : "text-slate-300"}`}>
+              <li key={s} className={`flex items-start gap-2 ${syarat[i].ok ? "text-green-700" : "text-slate-600"}`}>
                 <span aria-hidden>{syarat[i].ok ? "✓" : "○"}</span>
                 {syarat[i].aksi && !syarat[i].ok
                   ? <button onClick={syarat[i].aksi} className="underline text-left">{s}</button>
@@ -310,7 +310,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
               </li>
             ))}
           </ul>
-          <p className="text-xs text-slate-500 mt-2">{T.harga.estimasi}</p>
+          <p className="text-xs text-slate-600 mt-2">{T.harga.estimasi}</p>
         </Card>
       </aside>
       {preview !== "" && <PreviewDoc md={preview} onClose={() => setPreview("")} />}

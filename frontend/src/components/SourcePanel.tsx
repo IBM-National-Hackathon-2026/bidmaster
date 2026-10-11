@@ -79,47 +79,47 @@ export function SourcePanel({ proposalId, s, onClose, returnTo }: {
     <div className="fixed inset-0 z-[70]" role="presentation" onClick={close}>
       <div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={T.tinjau.sumber}
         onClick={(e) => e.stopPropagation()}
-        className="absolute right-0 top-0 h-full w-full sm:w-[420px] bg-surface border-l border-white/10 shadow-2xl overflow-y-auto p-5
+        className="absolute right-0 top-0 h-full w-full sm:w-[420px] bg-surface border-l border-slate-200 shadow-2xl overflow-y-auto p-5
                    max-sm:top-auto max-sm:bottom-0 max-sm:h-[75vh] max-sm:w-full max-sm:border-l-0 max-sm:border-t max-sm:rounded-t-2xl">
         <div className="flex items-center gap-2 mb-3">
-          <h2 className="font-bold text-white flex-1">{T.tinjau.sumber}</h2>
+          <h2 className="font-bold text-[#0F1B3D] flex-1">{T.tinjau.sumber}</h2>
           <button onClick={close} aria-label={T.umum.tutup}
-            className="p-2.5 min-w-11 min-h-11 text-slate-300 hover:text-white rounded-lg hover:bg-white/5">
+            className="p-2.5 min-w-11 min-h-11 text-slate-600 hover:text-[#0F1B3D] rounded-lg hover:bg-slate-100">
             <X size={18} aria-hidden />
           </button>
         </div>
-        {err !== "" && <p className="text-sm text-red-300" role="alert">{err} <button onClick={() => setErr("")} className="underline">{T.umum.cobaLagi}</button></p>}
+        {err !== "" && <p className="text-sm text-red-700" role="alert">{err} <button onClick={() => setErr("")} className="underline">{T.umum.cobaLagi}</button></p>}
         {s.kind === "pengguna" && (
           <div>
-            <p className="text-xs text-slate-400">{s.label} · {T.tinjau.sumberPengguna}</p>
-            <p className="text-base text-slate-100 mt-2">{s.nilai || "—"}</p>
+            <p className="text-xs text-slate-600">{s.label} · {T.tinjau.sumberPengguna}</p>
+            <p className="text-base text-slate-800 mt-2">{s.nilai || "—"}</p>
           </div>
         )}
         {s.kind === "katalog" && (
           <div>
-            <p className="text-xs text-slate-400">{T.tinjau.sumberKatalog} — {s.kode}</p>
-            <p className="text-base text-slate-100 mt-2">{s.nama}</p>
-            <p className="text-sm text-slate-300">Satuan: {s.satuan} · Acuan: Rp {s.harga.toLocaleString("id-ID")}</p>
+            <p className="text-xs text-slate-600">{T.tinjau.sumberKatalog} — {s.kode}</p>
+            <p className="text-base text-slate-800 mt-2">{s.nama}</p>
+            <p className="text-sm text-slate-600">Satuan: {s.satuan} · Acuan: Rp {s.harga.toLocaleString("id-ID")}</p>
           </div>
         )}
         {s.kind === "knowledge" && (
           <div>
-            <p className="text-xs text-slate-400">{T.tinjau.sumberKnowledge} — {quote?.kode ?? s.kode} (read-only)</p>
+            <p className="text-xs text-slate-600">{T.tinjau.sumberKnowledge} — {quote?.kode ?? s.kode} (read-only)</p>
             {quote
-              ? <p className="text-base text-slate-100 mt-2">{quote.teks}</p>
-              : <p className="text-sm text-slate-400 mt-2">{T.umum.memuat}</p>}
+              ? <p className="text-base text-slate-800 mt-2">{quote.teks}</p>
+              : <p className="text-sm text-slate-600 mt-2">{T.umum.memuat}</p>}
           </div>
         )}
         {s.kind === "klien" && (
           <div>
-            <p className="text-xs text-slate-400">{T.tinjau.sumberKlien} — {body?.label ?? "…"}</p>
-            {!body ? <p className="text-sm text-slate-400 mt-2">{T.umum.memuat}</p> : <>
-              {body.atas.map((a) => <p key={a.label} className="text-sm text-slate-400 mt-2"><span className="text-xs">{a.label}</span><br />{a.teks}</p>)}
-              <p className="text-base text-slate-100 mt-3 border-l-2 border-brand pl-3">
-                <span className="text-xs text-slate-400 block">{body.label} · {T.umum.teksDikutip}</span>
+            <p className="text-xs text-slate-600">{T.tinjau.sumberKlien} — {body?.label ?? "…"}</p>
+            {!body ? <p className="text-sm text-slate-600 mt-2">{T.umum.memuat}</p> : <>
+              {body.atas.map((a) => <p key={a.label} className="text-sm text-slate-600 mt-2"><span className="text-xs">{a.label}</span><br />{a.teks}</p>)}
+              <p className="text-base text-slate-800 mt-3 border-l-2 border-brand pl-3">
+                <span className="text-xs text-slate-600 block">{body.label} · {T.umum.teksDikutip}</span>
                 {hi(body.target, s.kutipan)}
               </p>
-              {body.bawah.map((a) => <p key={a.label} className="text-sm text-slate-400 mt-2"><span className="text-xs">{a.label}</span><br />{a.teks}</p>)}
+              {body.bawah.map((a) => <p key={a.label} className="text-sm text-slate-600 mt-2"><span className="text-xs">{a.label}</span><br />{a.teks}</p>)}
             </>}
           </div>
         )}

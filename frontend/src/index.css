@@ -16,16 +16,17 @@
 }
 
 @theme {
-  --color-brand: #ffb020;
-  --color-brand-dark: #d9940a;
-  --color-brand-light: #231a08;
-  --color-night: #0a0f22;
-  --color-surface: #111736;
-  --color-surface-2: #1a2150;
+  --color-brand: #0f1b3d;
+  --color-brand-dark: #1a2450;
+  --color-brand-light: #e4e8f7;
+  --color-accent: #ffb020;
+  --color-night: #eef0f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f6fc;
   --color-mist: #c9d1f0;
-  --color-line: rgba(201, 209, 240, 0.12);
-  --color-ink: #eef0f8;
-  --color-mut: #8e97b8;
+  --color-line: rgba(15, 27, 61, 0.12);
+  --color-ink: #0f1b3d;
+  --color-mut: #4a5578;
   --font-sans: "Sora", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -89,7 +90,7 @@ body {
 .d3 { animation-delay: 240ms; }
 .d4 { animation-delay: 320ms; }
 .auth-side {
-  background: linear-gradient(150deg, #2a2111 0%, #141a3a 55%, #0a0f22 100%);
+  background: linear-gradient(150deg, #0f1b3d 0%, #1e2a5e 60%, #2a3a7d 100%);
 }
 
 .hero-glow {

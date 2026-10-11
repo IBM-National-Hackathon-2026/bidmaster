@@ -19,13 +19,13 @@ export function Steps({ current, can, reasons }: {
               aria-disabled={!ok}
               className={`rounded-[10px] px-2.5 py-2 border-[1.5px] ${
                 active ? "border-brand bg-brand-light"
-                : ok ? "border-white/10 bg-surface" : "border-white/5 bg-night opacity-60"}`}>
-              <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-slate-400">
+                : ok ? "border-slate-200 bg-white" : "border-slate-200 bg-slate-100 opacity-70"}`}>
+              <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-slate-600">
                 Langkah {n}
-                {n < current && ok && <Check size={12} className="text-green-400" aria-hidden />}
+                {n < current && ok && <Check size={12} className="text-green-600" aria-hidden />}
               </span>
-              <span className="text-xs text-slate-200">{t}</span>
-              {!ok && <span className="block text-[0.7rem] text-slate-500">{reasons[i]}</span>}
+              <span className="text-xs text-slate-700">{t}</span>
+              {!ok && <span className="block text-[0.7rem] text-slate-600">{reasons[i]}</span>}
             </div>
           </li>
         );

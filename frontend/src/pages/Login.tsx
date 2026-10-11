@@ -36,8 +36,8 @@ export default function Login() {
     <main className="min-h-[calc(100vh-120px)] flex items-center justify-center p-4">
       <Card className="anim-fade-up w-full max-w-md p-8">
         <img src="/BidMaster-Logo.png" alt="BidMaster AI" className="h-11 w-auto mb-5" />
-        <h1 className="text-2xl font-extrabold text-white">{T.auth.judul}</h1>
-        <p className="text-base text-slate-400 mt-1 mb-5">{T.auth.sub}</p>
+        <h1 className="text-2xl font-extrabold text-[#0F1B3D]">{T.auth.judul}</h1>
+        <p className="text-base text-slate-600 mt-1 mb-5">{T.auth.sub}</p>
         <form onSubmit={submit} noValidate>
           <Label htmlFor="user">{T.auth.nama}</Label>
           <Input id="user" autoFocus autoComplete="username" placeholder="nama.pengguna"
@@ -50,7 +50,7 @@ export default function Login() {
               aria-invalid={err !== "" && pw === ""} className="pr-12" />
             <button type="button" onClick={() => setShow(!show)}
               aria-label={show ? T.auth.sembunyi : T.auth.lihat} aria-pressed={show}
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-2.5 min-w-11 min-h-11 text-slate-300 hover:text-white rounded-lg">
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-2.5 min-w-11 min-h-11 text-slate-600 hover:text-[#0F1B3D] rounded-lg">
               {show ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
             </button>
           </div>

@@ -20,7 +20,7 @@ export default function App() {
           <Route path="/riwayat" element={<Riwayat />} />
           <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>
-        <footer className="border-t border-white/10 text-center text-slate-500 text-xs py-6 bg-night">
+        <footer className="border-t border-slate-200 text-center text-slate-600 text-xs py-6 bg-white">
           BidMaster AI · alat internal · draft → gate → approve manusia
         </footer>
       </AuthProvider>

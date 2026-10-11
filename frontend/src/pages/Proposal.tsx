@@ -84,7 +84,7 @@ export default function Proposal() {
       <div className="my-4"><Steps current={step} can={can} reasons={reasons} /></div>
       {err !== "" && <div className="mb-3"><Alert kind="error">{err}</Alert></div>}
       {p && (
-        <div className="flex items-center gap-3 mb-3 text-xs text-slate-400" role="status">
+        <div className="flex items-center gap-3 mb-3 text-xs text-slate-600" role="status">
           <span>{p.instansi || "(tanpa nama)"} · #{p.id}</span>
           <span className="ml-auto">
             {dirty ? "Menyimpan…" : savedAt !== "" ? `${T.unggah.tersimpan} ${savedAt}` : ""}
