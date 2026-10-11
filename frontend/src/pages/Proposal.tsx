@@ -95,7 +95,7 @@ export default function Proposal() {
       {step === 2 && p && (
         <Step2 p={p} setP={setP} goHarga={() => setStep(3)} agent={<Agent compact />} />
       )}
-      {step === 3 && p && <Step3 p={p} />}
+      {step === 3 && p && <Step3 p={p} setP={setP} refresh={() => load(p.id)} />}
       {p && (
         <div className="flex gap-2 mt-4">
           {step > 1 && <Button variant="secondary" onClick={() => setStep(step - 1)}><ArrowLeft size={15} aria-hidden /> {T.umum.kembali}</Button>}

@@ -78,6 +78,7 @@ class ProposalsController
             'req_units' => $proposal->req_units ?? [],
             'items' => $proposal->items ?? [], 'decisions' => $proposal->decisions ?? [],
             'approvals' => $proposal->approvals ?? [], 'status' => $proposal->status,
+            'prices' => $proposal->prices ?? [], 'discount' => $proposal->discount ?? [],
             'current_version' => $proposal->current_version,
             'updated_at' => $proposal->updated_at?->toIso8601String()];
     }
@@ -403,5 +404,115 @@ class ProposalsController
             'ringkasan' => ['butir' => count($checked['items']), 'valid' => $checked['valid'],
                 'perlu_konfirmasi' => $checked['invalid'],
                 'waktu_detik' => (int) round(microtime(true) - $started)]]);
+    }
+
+    public function prices(Request $request, Proposal $proposal, \App\Services\PriceService $harga)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        if (($proposal->prices ?? []) === []) {
+            $proposal->prices = $harga->initRows($proposal);
+            $proposal->save();
+        }
+
+        return response()->json(['proposal' => $this->full($proposal->fresh()),
+            'ringkasan' => $harga->ringkasan($proposal->fresh()),
+            'alasan_valid' => \App\Services\PriceService::ALASAN]);
+    }
+
+    public function pricesUpdate(Request $request, Proposal $proposal, \App\Services\PriceService $harga)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $u = $request->attributes->get('member');
+        $d = $request->isJson() ? $request->json()->all() : [];
+        $kat = $harga->katalog();
+        $rows = [];
+        foreach ((array) ($d['rows'] ?? []) as $r) {
+            if (! is_array($r) || ! isset($kat[$r['kode'] ?? ''])) {
+                return response()->json(['error' => 'Kode komponen tidak dikenal.', 'field' => 'rows'], 400);
+            }
+            $k = $kat[$r['kode']];
+            $qty = filter_var($r['qty'] ?? 0, FILTER_VALIDATE_INT);
+            if ($qty === false || $qty < 1 || $qty > 1000) {
+                return response()->json(['error' => "Qty {$k['kode']} 1-1000.", 'field' => 'qty'], 400);
+            }
+            $hp = $r['harga_proposal'] ?? null;
+            if (! is_numeric($hp) || (int) $hp < 0 || (int) $hp > \App\Services\PriceService::MAX_BARIS) {
+                return response()->json(['error' => "Harga {$k['kode']} harus bilangan bulat 0-10M.", 'field' => 'harga'], 400);
+            }
+            $hp = (int) $hp;
+            $alasan = mb_substr(trim((string) ($r['alasan'] ?? '')), 0, 40);
+            if ($hp !== $k['harga_acuan']) {
+                if (! in_array($alasan, \App\Services\PriceService::ALASAN, true)) {
+                    return response()->json(['error' => "Alasan wajib untuk {$k['kode']} (beda dari acuan).", 'field' => 'alasan'], 400);
+                }
+            }
+            $rows[] = ['kode' => $k['kode'], 'nama' => $k['nama'], 'satuan' => $k['satuan'],
+                'qty' => $qty, 'harga_acuan' => $k['harga_acuan'], 'harga_proposal' => $hp,
+                'alasan' => $hp !== $k['harga_acuan'] ? $alasan : '',
+                'alasan_catatan' => mb_substr(trim((string) ($r['alasan_catatan'] ?? '')), 0, 200)];
+            if (count($rows) > 20) {
+                break;
+            }
+        }
+        if ($rows === []) {
+            return response()->json(['error' => 'Minimal 1 baris komponen.', 'field' => 'rows'], 400);
+        }
+        $disc = $d['diskon'] ?? [];
+        $tipe = $disc['tipe'] ?? 'persen';
+        $nilai = $disc['nilai'] ?? 0;
+        if (! in_array($tipe, ['persen', 'nominal'], true) || ! is_numeric($nilai) || (int) $nilai < 0) {
+            return response()->json(['error' => 'Diskon tidak valid.', 'field' => 'diskon'], 400);
+        }
+        $nilai = (int) $nilai;
+        if ($tipe === 'persen' && $nilai > 100) {
+            return response()->json(['error' => 'Diskon persen 0-100.', 'field' => 'diskon'], 400);
+        }
+        $alasanD = mb_substr(trim((string) ($disc['alasan'] ?? '')), 0, 40);
+        if ($nilai > 0 && $alasanD === '') {
+            return response()->json(['error' => 'Alasan diskon wajib diisi.', 'field' => 'diskon_alasan'], 400);
+        }
+        $lama = collect($proposal->prices ?? [])->mapWithKeys(fn ($r) => [$r['kode'] => $r])->all();
+        foreach ($rows as $r) {
+            $old = $lama[$r['kode']] ?? null;
+            if (! $old || (int) $old['harga_proposal'] !== $r['harga_proposal'] || (int) $old['qty'] !== $r['qty']) {
+                $this->audits->log($u['id'], 'harga_ubah',
+                    "#{$proposal->id} {$r['kode']}: Rp ".number_format($old['harga_proposal'] ?? $r['harga_acuan'], 0, ',', '.')
+                    .' → Rp '.number_format($r['harga_proposal'], 0, ',', '.')." ({$r['alasan']})");
+            }
+        }
+        $proposal->prices = $rows;
+        $proposal->discount = ['tipe' => $tipe, 'nilai' => $nilai, 'alasan' => $nilai > 0 ? $alasanD : ''];
+        $proposal->approvals = [];
+        $proposal->save();
+
+        return response()->json(['proposal' => $this->full($proposal->fresh()),
+            'ringkasan' => $harga->ringkasan($proposal->fresh())]);
+    }
+
+    public function approve(Request $request, Proposal $proposal)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $u = $request->attributes->get('member');
+        if ($u['peran'] !== 'admin') {
+            return response()->json(['error' => 'Hanya approver (admin) yang boleh menyetujui.', 'field' => 'persetujuan'], 403);
+        }
+        $d = $request->isJson() ? $request->json()->all() : [];
+        $oleh = mb_substr(trim((string) ($d['disetujui_oleh'] ?? '')), 0, 80);
+        if ($oleh === '' || ($d['centang'] ?? false) !== true) {
+            return response()->json(['error' => 'Isi nama penyetuju dan centang persetujuan.', 'field' => 'persetujuan'], 400);
+        }
+        $appr = $proposal->approvals ?? [];
+        $appr[] = ['oleh' => $oleh, 'pada' => date('c'), 'admin' => $u['nama']];
+        $proposal->approvals = $appr;
+        $proposal->save();
+        $this->audits->log($u['id'], 'persetujuan', "#{$proposal->id} disetujui oleh {$oleh}");
+
+        return response()->json(['proposal' => $this->full($proposal->fresh())]);
     }
 }

@@ -28,6 +28,9 @@ Route::middleware(['token', 'throttle:120,1'])->group(function () {
         Route::post('/proposals/{proposal}/analyze', [ProposalsController::class, 'analyze'])->middleware('throttle:10,1');
         Route::patch('/proposals/{proposal}/items/{item}/decision', [ProposalsController::class, 'decide']);
         Route::post('/proposals/{proposal}/approve-sesuai', [ProposalsController::class, 'approveSesuai']);
+        Route::get('/proposals/{proposal}/prices', [ProposalsController::class, 'prices']);
+        Route::patch('/proposals/{proposal}/prices', [ProposalsController::class, 'pricesUpdate']);
+        Route::post('/proposals/{proposal}/approve', [ProposalsController::class, 'approve']);
     });
     Route::get('/proposals', [ProposalsController::class, 'index']);
     Route::get('/proposals/{proposal}', [ProposalsController::class, 'show']);

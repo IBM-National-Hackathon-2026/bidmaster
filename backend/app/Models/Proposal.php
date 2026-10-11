@@ -8,10 +8,12 @@ class Proposal extends Model
 {
     protected $fillable = ['member_id', 'instansi', 'jenis_instansi', 'pagu',
         'durasi_minggu', 'req_nama', 'req_teks', 'req_satuan', 'req_jumlah',
-        'pendukung', 'items', 'status', 'current_version', 'decisions', 'approvals'];
+        'pendukung', 'items', 'status', 'current_version', 'decisions', 'approvals',
+        'req_units', 'prices', 'discount'];
 
     protected $casts = ['pagu' => 'integer', 'pendukung' => 'array', 'items' => 'array',
-        'decisions' => 'array', 'approvals' => 'array', 'req_units' => 'array'];
+        'decisions' => 'array', 'approvals' => 'array', 'req_units' => 'array',
+        'prices' => 'array', 'discount' => 'array'];
 
     public function versions()
     {
