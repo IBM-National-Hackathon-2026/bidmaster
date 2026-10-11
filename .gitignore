@@ -64,4 +64,5 @@ desktop.ini
 *.bak-*
 chroma/
 chroma_db/
+data/
 pgdata/

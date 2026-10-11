@@ -14,7 +14,7 @@ services:
       LANGFLOW_API_KEY: ${LANGFLOW_API_KEY:-}
       LANGFLOW_FLOW: ${LANGFLOW_FLOW:-generate_proposal_draft}
     volumes:
-      - bidmaster-sqlite:/app/database
+      - ./data/bidmaster.sqlite:/app/database/database.sqlite
     expose:
       - "8000"
 
@@ -26,6 +26,3 @@ services:
       - "8080:80"
     depends_on:
       - backend
-
-volumes:
-  bidmaster-sqlite:

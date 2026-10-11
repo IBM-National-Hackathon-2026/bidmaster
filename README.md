@@ -46,6 +46,9 @@ npm run dev                                      # UI di :5173 (proxy /api → :
 ```sh
 SEED_ADMIN_PASS=xxx LANGFLOW_API_KEY=xxx docker compose up --build
 # UI http://localhost:8080 (nginx → frontend + proxy /api → backend)
+# Pertama kali: buat file DB kosong dulu (wajib, agar bind-mount berupa file):
+#   PowerShell: mkdir data -ea 0; New-Item -ItemType File data/bidmaster.sqlite -Force
+#   Linux/macOS: mkdir -p data && touch data/bidmaster.sqlite
 ```
 
 Adaptasi perusahaan: `cp knowledge/<nama>.example knowledge/<nama>.md` (atau `.yaml`), lalu edit. Token `{...}` di template wajib dipertahankan.
