@@ -213,4 +213,69 @@ class ProposalsTest extends TestCase
         $r->assertOk()->assertHeader('Content-Type', 'application/json');
         $this->assertStringContainsString($xss, $r->json('proposal.req_teks'));
     }
+
+    /** Siapkan proposal dengan requirement terunggah + Langflow dikonfigurasi. */
+    private function siapAnalisis(string $txt = "Baris satu\nBaris dua"): array
+    {
+        [$p, $h] = $this->buat($this->token());
+        $f = UploadedFile::fake()->createWithContent('req.txt', $txt);
+        $this->post("/api/proposals/{$p['id']}/upload", ['kind' => 'requirement', 'file' => $f], $h)->assertOk();
+        config(['bidmaster.langflow_url' => 'http://lf.test', 'bidmaster.langflow_key' => 'k']);
+
+        return [$p, $h];
+    }
+
+    public function test_analyze_kuota_429_pesan_ramah_bukan_json_mentah(): void
+    {
+        [$p, $h] = $this->siapAnalisis();
+        $body = '{"message":"Error running graph: RESOURCE_EXHAUSTED 429 ... https://cloud.google.com/vertex-ai"}';
+        Http::fake(['*' => Http::response($body, 500)]);
+        $r = $this->postJson("/api/proposals/{$p['id']}/analyze", [], $h);
+        $r->assertStatus(502)->assertJsonPath('code', 'LF_QUOTA');
+        $err = $r->json('error');
+        $this->assertStringContainsString('Kuota', $err);
+        $this->assertStringNotContainsString('RESOURCE_EXHAUSTED', $err);
+        $this->assertStringNotContainsString('cloud.google.com', $err);
+        $this->assertTrue($r->json('retryable'));
+        $this->assertTrue($r->json('bisa_fallback'));
+    }
+
+    public function test_analyze_gagal_bisa_lanjut_tanpa_ai(): void
+    {
+        [$p, $h] = $this->siapAnalisis("Butuh backend API\nButuh sertifikasi ISO");
+        Http::fake(['*' => Http::response('{"message":"boom"}', 500)]);
+        $r = $this->postJson("/api/proposals/{$p['id']}/analyze", ['fallback' => true], $h);
+        $r->assertOk()->assertJsonPath('ringkasan.fallback', true);
+        $items = $r->json('proposal.items');
+        $this->assertCount(2, $items);
+        foreach ($items as $it) {
+            $this->assertSame('berisiko', $it['status']);
+            $this->assertSame('rendah', $it['keyakinan']);
+            $this->assertTrue($it['perlu_konfirmasi']);
+            $this->assertSame([], $it['komponen_usulan']);
+        }
+        $this->assertSame(0, $r->json('ringkasan.valid'));
+        $this->assertSame('dianalisis', $r->json('proposal.status'));
+    }
+
+    public function test_analyze_sukses_tidak_menandai_fallback(): void
+    {
+        [$p, $h] = $this->siapAnalisis();
+        $items = [['id' => 'B1', 'kategori' => 'T', 'requirement' => 'Baris satu',
+            'kutipan' => 'Baris satu', 'sumber_klien' => ['baris' => 1], 'sumber_knowledge' => [],
+            'status' => 'sesuai', 'alasan' => '', 'keyakinan' => 'tinggi', 'komponen_usulan' => []]];
+        $text = json_encode($items);
+        Http::fake(['*' => Http::response(['outputs' => [['outputs' => [['results' => ['message' => ['text' => $text]]]]]]], 200)]);
+        $this->postJson("/api/proposals/{$p['id']}/analyze", [], $h)
+            ->assertOk()->assertJsonPath('ringkasan.fallback', false);
+    }
+
+    public function test_analyze_galat_5xx_biasa_bukan_kuota(): void
+    {
+        [$p, $h] = $this->siapAnalisis();
+        Http::fake(['*' => Http::response('{"message":"internal"}', 500)]);
+        $r = $this->postJson("/api/proposals/{$p['id']}/analyze", [], $h);
+        $r->assertStatus(502)->assertJsonPath('code', 'LF_SERVER');
+        $this->assertStringNotContainsString('internal', $r->json('error'));
+    }
 }

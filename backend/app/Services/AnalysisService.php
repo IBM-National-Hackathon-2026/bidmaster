@@ -115,6 +115,42 @@ class AnalysisService
         return $out;
     }
 
+    /**
+     * Analisis darurat tanpa LLM: setiap baris requirement menjadi butir
+     * "berisiko / keyakinan rendah" yang WAJIB ditinjau manusia. Dipakai saat
+     * mesin AI (Langflow) tidak tersedia (kuota habis / mati) agar alur kerja
+     * tetap berjalan dan tetap human-in-the-loop.
+     *
+     * @return array{items:list<array>,valid:int,invalid:int,fallback:bool}
+     */
+    public function fallbackItems(Proposal $p): array
+    {
+        $items = [];
+        $i = 0;
+        foreach ($this->units($p) as $label => $teks) {
+            $i++;
+            if ($i > 60) {
+                break;
+            }
+            $baris = (int) filter_var($label, FILTER_SANITIZE_NUMBER_INT);
+            $items[] = [
+                'id' => 'B'.$i,
+                'kategori' => 'Umum',
+                'requirement' => mb_substr($teks, 0, 500),
+                'kutipan' => mb_substr($teks, 0, 500),
+                'sumber_klien' => ['baris' => $baris],
+                'sumber_knowledge' => [],
+                'status' => 'berisiko',
+                'alasan' => 'Dianalisis tanpa AI (mesin utama tidak tersedia) — wajib ditinjau manusia.',
+                'keyakinan' => 'rendah',
+                'komponen_usulan' => [],
+                'perlu_konfirmasi' => true,
+            ];
+        }
+
+        return ['items' => $items, 'valid' => 0, 'invalid' => count($items), 'fallback' => true];
+    }
+
     private function norm(string $s): string
     {
         return trim(preg_replace('/\s+/', ' ', mb_strtolower($s)));

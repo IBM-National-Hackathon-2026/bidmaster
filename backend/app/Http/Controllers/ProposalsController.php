@@ -437,24 +437,38 @@ class ProposalsController
         $started = microtime(true);
         $result = $this->lf->run($this->analysis->prompt($proposal), $this->lf->flow(),
             'proposal-'.$proposal->id, $this->analysis->templateOverride());
+        $fallback = false;
         if (! $result['ok']) {
-            return response()->json(['error' => $result['error'], 'code' => 'LF_ERROR'], 502);
+            // Mode darurat: pengguna memilih lanjut tanpa AI saat mesin mati.
+            if (($request->input('fallback') === true || $request->input('fallback') === 'true')
+                && ($result['retryable'] ?? true)) {
+                $checked = $this->analysis->fallbackItems($proposal);
+                $fallback = true;
+            } else {
+                return response()->json(['error' => $result['error'],
+                    'code' => $result['code'] ?? 'LF_ERROR',
+                    'retryable' => $result['retryable'] ?? true,
+                    'bisa_fallback' => true], 502);
+            }
+        } else {
+            $raw = AnalysisService::extractJson($result['text']);
+            if ($raw === null) {
+                return response()->json(['error' => 'Respons mesin tidak terstruktur. Coba lagi.',
+                    'code' => 'LF_FORMAT', 'retryable' => true, 'bisa_fallback' => true], 502);
+            }
+            $checked = $this->analysis->validateItems($proposal, $raw);
         }
-        $raw = AnalysisService::extractJson($result['text']);
-        if ($raw === null) {
-            return response()->json(['error' => 'Respons mesin tidak terstruktur. Coba lagi.', 'code' => 'LF_FORMAT'], 502);
-        }
-        $checked = $this->analysis->validateItems($proposal, $raw);
         $proposal->items = $checked['items'];
         $proposal->status = 'dianalisis';
         $proposal->save();
         $u = $request->attributes->get('member');
         $this->audits->log($u['id'], 'proposal_analisis',
-            "#{$proposal->id} {$checked['valid']} valid, {$checked['invalid']} perlu konfirmasi, ".round(microtime(true) - $started).' dtk');
+            "#{$proposal->id} ".($fallback ? 'MODE DARURAT tanpa AI, ' : '')
+            ."{$checked['valid']} valid, {$checked['invalid']} perlu konfirmasi, ".round(microtime(true) - $started).' dtk');
 
         return response()->json(['proposal' => $this->full($proposal->fresh()),
             'ringkasan' => ['butir' => count($checked['items']), 'valid' => $checked['valid'],
-                'perlu_konfirmasi' => $checked['invalid'],
+                'perlu_konfirmasi' => $checked['invalid'], 'fallback' => $fallback,
                 'waktu_detik' => (int) round(microtime(true) - $started)]]);
     }
 

@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, CalendarClock, FileText, FileUp, Info, RefreshCw, Sparkles, Trash2, UploadCloud, Wallet } from "lucide-react";
+import { ArrowRight, Building2, CalendarClock, FileText, FileUp, Info, RefreshCw, Sparkles, Trash2, TriangleAlert, UploadCloud, Wallet } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Card, FieldError, Input, Label, Select } from "../components/ui/controls";
 import { toast } from "../components/ui/toast";
@@ -28,6 +28,7 @@ export default function Step1({ p, setP, autosave, reload }: {
   const [supJust, setSupJust] = useState(false);
   const [hapus, setHapus] = useState<Hapus>(null);
   const [hapusBusy, setHapusBusy] = useState(false);
+  const [bisaFallback, setBisaFallback] = useState(false);
   const [pesan, setPesan] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const supRef = useRef<HTMLInputElement>(null);
@@ -102,19 +103,26 @@ export default function Step1({ p, setP, autosave, reload }: {
     }
   }
 
-  async function analyze() {
+  async function analyze(fallback = false) {
     if (p.req_teks.trim() === "") { setErr(T.unggah.perluFile); toast(T.unggah.perluFile, "warn"); return; }
     setErr("");
+    setBisaFallback(false);
     setBusy(true);
     setStage(0);
     const tick = setInterval(() => setStage((s) => (s < 3 ? s + 1 : s)), 20000);
     try {
-      const j = await ProposalApi.analyze(p.id);
+      const j = await ProposalApi.analyze(p.id, fallback);
       setP(j.proposal);
-      toast("Analisis selesai.", "ok");
+      if (j.ringkasan.fallback) {
+        toast(T.unggah.fallbackSukses, "warn");
+      } else {
+        toast("Analisis selesai.", "ok");
+      }
     } catch (e) {
       const m = e instanceof Error ? e.message : T.unggah.unggahGagal;
+      const data = (e as { data?: { bisa_fallback?: boolean } }).data;
       setErr(m); toast(m, "error");
+      if (data?.bisa_fallback) setBisaFallback(true);
     } finally {
       clearInterval(tick);
       setBusy(false);
@@ -274,11 +282,26 @@ export default function Step1({ p, setP, autosave, reload }: {
             <button onClick={useContoh} className="text-brand font-semibold underline inline-flex items-center min-h-9 px-0.5">{T.unggah.contoh}</button></span>
         </div>
 
-        {err !== "" && <div role="alert"><Alert kind="error">{err}</Alert></div>}
+        {err !== "" && (
+          <div role="alert" className="space-y-2">
+            <Alert kind="error">{err}</Alert>
+            {bisaFallback && (
+              <div className="border border-amber-200 bg-amber-50 rounded-xl px-4 py-3 text-sm text-amber-900 space-y-2">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <TriangleAlert size={15} aria-hidden /> {T.unggah.fallbackJudul}
+                </p>
+                <p>{T.unggah.fallbackKet}</p>
+                <Button size="sm" variant="secondary" onClick={() => analyze(true)} disabled={busy}>
+                  {T.unggah.fallbackTombol}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Aksi analisis */}
         <div className="pt-1">
-          <Button onClick={analyze} disabled={busy} variant="accent" size="lg" className="w-full sm:w-auto">
+          <Button onClick={() => analyze()} disabled={busy} variant="accent" size="lg" className="w-full sm:w-auto">
             {busy ? "Menganalisis…" : T.unggah.analisis} <ArrowRight size={17} aria-hidden />
           </Button>
           {p.req_teks.trim() === "" && <p className="text-xs text-slate-500 mt-1.5">{T.unggah.perluFile}</p>}

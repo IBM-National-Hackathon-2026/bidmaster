@@ -40,8 +40,8 @@ export const ProposalApi = {
     return api<{ proposal: Proposal; file: { nama: string; satuan: string; jumlah: number; status: string } }>(
       `/api/proposals/${id}/upload`, { method: "POST", headers: authHeaders(), body: f });
   },
-  analyze: (id: number) => api<{ proposal: Proposal; ringkasan: { butir: number; valid: number; perlu_konfirmasi: number; waktu_detik: number } }>(
-    `/api/proposals/${id}/analyze`, { method: "POST", headers: authHeaders() }),
+  analyze: (id: number, fallback = false) => api<{ proposal: Proposal; ringkasan: { butir: number; valid: number; perlu_konfirmasi: number; waktu_detik: number; fallback?: boolean } }>(
+    `/api/proposals/${id}/analyze`, { method: "POST", headers: authHeaders(J), body: JSON.stringify({ fallback }) }),
   deleteFile: (id: number, kind: "requirement" | "pendukung", index?: number) => {
     const q = new URLSearchParams({ kind });
     if (index !== undefined) q.set("index", String(index));

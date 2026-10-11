@@ -77,6 +77,10 @@ export const T = {
     tinggalkan: "Ada perubahan belum tersimpan. Tetap tinggalkan halaman ini?",
     unggahGagal: "Gagal membaca file. Periksa format dan ukuran, lalu coba lagi.",
     cobaLagi: "Coba lagi",
+    fallbackJudul: "Mesin AI sedang tidak tersedia",
+    fallbackKet: "Kuota model AI habis atau Langflow mati. Anda tetap bisa lanjut: semua butir ditandai Berisiko dan wajib Anda putuskan sendiri, tanpa usulan otomatis.",
+    fallbackTombol: "Lanjut tanpa AI (analisis darurat)",
+    fallbackSukses: "Analisis darurat selesai — semua butir wajib ditinjau manusia.",
   },
   tinjau: {
     judul: "Langkah 2 — Tinjau hasil",

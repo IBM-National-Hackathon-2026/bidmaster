@@ -76,7 +76,8 @@ class AgentController
             $result = $this->lf->run($payload, $this->lf->flow(), $session);
         }
         if (! $result['ok']) {
-            return response()->json(['error' => $result['error'], 'code' => 'LF_ERROR'], 502);
+            return response()->json(['error' => $result['error'],
+                'code' => $result['code'] ?? 'LF_ERROR'], 502);
         }
         $u = $request->attributes->get('member');
         $this->audits->log($u['id'], 'agent', 'flow='.$flow.' mode='.$mode.' len='.strlen($msg)
