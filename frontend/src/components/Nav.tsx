@@ -6,8 +6,8 @@ import { T } from "../ui-text";
 import { api } from "../lib/utils";
 
 const link = ({ isActive }: { isActive: boolean }) =>
-  `px-3 py-2 rounded-md text-sm font-medium no-underline transition-colors min-h-11 inline-flex items-center ${
-    isActive ? "text-white bg-[#0F1B3D] font-semibold" : "text-slate-600 hover:text-[#0F1B3D] hover:bg-slate-100"
+  `px-3.5 py-2 rounded-xl text-sm font-semibold no-underline transition-all min-h-11 inline-flex items-center ${
+    isActive ? "text-white bg-brand shadow-[0_4px_14px_rgba(15,27,61,0.25)]" : "text-slate-600 hover:text-[#0F1B3D] hover:bg-slate-100"
   }`;
 
 function HowDialog({ onClose }: { onClose: () => void }) {
@@ -37,7 +37,8 @@ export function Nav() {
       .then((j) => setEngine(j.configured)).catch(() => setEngine(false));
   }, []);
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <header className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-[#C9DDEE]">
+      <div className="h-0.5 grad-line" aria-hidden />
       <div className="max-w-6xl mx-auto flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 h-16">
         <Link to="/app" className="flex items-center no-underline shrink-0" aria-label="BidMaster AI beranda">
           <img src="/BidMaster-Ikon-1024.png" alt="BidMaster AI" className="h-8 w-auto sm:hidden" />

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Alert, Badge, Button, Card, Input, Label, Select } from "../components/ui/controls";
+import { BadgeCheck, Download, FileCheck2, Landmark, Percent, Sparkles, Tag, Trash2 } from "lucide-react";
+import { Alert, Badge, Button, Card, FieldError, Input, Label, Select, Skeleton, SkeletonRows } from "../components/ui/controls";
+import { toast } from "../components/ui/toast";
 import type { Proposal } from "../lib/proposals";
 import { T } from "../ui-text";
 import { api, authHeaders, fmtRp } from "../lib/utils";
@@ -30,6 +32,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
   const [cari, setCari] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [role, setRole] = useState("");
   const [legal, setLegal] = useState({ nib: "", npwp: "", akta: "" });
   const [kurang, setKurang] = useState<string[]>([]);
@@ -38,8 +41,10 @@ export default function Step3({ p, setP, refresh, goStep }: {
   const [lampK, setLampK] = useState(true);
   const [sukses, setSukses] = useState("");
   const [versions, setVersions] = useState<{ versi: number; pada?: string }[]>([]);
+  const [tried, setTried] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     api<{ tender: { komponen: { kode: string; nama: string; satuan: string; harga_dasar: number }[] } }>("/api/catalog")
       .then((c) => setKat(c.tender.komponen)).catch(() => setErr(T.umum.cobaLagi));
     api<{ nama: string; peran: string }>("/api/me").then((u) => setRole(u.peran)).catch(() => {});
@@ -50,7 +55,8 @@ export default function Step3({ p, setP, refresh, goStep }: {
         setRows(j.ringkasan.rows); setRing(j.ringkasan); setP(j.proposal);
         const d = (j.proposal as unknown as { discount?: { tipe: string; nilai: number; alasan: string } }).discount;
         if (d) { setTipe(d.tipe); setNilai(d.nilai); setAlasanD(d.alasan); }
-      }).catch((e) => setErr(e instanceof Error ? e.message : T.umum.cobaLagi));
+      }).catch((e) => setErr(e instanceof Error ? e.message : T.umum.cobaLagi))
+      .finally(() => setLoading(false));
     api<{ ok: boolean; kurang: string[] }>(`/api/proposals/${p.id}/download-check`, { headers: authHeaders() })
       .then((j) => setKurang(j.ok ? [] : j.kurang)).catch(() => {});
     api<{ versions: { versi: number; pada?: string }[] }>(`/api/proposals/${p.id}/versions`, { headers: authHeaders() })
@@ -62,7 +68,15 @@ export default function Step3({ p, setP, refresh, goStep }: {
     return Number.isNaN(n) ? 0 : n;
   }
 
+  const adaDiskon = nilai > 0;
+  const alasanRusak = rows.some((r) => r.harga_proposal !== r.harga_acuan && r.alasan.trim() === "");
+  const diskonErr = adaDiskon && alasanD.trim() === "" ? T.validasi.diskonAlasanWajib : "";
+  const setujuErr = tried && (!centang || oleh.trim() === "") ? T.validasi.setujuWajib : "";
+
   async function simpan() {
+    setTried(true);
+    if (alasanRusak) { setErr(T.validasi.alasanWajib); toast(T.validasi.alasanWajib, "warn"); return; }
+    if (diskonErr !== "") { setErr(diskonErr); toast(diskonErr, "warn"); return; }
     setErr("");
     setBusy(true);
     try {
@@ -76,10 +90,12 @@ export default function Step3({ p, setP, refresh, goStep }: {
       setP(j.proposal);
       setRing(j.ringkasan);
       setRows(j.ringkasan.rows);
+      toast(T.harga.simpan + " ✓", "ok");
       const c = await api<{ ok: boolean; kurang: string[] }>(`/api/proposals/${p.id}/download-check`, { headers: authHeaders() });
       setKurang(c.ok ? [] : c.kurang);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : T.umum.cobaLagi);
+      const m = e instanceof Error ? e.message : T.umum.cobaLagi;
+      setErr(m); toast(m, "error");
     } finally {
       setBusy(false);
     }
@@ -91,6 +107,10 @@ export default function Step3({ p, setP, refresh, goStep }: {
     setRows([...rows, { kode: k.kode, nama: k.nama, satuan: k.satuan, qty: 1, harga_acuan: k.harga_dasar, harga_proposal: k.harga_dasar, alasan: "", alasan_catatan: "" }]);
   }
 
+  function hapusRow(kode: string) {
+    setRows(rows.filter((r) => r.kode !== kode));
+  }
+
   async function lihatPreview() {
     setErr("");
     try {
@@ -100,7 +120,8 @@ export default function Step3({ p, setP, refresh, goStep }: {
       });
       setPreview(j.markdown);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : T.umum.cobaLagi);
+      const m = e instanceof Error ? e.message : T.umum.cobaLagi;
+      setErr(m); toast(m, "error");
     }
   }
 
@@ -123,17 +144,19 @@ export default function Step3({ p, setP, refresh, goStep }: {
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
       setSukses(nama);
+      toast("Unduhan berhasil.", "ok");
       refresh();
       api<{ versions: { versi: number; pada?: string }[] }>(`/api/proposals/${p.id}/versions`, { headers: authHeaders() })
         .then((j) => setVersions(j.versions)).catch(() => {});
     } catch (e) {
-      setErr(e instanceof Error ? e.message : T.umum.cobaLagi);
+      const m = e instanceof Error ? e.message : T.umum.cobaLagi;
+      setErr(m); toast(m, "error");
     }
   }
 
   async function unduhVersi(v: number, format: "docx" | "md") {
     const r = await fetch(`/api/proposals/${p.id}/versions/${v}/file?format=${format}`, { headers: authHeaders() });
-    if (!r.ok) return setErr(T.umum.cobaLagi);
+    if (!r.ok) { setErr(T.umum.cobaLagi); return; }
     const nama = (r.headers.get("Content-Disposition") ?? "").match(/filename="(.+?)"/)?.[1] ?? `proposal-v${v}.${format}`;
     const a = document.createElement("a");
     a.href = URL.createObjectURL(await r.blob());
@@ -151,169 +174,244 @@ export default function Step3({ p, setP, refresh, goStep }: {
   ];
 
   return (
-    <div className="anim-fade-up grid lg:grid-cols-[1fr_300px] gap-4">
-      <div>
-        <Card>
-          <h2 className="font-bold text-lg text-[#0F1B3D]">{T.harga.judul}</h2>
-          <div className="flex gap-2 mt-2">
-            <Input placeholder={T.harga.cari} value={cari} onChange={(e) => setCari(e.target.value)} aria-label={T.harga.tambah} />
-          </div>
-          {cari !== "" && (
-            <div className="mt-1 border border-slate-200 rounded-lg max-h-40 overflow-y-auto">
-              {kat.filter((k) => (k.kode + " " + k.nama).toLowerCase().includes(cari.toLowerCase())).slice(0, 8).map((k) => (
-                <button key={k.kode} onClick={() => { tambah(k.kode); setCari(""); }}
-                  className="w-full text-left px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-100 min-h-11">
-                  {k.kode} — {k.nama} <span className="text-slate-600">({fmtRp(k.harga_dasar)})</span></button>
-              ))}
+    <div className="anim-fade-up space-y-4">
+      {/* Header */}
+      <div className="grad-brand rounded-2xl p-5 sm:p-6 text-white relative overflow-hidden">
+        <div className="absolute right-0 top-0 w-40 h-40 rounded-full bg-white/5 -mr-10 -mt-10" aria-hidden />
+        <div className="relative">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/15 rounded-full px-3 py-1">
+            <Sparkles size={13} aria-hidden /> Langkah 3 dari 3
+          </span>
+          <h2 className="text-xl sm:text-2xl font-extrabold mt-2">{T.harga.judul}</h2>
+          <p className="text-white/80 text-sm mt-1">{T.harga.estimasi}</p>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-[1fr_320px] gap-4 items-start">
+        <div className="space-y-4">
+          <Card className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Tag size={17} className="text-brand" aria-hidden />
+              <h3 className="font-bold text-[#0F1B3D]">Komponen harga</h3>
             </div>
-          )}
-          <div className="overflow-x-auto mt-3">
-            <table className="w-full text-sm min-w-[640px]">
-              <thead><tr className="text-left text-xs uppercase text-slate-600 bg-[#EEF0F8]">
-                <th className="py-2 pr-2">{T.harga.kolomKomponen}</th>
-                <th className="py-2 pr-2">{T.harga.kolomQty}</th>
-                <th className="py-2 pr-2">{T.harga.kolomAcuan}</th>
-                <th className="py-2 pr-2">{T.harga.kolomProposal}</th>
-                <th className="py-2">{T.harga.kolomSubtotal}</th>
-              </tr></thead>
-              <tbody>
-                {rows.map((r, i) => (
-                  <tr key={r.kode} className="border-t border-slate-200 align-top">
-                    <td className="py-2 pr-2 text-slate-700">{r.nama}<br /><span className="text-xs text-slate-600">{r.kode} / {r.satuan}</span>
-                      {r.lencana !== "" && <><br /><span className="text-xs font-bold text-amber-700">{r.lencana}</span></>}
-                    </td>
-                    <td className="py-2 pr-2"><Input type="number" min={1} max={1000} className="max-w-24 py-1.5" aria-label={`Jumlah ${r.kode}`}
-                      value={r.qty} onChange={(e) => { const n = [...rows]; n[i] = { ...r, qty: Math.max(1, parseInt(e.target.value || "1", 10)) }; setRows(n); }} /></td>
-                    <td className="py-2 pr-2 text-slate-600 whitespace-nowrap">{fmtRp(r.harga_acuan)}</td>
-                    <td className="py-2 pr-2">
-                      <Input inputMode="numeric" aria-label={`Harga proposal ${r.kode}`} className="max-w-36 py-1.5"
-                        value={fmtRp(r.harga_proposal)}
-                        onChange={(e) => { const n = [...rows]; n[i] = { ...r, harga_proposal: rpParse(e.target.value) }; setRows(n); }} />
-                      {r.harga_proposal !== r.harga_acuan && (
-                        <div className="mt-1 space-y-1">
-                          <Select aria-label={`${T.harga.alasan} ${r.kode}`} value={r.alasan}
-                            onChange={(e) => { const n = [...rows]; n[i] = { ...r, alasan: e.target.value }; setRows(n); }}
-                            className="py-1.5 text-xs">
-                            <option value="">{T.harga.alasanPilih}</option>
-                            {ALASAN.map((a) => <option key={a} value={a}>{a}</option>)}
-                          </Select>
-                          <Input aria-label={`${T.harga.catatan} ${r.kode}`} placeholder={T.harga.catatan}
-                            value={r.alasan_catatan} onChange={(e) => { const n = [...rows]; n[i] = { ...r, alasan_catatan: e.target.value }; setRows(n); }}
-                            className="py-1.5 text-xs" maxLength={200} />
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-2 whitespace-nowrap text-slate-800">{fmtRp(r.harga_proposal * r.qty)}</td>
-                  </tr>
+            <Input placeholder={T.harga.cari} value={cari} onChange={(e) => setCari(e.target.value)} aria-label={T.harga.tambah} />
+            {cari !== "" && (
+              <div className="border border-[#C9DDEE] rounded-xl max-h-48 overflow-y-auto">
+                {kat.filter((k) => (k.kode + " " + k.nama).toLowerCase().includes(cari.toLowerCase())).slice(0, 8).map((k) => (
+                  <button key={k.kode} onClick={() => { tambah(k.kode); setCari(""); }}
+                    className="w-full text-left px-3 py-3 text-sm text-slate-700 hover:bg-brand-light border-b border-slate-100 last:border-0 min-h-11">
+                    <b className="text-brand">{k.kode}</b> — {k.nama} <span className="text-slate-500">({fmtRp(k.harga_dasar)})</span></button>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          <Card>
-            <h3 className="font-bold text-[#0F1B3D]">{T.harga.diskonJudul}</h3>
-            <div className="flex gap-2 mt-2">
+              </div>
+            )}
+
+            {loading ? (
+              <SkeletonRows rows={3} />
+            ) : rows.length === 0 ? (
+              <div className="border border-dashed border-slate-300 rounded-xl p-6 text-center text-sm text-slate-500">
+                Belum ada komponen. Cari dan tambah dari katalog di atas.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[660px]">
+                  <thead><tr className="text-left text-xs uppercase text-slate-600 bg-[#EEF0F8]">
+                    <th className="py-2.5 px-2 rounded-l-lg">{T.harga.kolomKomponen}</th>
+                    <th className="py-2.5 px-2">{T.harga.kolomQty}</th>
+                    <th className="py-2.5 px-2">{T.harga.kolomAcuan}</th>
+                    <th className="py-2.5 px-2">{T.harga.kolomProposal}</th>
+                    <th className="py-2.5 px-2">{T.harga.kolomSubtotal}</th>
+                    <th className="py-2.5 px-2 rounded-r-lg"></th>
+                  </tr></thead>
+                  <tbody>
+                    {rows.map((r, i) => (
+                      <tr key={r.kode} className="border-t border-slate-200 align-top">
+                        <td className="py-3 px-2 text-slate-700">{r.nama}<br /><span className="text-xs text-slate-500">{r.kode} / {r.satuan}</span>
+                          {r.lencana !== "" && <><br /><span className="text-xs font-bold text-amber-700">{r.lencana}</span></>}
+                        </td>
+                        <td className="py-3 px-2"><Input type="number" min={1} max={1000} className="max-w-24 py-1.5" aria-label={`Jumlah ${r.kode}`}
+                          value={r.qty} onChange={(e) => { const n = [...rows]; n[i] = { ...r, qty: Math.max(1, Math.min(1000, parseInt(e.target.value || "1", 10))) }; setRows(n); }} /></td>
+                        <td className="py-3 px-2 text-slate-500 whitespace-nowrap">{fmtRp(r.harga_acuan)}</td>
+                        <td className="py-3 px-2">
+                          <Input inputMode="numeric" aria-label={`Harga proposal ${r.kode}`} className="max-w-36 py-1.5"
+                            aria-invalid={r.harga_proposal !== r.harga_acuan && r.alasan.trim() === ""}
+                            value={fmtRp(r.harga_proposal)}
+                            onChange={(e) => { const n = [...rows]; n[i] = { ...r, harga_proposal: rpParse(e.target.value) }; setRows(n); }} />
+                          {r.harga_proposal !== r.harga_acuan && (
+                            <div className="mt-1.5 space-y-1.5">
+                              <Select aria-label={`${T.harga.alasan} ${r.kode}`} value={r.alasan}
+                                aria-invalid={r.alasan.trim() === ""}
+                                onChange={(e) => { const n = [...rows]; n[i] = { ...r, alasan: e.target.value }; setRows(n); }}
+                                className="py-1.5 text-xs">
+                                <option value="">{T.harga.alasanPilih}</option>
+                                {ALASAN.map((a) => <option key={a} value={a}>{a}</option>)}
+                              </Select>
+                              <Input aria-label={`${T.harga.catatan} ${r.kode}`} placeholder={T.harga.catatan}
+                                value={r.alasan_catatan} onChange={(e) => { const n = [...rows]; n[i] = { ...r, alasan_catatan: e.target.value }; setRows(n); }}
+                                className="py-1.5 text-xs" maxLength={200} />
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-2 whitespace-nowrap text-slate-800 font-semibold">{fmtRp(r.harga_proposal * r.qty)}</td>
+                        <td className="py-3 px-2">
+                          <button onClick={() => hapusRow(r.kode)} aria-label={`Hapus ${r.kode}`}
+                            className="text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-2.5 min-w-11 min-h-11 inline-flex items-center justify-center">
+                            <Trash2 size={15} aria-hidden />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {alasanRusak && <FieldError>{T.validasi.alasanWajib}</FieldError>}
+          </Card>
+
+          <Card className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Percent size={17} className="text-brand" aria-hidden />
+              <h3 className="font-bold text-[#0F1B3D]">{T.harga.diskonJudul}</h3>
+            </div>
+            <div className="flex gap-2 flex-wrap items-center">
               {(["persen", "nominal"] as const).map((t) => (
                 <button key={t} onClick={() => setTipe(t)} aria-pressed={tipe === t}
-                  className={`rounded-lg px-3.5 py-2.5 text-xs font-semibold border min-h-11 ${tipe === t ? "border-brand text-brand" : "border-slate-300 text-slate-600"}`}>
+                  className={`rounded-xl px-3.5 py-2.5 text-sm font-semibold border min-h-11 ${tipe === t ? "border-brand text-brand bg-brand-light" : "border-slate-300 text-slate-600"}`}>
                   {t === "persen" ? T.harga.diskonPersen : T.harga.diskonNominal}</button>
               ))}
               <Input type="number" min={0} aria-label="Nilai diskon" value={nilai}
                 onChange={(e) => setNilai(Math.max(0, parseInt(e.target.value || "0", 10)))} className="max-w-32 py-1.5" />
             </div>
-            <Label htmlFor="diskon-alasan">{T.harga.diskonAlasan}</Label>
-            <Input id="diskon-alasan" value={alasanD} onChange={(e) => setAlasanD(e.target.value)} maxLength={40} />
-          </Card>
-          {err !== "" && <div className="mt-2" role="alert"><Alert kind="error">{err}</Alert></div>}
-          <div className="mt-3"><Button onClick={simpan} disabled={busy}>{busy ? T.harga.menyimpan : T.harga.simpan}</Button></div>
-        </Card>
-
-        <Card>
-          <h3 className="font-bold text-[#0F1B3D]">{T.harga.legalJudul}</h3>
-          {[["NIB", legal.nib], ["NPWP", legal.npwp], ["Akta", legal.akta]].map(([l, v]) => (
-            <div key={l} className="text-sm mt-1 text-slate-700">{l}: {v !== "" ? v : <span className="text-slate-600">{T.harga.legalHubungi}</span>}</div>
-          ))}
-        </Card>
-
-        <Card>
-          <h3 className="font-bold text-[#0F1B3D]">{T.harga.pratinjau}</h3>
-          <div className="flex gap-4 flex-wrap mt-2 text-sm text-slate-700">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={lampS} onChange={(e) => setLampS(e.target.checked)} className="w-5 h-5 accent-amber-500" />
-              {T.harga.lampiranSumber}</label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={lampK} onChange={(e) => setLampK(e.target.checked)} className="w-5 h-5 accent-amber-500" />
-              {T.harga.lampiranKlarifikasi}</label>
-          </div>
-          <div className="mt-2 flex gap-2 flex-wrap">
-            <Button variant="secondary" onClick={lihatPreview}>{T.harga.pratinjauLihat}</Button>
-            <Button onClick={() => unduh("docx")} disabled={kurang.length > 0}>{T.harga.unduhDocx}</Button>
-            <Button variant="secondary" onClick={() => unduh("md")} disabled={kurang.length > 0}>{T.harga.unduhMd}</Button>
-            <Button variant="secondary" onClick={() => window.print()}>{T.harga.unduhCetak}</Button>
-          </div>
-          {kurang.length > 0 && <p className="text-xs text-amber-700 mt-1">Belum terpenuhi: {kurang.join("; ")}</p>}
-          {sukses !== "" && (
-            <div className="mt-3 border border-green-500/40 bg-green-50 rounded-xl p-4">
-              <p className="font-bold text-green-700">{T.harga.sukses}: {sukses}</p>
-              <div className="mt-2 flex gap-2 flex-wrap">
-                <Button size="sm" variant="secondary" onClick={() => unduh("docx")}>{T.harga.suksesUlang}</Button>
-                <Button size="sm" variant="secondary" onClick={() => nav0("/app")}>{T.harga.suksesBaru}</Button>
-                <Button size="sm" variant="secondary" onClick={() => nav0("/riwayat")}>{T.harga.suksesRiwayat}</Button>
-              </div>
+            <div>
+              <Label htmlFor="diskon-alasan">{T.harga.diskonAlasan}</Label>
+              <Input id="diskon-alasan" value={alasanD} onChange={(e) => setAlasanD(e.target.value)} maxLength={40}
+                aria-invalid={diskonErr !== ""} placeholder="cth negosiasi klien" />
+              <FieldError>{diskonErr}</FieldError>
             </div>
-          )}
-          {versions.length > 0 && (
-            <div className="mt-3 text-sm text-slate-600">
-              {T.harga.versi}: {versions.map((v) => (
-                <span key={v.versi} className="inline-flex items-center gap-1 mr-3">
-                  <span className="text-slate-700">v{v.versi}</span>
-                  <button onClick={() => unduhVersi(v.versi, "docx")} className="text-brand underline inline-flex items-center min-h-11 px-1.5">.docx</button>
-                  <button onClick={() => unduhVersi(v.versi, "md")} className="text-brand underline inline-flex items-center min-h-11 px-1.5">.md</button>
-                </span>
+          </Card>
+
+          {err !== "" && <div role="alert"><Alert kind="error">{err}</Alert></div>}
+          <Button onClick={simpan} disabled={busy} size="lg" className="w-full sm:w-auto">
+            {busy ? T.harga.menyimpan : T.harga.simpan}
+          </Button>
+
+          <Card className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Landmark size={17} className="text-brand" aria-hidden />
+              <h3 className="font-bold text-[#0F1B3D]">{T.harga.legalJudul}</h3>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {[["NIB", legal.nib], ["NPWP", legal.npwp], ["Akta", legal.akta]].map(([l, v]) => (
+                <div key={l} className={`rounded-xl border p-3 ${v !== "" ? "border-green-200 bg-green-50/50" : "border-amber-200 bg-amber-50/50"}`}>
+                  <div className="text-xs font-semibold text-slate-500">{l}</div>
+                  <div className="text-sm text-slate-800 mt-0.5">{v !== "" ? v : <span className="text-amber-700">{T.harga.legalHubungi}</span>}</div>
+                </div>
               ))}
             </div>
-          )}
-        </Card>
+          </Card>
+
+          <Card className="space-y-3">
+            <div className="flex items-center gap-2">
+              <FileCheck2 size={17} className="text-brand" aria-hidden />
+              <h3 className="font-bold text-[#0F1B3D]">{T.harga.pratinjau}</h3>
+            </div>
+            <div className="flex gap-5 flex-wrap text-sm text-slate-700">
+              <label className="flex items-center gap-2 cursor-pointer min-h-11">
+                <input type="checkbox" checked={lampS} onChange={(e) => setLampS(e.target.checked)} className="w-5 h-5 accent-amber-500" />
+                {T.harga.lampiranSumber}</label>
+              <label className="flex items-center gap-2 cursor-pointer min-h-11">
+                <input type="checkbox" checked={lampK} onChange={(e) => setLampK(e.target.checked)} className="w-5 h-5 accent-amber-500" />
+                {T.harga.lampiranKlarifikasi}</label>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="secondary" onClick={lihatPreview}>{T.harga.pratinjauLihat}</Button>
+              <Button variant="accent" onClick={() => unduh("docx")} disabled={kurang.length > 0}><Download size={16} aria-hidden /> {T.harga.unduhDocx}</Button>
+              <Button variant="secondary" onClick={() => unduh("md")} disabled={kurang.length > 0}>{T.harga.unduhMd}</Button>
+              <Button variant="secondary" onClick={() => window.print()}>{T.harga.unduhCetak}</Button>
+            </div>
+            {kurang.length > 0 && (
+              <div className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Belum terpenuhi: {kurang.join("; ")}
+              </div>
+            )}
+            {sukses !== "" && (
+              <div className="border border-green-300 bg-green-50 rounded-xl p-4 anim-pop">
+                <p className="font-bold text-green-800 flex items-center gap-2"><BadgeCheck size={17} aria-hidden /> {T.harga.sukses}: {sukses}</p>
+                <div className="mt-2 flex gap-2 flex-wrap">
+                  <Button size="sm" variant="secondary" onClick={() => unduh("docx")}>{T.harga.suksesUlang}</Button>
+                  <Button size="sm" variant="secondary" onClick={() => nav0("/app")}>{T.harga.suksesBaru}</Button>
+                  <Button size="sm" variant="secondary" onClick={() => nav0("/riwayat")}>{T.harga.suksesRiwayat}</Button>
+                </div>
+              </div>
+            )}
+            {versions.length > 0 && (
+              <div className="text-sm text-slate-600">
+                {T.harga.versi}: {versions.map((v) => (
+                  <span key={v.versi} className="inline-flex items-center gap-1 mr-3">
+                    <span className="text-slate-700 font-semibold">v{v.versi}</span>
+                    <button onClick={() => unduhVersi(v.versi, "docx")} className="text-brand underline inline-flex items-center min-h-11 px-1.5">.docx</button>
+                    <button onClick={() => unduhVersi(v.versi, "md")} className="text-brand underline inline-flex items-center min-h-11 px-1.5">.md</button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        {/* Sidebar ringkasan */}
+        <aside className="space-y-4 lg:sticky lg:top-24 self-start">
+          <Card className="space-y-3">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{T.harga.total}</div>
+            {ring ? (
+              <div className="text-3xl font-extrabold text-[#0F1B3D] leading-none">{fmtRp(ring.total)}</div>
+            ) : (
+              <Skeleton className="h-9 w-40" />
+            )}
+            <div className="text-xs text-slate-600 space-y-1">
+              <div className="flex justify-between"><span>{T.harga.subtotal}</span><span className="font-semibold text-slate-700">{ring ? fmtRp(ring.subtotal) : "…"}</span></div>
+              <div className="flex justify-between"><span>{T.harga.diskon}</span><span className="font-semibold text-slate-700">{ring ? fmtRp(ring.diskon_rp) : "…"}</span></div>
+              <div className="flex justify-between"><span>Pagu</span><span className="font-semibold text-slate-700">{p.pagu ? fmtRp(p.pagu) : T.harga.tanpaPagu}</span></div>
+            </div>
+            {ring && ring.pagu_ok !== null && (
+              <div className={`text-xs font-semibold rounded-lg px-3 py-2 ${ring.pagu_ok ? "text-green-700 bg-green-50 border border-green-200" : "text-red-700 bg-red-50 border border-red-200"}`}>
+                {ring.pagu_ok ? T.harga.paguDiBawah : T.harga.paguLewat}
+              </div>
+            )}
+            <div>
+              {ring && (ring.perlu_persetujuan && approvals.length === 0
+                ? <Badge ok={false}>{T.harga.perluSetuju}</Badge>
+                : <Badge ok={true}>{approvals.length > 0 ? `Disetujui ${approvals.length}x` : T.harga.siap}</Badge>)}
+            </div>
+            {ring?.sebab.map((s) => <div key={s} className="text-xs text-amber-700">• {s}</div>)}
+          </Card>
+
+          <Card className="space-y-2">
+            <h3 className="font-bold text-sm text-[#0F1B3D]">{T.harga.setujuOleh}</h3>
+            <Input id="oleh" value={oleh} onChange={(e) => setOleh(e.target.value)} maxLength={80} placeholder="Nama penyetuju"
+              aria-invalid={setujuErr !== ""} />
+            <label className="flex items-start gap-2 text-sm text-slate-700 cursor-pointer min-h-11">
+              <input type="checkbox" checked={centang} onChange={(e) => setCentang(e.target.checked)} className="mt-1 w-5 h-5 accent-amber-500" />
+              {T.harga.centang}
+            </label>
+            <FieldError>{setujuErr}</FieldError>
+            <Button size="sm" className="w-full" onClick={setujui}>{T.harga.setujuOleh}</Button>
+            {role !== "" && role !== "admin" && <p className="text-xs text-slate-500">{T.harga.butuhApprover}</p>}
+          </Card>
+
+          <Card>
+            <h3 className="font-bold text-sm text-[#0F1B3D]">{T.harga.syaratJudul}</h3>
+            <ul className="mt-2 space-y-2 text-sm">
+              {T.harga.syarat.map((s, i) => (
+                <li key={s} className={`flex items-start gap-2 ${syarat[i].ok ? "text-green-700" : "text-slate-500"}`}>
+                  <span aria-hidden className="mt-0.5">{syarat[i].ok ? "✓" : "○"}</span>
+                  {syarat[i].aksi && !syarat[i].ok
+                    ? <button onClick={syarat[i].aksi} className="underline text-left min-h-11 inline-flex items-center">{s}</button>
+                    : <span>{s}</span>}
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </aside>
       </div>
-      <aside className="space-y-3 lg:sticky lg:top-20 self-start">
-        <Card>
-          <div className="text-2xl font-extrabold text-[#0F1B3D]">{ring ? fmtRp(ring.total) : "…"}</div>
-          <div className="text-xs text-slate-600 mt-1">
-            {T.harga.subtotal}: {ring ? fmtRp(ring.subtotal) : "…"} · {T.harga.diskon}: {ring ? fmtRp(ring.diskon_rp) : "…"}
-          </div>
-          <div className="text-xs text-slate-600">
-            Pagu: {p.pagu ? fmtRp(p.pagu) : T.harga.tanpaPagu}
-            {ring && ring.pagu_ok !== null && (ring.pagu_ok ? ` · ${T.harga.paguDiBawah}` : ` · ${T.harga.paguLewat}`)}
-          </div>
-          <div className="mt-2">
-            {ring && (ring.perlu_persetujuan && approvals.length === 0
-              ? <Badge ok={false}>{T.harga.perluSetuju}</Badge>
-              : <Badge ok={true}>{approvals.length > 0 ? `Disetujui ${approvals.length}x` : T.harga.siap}</Badge>)}
-          </div>
-          {ring?.sebab.map((s) => <div key={s} className="text-xs text-amber-700 mt-1">• {s}</div>)}
-          <Label htmlFor="oleh">{T.harga.setujuOleh}</Label>
-          <Input id="oleh" value={oleh} onChange={(e) => setOleh(e.target.value)} maxLength={80} />
-          <label className="flex items-start gap-2 mt-2 text-sm text-slate-700 cursor-pointer">
-            <input type="checkbox" checked={centang} onChange={(e) => setCentang(e.target.checked)} className="mt-1 w-5 h-5 accent-amber-500" />
-            {T.harga.centang}
-          </label>
-          <div className="mt-2"><Button size="sm" onClick={setujui}>{T.harga.setujuOleh}</Button></div>
-          {role !== "" && role !== "admin" && <p className="text-xs text-slate-600 mt-1">{T.harga.butuhApprover}</p>}
-        </Card>
-        <Card>
-          <h3 className="font-bold text-sm text-[#0F1B3D]">{T.harga.syaratJudul}</h3>
-          <ul className="mt-2 space-y-1.5 text-sm">
-            {T.harga.syarat.map((s, i) => (
-              <li key={s} className={`flex items-start gap-2 ${syarat[i].ok ? "text-green-700" : "text-slate-600"}`}>
-                <span aria-hidden>{syarat[i].ok ? "✓" : "○"}</span>
-                {syarat[i].aksi && !syarat[i].ok
-                  ? <button onClick={syarat[i].aksi} className="underline text-left min-h-11 inline-flex items-center">{s}</button>
-                  : <span>{s}</span>}
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-slate-600 mt-2">{T.harga.estimasi}</p>
-        </Card>
-      </aside>
       {preview !== "" && <PreviewDoc md={preview} onClose={() => setPreview("")} />}
     </div>
   );
@@ -321,6 +419,8 @@ export default function Step3({ p, setP, refresh, goStep }: {
   function nav0(to: string) { window.location.href = to; }
 
   async function setujui() {
+    setTried(true);
+    if (!centang || oleh.trim() === "") { setErr(T.validasi.setujuWajib); toast(T.validasi.setujuWajib, "warn"); return; }
     setErr("");
     try {
       const j = await api<{ proposal: Proposal }>(`/api/proposals/${p.id}/approve`, {
@@ -329,17 +429,19 @@ export default function Step3({ p, setP, refresh, goStep }: {
       });
       setP(j.proposal);
       refresh();
+      toast("Persetujuan tersimpan.", "ok");
     } catch (e) {
-      setErr(e instanceof Error ? e.message : T.umum.cobaLagi);
+      const m = e instanceof Error ? e.message : T.umum.cobaLagi;
+      setErr(m); toast(m, "error");
     }
   }
 }
 
 function PreviewDoc({ md, onClose }: { md: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[60] bg-black/70 overflow-y-auto p-4" onClick={onClose}>
-      <div className="bg-white text-slate-900 max-w-3xl mx-auto rounded-lg my-6" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 p-4 border-b no-print sticky top-0 bg-white rounded-t-lg">
+    <div className="fixed inset-0 z-[80] bg-black/70 overflow-y-auto p-4" onClick={onClose}>
+      <div className="bg-white text-slate-900 max-w-3xl mx-auto rounded-xl my-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2 p-4 border-b no-print sticky top-0 bg-white rounded-t-xl">
           <h2 className="font-bold flex-1">{T.harga.pratinjau}</h2>
           <Button size="sm" variant="secondary" onClick={onClose}>{T.harga.kembaliPerbaiki}</Button>
           <Button size="sm" variant="secondary" onClick={() => window.print()}>{T.harga.unduhCetak}</Button>

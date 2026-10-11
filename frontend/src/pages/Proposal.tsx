@@ -1,9 +1,9 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Steps } from "../components/Steps";
-import { Alert, Button } from "../components/ui/controls";
-import { ProposalApi, type Proposal } from "../lib/proposals";
+import { Alert, Button, Card, Skeleton } from "../components/ui/controls";
+import { ProposalApi, type Proposal as P } from "../lib/proposals";
 import { T } from "../ui-text";
 import Agent from "./Agent";
 import Step1 from "./Step1";
@@ -13,7 +13,7 @@ import Step2 from "./Step2";
 export default function Proposal() {
   const { id } = useParams();
   const nav = useNavigate();
-  const [p, setP] = useState<Proposal | null>(null);
+  const [p, setP] = useState<P | null>(null);
   const [step, setStep] = useState(1);
   const [err, setErr] = useState("");
   const [savedAt, setSavedAt] = useState("");
@@ -80,24 +80,47 @@ export default function Proposal() {
   ];
 
   return (
-    <main className="max-w-4xl mx-auto px-4 pb-24">
-      <div className="my-4"><Steps current={step} can={can} reasons={reasons} /></div>
-      {err !== "" && <div className="mb-3"><Alert kind="error">{err}</Alert></div>}
+    <main className="max-w-4xl mx-auto px-4 py-5 pb-20">
+      <div className="mb-4"><Steps current={step} can={can} reasons={reasons} /></div>
+
+      {err !== "" && <div className="mb-3" role="alert"><Alert kind="error">{err}</Alert></div>}
+
+      {!p && (
+        <Card className="space-y-4">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </Card>
+      )}
+
       {p && (
-        <div className="flex items-center gap-3 mb-3 text-xs text-slate-600" role="status">
-          <span>{p.instansi || "(tanpa nama)"} · #{p.id}</span>
-          <span className="ml-auto">
-            {dirty ? "Menyimpan…" : savedAt !== "" ? `${T.unggah.tersimpan} ${savedAt}` : ""}
+        <div className="flex items-center gap-3 mb-3 text-xs text-slate-600 bg-white/70 border border-[#C9DDEE] rounded-xl px-3.5 py-2" role="status">
+          <FileText size={14} className="text-brand shrink-0" aria-hidden />
+          <span className="truncate font-semibold text-slate-700">{p.instansi || "(tanpa nama)"}</span>
+          <span className="text-slate-400">· #{p.id}</span>
+          <span className="ml-auto inline-flex items-center gap-1.5 shrink-0">
+            {dirty ? (
+              <><span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" aria-hidden /> Menyimpan…</>
+            ) : savedAt !== "" ? (
+              <><span className="w-2 h-2 rounded-full bg-green-500" aria-hidden /> {T.unggah.tersimpan} {savedAt}</>
+            ) : ""}
           </span>
         </div>
       )}
+
       {step === 1 && p && <Step1 p={p} setP={setP} autosave={autosave} reload={() => load(p.id)} />}
       {step === 2 && p && (
         <Step2 p={p} setP={setP} goHarga={() => setStep(3)} agent={<Agent compact />} />
       )}
       {step === 3 && p && <Step3 p={p} setP={setP} refresh={() => load(p.id)} goStep={(n) => { setStep(n); window.scrollTo({ top: 0 }); }} />}
+
       {p && (
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-5">
           {step > 1 && <Button variant="secondary" onClick={() => setStep(step - 1)}><ArrowLeft size={15} aria-hidden /> {T.umum.kembali}</Button>}
           {step < 3 && can[step] && (
             <Button onClick={() => setStep(step + 1)}>{step === 1 ? "Ke Tinjau" : "Ke Harga"} <ArrowRight size={15} aria-hidden /></Button>

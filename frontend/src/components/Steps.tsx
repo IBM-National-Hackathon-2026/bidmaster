@@ -7,25 +7,35 @@ export function Steps({ current, can, reasons }: {
   reasons: [string, string, string];
 }) {
   return (
-    <ol className="flex gap-1.5 list-none p-0" aria-label="Langkah proposal">
+    <ol className="flex gap-2 list-none p-0" aria-label="Langkah proposal">
       {T.langkah.judul.map((t, i) => {
         const n = i + 1;
         const ok = can[i];
         const active = current === n;
+        const done = n < current && ok;
         return (
           <li key={t} className="flex-1 min-w-0">
             <div title={ok ? T.langkah.ket[i] : reasons[i]}
               aria-current={active ? "step" : undefined}
               aria-disabled={!ok}
-              className={`rounded-[10px] px-2.5 py-2 border-[1.5px] ${
-                active ? "border-brand bg-brand-light"
-                : ok ? "border-slate-200 bg-white" : "border-slate-200 bg-slate-100 opacity-70"}`}>
-              <span className="flex items-center gap-1 text-[0.72rem] font-semibold text-slate-600">
-                Langkah {n}
-                {n < current && ok && <Check size={12} className="text-green-600" aria-hidden />}
-              </span>
-              <span className="text-xs text-slate-700 truncate block">{t}</span>
-              {!ok && <span className="block text-[0.7rem] text-slate-600">{reasons[i]}</span>}
+              className={`h-full rounded-2xl px-3 py-3 border-[1.5px] transition-all ${
+                active ? "border-brand bg-white shadow-[0_8px_24px_rgba(15,27,61,0.12)]"
+                : done ? "border-green-300 bg-green-50/60"
+                : ok ? "border-[#C9DDEE] bg-white"
+                : "border-slate-200 bg-slate-100/70 opacity-80"}`}>
+              <div className="flex items-center gap-2">
+                <span className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${
+                  done ? "bg-green-500 text-white"
+                  : active ? "grad-brand text-white"
+                  : ok ? "bg-slate-200 text-slate-700" : "bg-slate-200 text-slate-500"}`}>
+                  {done ? <Check size={14} aria-hidden /> : n}
+                </span>
+                <span className="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500 truncate">
+                  Langkah {n}
+                </span>
+              </div>
+              <span className={`block mt-1.5 font-bold text-sm truncate ${active ? "text-[#0F1B3D]" : "text-slate-700"}`}>{t}</span>
+              <span className="hidden sm:block text-xs text-slate-500 truncate">{ok ? T.langkah.ket[i] : reasons[i]}</span>
             </div>
           </li>
         );
