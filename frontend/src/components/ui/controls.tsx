@@ -37,7 +37,7 @@ export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 }
 
 const fieldCls =
-  "w-full px-3.5 py-2.5 border-[1.5px] border-white/10 rounded-lg text-[0.92rem] bg-night text-ink placeholder:text-slate-500 " +
+  "w-full px-3.5 py-2.5 border-[1.5px] border-white/10 rounded-lg text-base bg-night text-ink placeholder:text-slate-500 " +
   "focus:border-brand focus:outline-none focus:ring-3 focus:ring-brand/20 " +
   "aria-[invalid=true]:border-red-500";
 

@@ -33,7 +33,7 @@ function md(text: string): string {
   }).filter(Boolean).join("\n");
 }
 
-export default function Agent() {
+export default function Agent({ compact = false }: { compact?: boolean }) {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -69,7 +69,7 @@ export default function Agent() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-60px)] overflow-hidden">
+    <div className={`flex overflow-hidden ${compact ? "h-[70vh] rounded-xl border border-white/10" : "h-[calc(100vh-60px)]"}`}>
       <aside className="w-64 shrink-0 bg-surface border-r border-white/10 hidden md:flex flex-col">
         <div className="p-4 border-b border-white/10 text-xs text-slate-300">
           <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${ready ? "bg-green-400" : ready === false ? "bg-red-400" : "bg-slate-500"} ${ready ? "animate-pulse" : ""}`} />

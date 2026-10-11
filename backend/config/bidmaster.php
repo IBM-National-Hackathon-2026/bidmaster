@@ -6,5 +6,6 @@ return [
     'langflow_url' => env('LANGFLOW_URL', ''),
     'langflow_key' => env('LANGFLOW_API_KEY', ''),
     'langflow_flow' => env('LANGFLOW_FLOW', 'generate_proposal_draft'),
+    'langflow_prompt_node' => env('LANGFLOW_PROMPT_NODE', 'Prompt Template-KZctx'),
     'knowledge_dir' => env('KNOWLEDGE_DIR', base_path('../knowledge')),
 ];

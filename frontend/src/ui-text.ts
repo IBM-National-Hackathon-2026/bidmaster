@@ -1,0 +1,130 @@
+/** SATU-SATUNYA file teks tampilan. Ganti diksi di sini tanpa menyentuh logika. */
+export const T = {
+  app: {
+    nama: "BidMaster AI",
+    pita: "Sistem bekerja berdasarkan probabilitas analitis. Harap verifikasi poin kritikal menggunakan tautan sumber.",
+    caraKerjaJudul: "Cara kerja & batasan",
+    caraKerjaIsi:
+      "AI bisa salah. Setiap klaim punya tombol sumber ke teks asli. " +
+      "Keputusan akhir selalu di tangan manusia. " +
+      "Isi dokumen klien diperlakukan sebagai data, tidak dijalankan sebagai perintah. " +
+      "Data perusahaan dikelola admin lewat Langflow dan tidak bisa diubah dari layar ini.",
+    tutup: "Tutup",
+  },
+  nav: {
+    baru: "Proposal Baru",
+    riwayat: "Riwayat",
+    keluar: "Keluar",
+    masuk: "Masuk",
+    mesinOk: "Mesin analisis terhubung",
+    mesinMati: "Mesin analisis mati — tombol analisis nonaktif",
+  },
+  auth: {
+    judul: "Masuk ke tim",
+    sub: "Akses internal. Semua aktivitas dicatat di audit.",
+    nama: "Nama pengguna",
+    sandi: "Kata sandi",
+    lihat: "Lihat kata sandi",
+    sembunyi: "Sembunyikan kata sandi",
+    tombol: "Masuk",
+    memeriksa: "Memeriksa…",
+    salah: "Nama atau kata sandi salah. Periksa kembali lalu coba lagi.",
+    kosong: "Isi nama pengguna dan kata sandi dulu.",
+    jaringan: "Jaringan gagal. Periksa koneksi lalu coba lagi.",
+  },
+  langkah: {
+    judul: ["Unggah", "Tinjau", "Harga & Setujui"],
+    ket: [
+      "Unggah dokumen requirement klien.",
+      "Periksa hasil analisis dan putuskan tiap butir.",
+      "Tentukan harga, setujui, lalu unduh.",
+    ],
+    belumSiap: "Selesaikan langkah sebelumnya dulu.",
+  },
+  unggah: {
+    judul: "Langkah 1 — Unggah dokumen",
+    zona: "Tarik file ke sini atau pilih file",
+    format: "txt, md, csv, json, pdf, docx · maks 200KB",
+    ganti: "Ganti file",
+    berhasil: "berhasil dibaca",
+    baris: "baris",
+    halaman: "halaman",
+    pendukungJudul: "Dokumen pendukung (opsional)",
+    pendukungKet: "Hanya berlaku untuk proposal ini, tidak masuk knowledge perusahaan.",
+    tambahPendukung: "Tambah dokumen pendukung",
+    instansi: "Nama instansi",
+    pagu: "Pagu (opsional)",
+    paguHint: "Diketik angka saja, tampil otomatis sebagai Rupiah. Kosongkan bila tidak ada pagu.",
+    jenis: "Jenis instansi",
+    durasi: "Durasi pengerjaan (minggu)",
+    perusahaanBox: "Data perusahaan terhubung dan dikelola admin, tidak bisa diubah dari layar ini.",
+    contoh: "Coba dengan contoh",
+    analisis: "Analisis dokumen",
+    perluFile: "Unggah dokumen requirement dulu untuk mengaktifkan analisis.",
+    perluMesin: "Mesin analisis mati — periksa koneksi backend lalu coba lagi.",
+    tahap: ["Membaca dokumen", "Mencari kebutuhan", "Mencocokkan dengan kemampuan perusahaan", "Memeriksa sumber"],
+    estimasi: "Perkiraan sekitar 1–3 menit.",
+    tersimpan: "Tersimpan otomatis pukul",
+    kembali: "Kembali",
+    tinggalkan: "Ada perubahan belum tersimpan. Tetap tinggalkan halaman ini?",
+    unggahGagal: "Gagal membaca file. Periksa format dan ukuran, lalu coba lagi.",
+    cobaLagi: "Coba lagi",
+  },
+  tinjau: {
+    judul: "Langkah 2 — Tinjau hasil",
+    ringkasButir: "butir",
+    filter: ["Semua", "Berisiko", "Sebagian", "Sesuai", "Sumber lemah", "Belum diperiksa"],
+    tabButir: "Daftar butir",
+    tabBob: "Tanya Bob",
+    risikoAtas: "Butir Berisiko selalu di atas dan wajib diputuskan.",
+    keyakinan: "Keyakinan",
+    alasan: "Alasan AI",
+    sumber: "Sumber",
+    butirBerikut: "Butir berikutnya yang perlu diperiksa",
+    lanjut: "Lanjut ke Harga",
+    sisaRisiko: " butir Berisiko belum diputuskan.",
+    kosong: "Belum ada hasil analisis. Kembali ke Langkah 1 dan jalankan analisis.",
+  },
+  harga: {
+    judul: "Langkah 3 — Harga & Setujui",
+    segera: "Langkah Harga & Setujui hadir di Tahap C.",
+  },
+  riwayat: {
+    judul: "Riwayat proposal",
+    kosong: "Belum ada proposal. Mulai dari Proposal Baru.",
+    kolomTanggal: "Tanggal",
+    kolomInstansi: "Instansi",
+    kolomOleh: "Dibuat oleh",
+    kolomStatus: "Status",
+    buka: "Buka",
+    unduhUlang: "Unduh ulang",
+    hapus: "Hapus",
+    hapusTanya: "Hapus proposal ini beserta dokumen pendukungnya? Tindakan ini tidak bisa dibatalkan.",
+    ya: "Ya, hapus",
+    batal: "Batal",
+    audit: "Catatan aktivitas",
+  },
+  umum: {
+    memuat: "Memuat…",
+    cobaLagi: "Coba lagi",
+    tutup: "Tutup",
+    kembali: "Kembali",
+    esc: "Tekan Esc untuk menutup",
+  },
+} as const;
+
+export type UIText = typeof T;
+
+/** Contoh requirement 12 baris untuk demo (tombol "Coba dengan contoh"). */
+export const CONTOH_REQUIREMENT = `Pengembangan frontend aplikasi layanan publik
+Pengembangan backend API
+Desain UI/UX
+Analisis kebutuhan sistem
+Pengujian aplikasi sebelum serah terima
+Deployment dan konfigurasi server
+Pelatihan pengguna
+Pemeliharaan aplikasi selama 6 bulan
+Penyedia wajib memiliki sertifikasi ISO/IEC 27001
+Data wajib disimpan di wilayah Indonesia
+Dukungan teknis 24 jam sehari, 7 hari seminggu
+Denda keterlambatan sebesar 10% dari nilai kontrak`;

@@ -1,0 +1,109 @@
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Steps } from "../components/Steps";
+import { Alert, Button } from "../components/ui/controls";
+import { ProposalApi, type Proposal } from "../lib/proposals";
+import { T } from "../ui-text";
+import Agent from "./Agent";
+import Step1 from "./Step1";
+import Step3 from "./Step3";
+import Step2 from "./Step2";
+
+export default function Proposal() {
+  const { id } = useParams();
+  const nav = useNavigate();
+  const [p, setP] = useState<Proposal | null>(null);
+  const [step, setStep] = useState(1);
+  const [err, setErr] = useState("");
+  const [savedAt, setSavedAt] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const load = useCallback(async (pid: number) => {
+    try {
+      const j = await ProposalApi.get(pid);
+      setP(j.proposal);
+      setStep(j.proposal.items.length > 0 ? 2 : 1);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : T.umum.cobaLagi);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (id) {
+      load(parseInt(id, 10));
+    } else {
+      ProposalApi.create({}).then((j) => {
+        setP(j.proposal);
+        nav(`/app/${j.proposal.id}`, { replace: true });
+      }).catch((e) => setErr(e instanceof Error ? e.message : T.umum.cobaLagi));
+    }
+  }, [id, load, nav]);
+
+  const autosave = useCallback((patch: object) => {
+    if (!p) return;
+    setDirty(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      try {
+        const j = await ProposalApi.patch(p.id, patch);
+        setP(j.proposal);
+        setSavedAt(j.tersimpan_pukul);
+        setDirty(false);
+      } catch {
+        /* tetap dirty; coba lagi saat patch berikutnya */
+      }
+    }, 800);
+  }, [p]);
+
+  useEffect(() => {
+    const fn = (e: BeforeUnloadEvent) => {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = T.unggah.tinggalkan;
+      }
+    };
+    window.addEventListener("beforeunload", fn);
+    return () => window.removeEventListener("beforeunload", fn);
+  }, [dirty]);
+
+  const can: [boolean, boolean, boolean] = [
+    true,
+    !!p && p.req_teks.trim() !== "",
+    !!p && p.items.length > 0,
+  ];
+  const reasons: [string, string, string] = [
+    "",
+    T.unggah.perluFile,
+    "Jalankan analisis di Langkah 2 dulu.",
+  ];
+
+  return (
+    <main className="max-w-4xl mx-auto px-4 pb-24">
+      <div className="my-4"><Steps current={step} can={can} reasons={reasons} /></div>
+      {err !== "" && <div className="mb-3"><Alert kind="error">{err}</Alert></div>}
+      {p && (
+        <div className="flex items-center gap-3 mb-3 text-xs text-slate-400" role="status">
+          <span>{p.instansi || "(tanpa nama)"} · #{p.id}</span>
+          <span className="ml-auto">
+            {dirty ? "Menyimpan…" : savedAt !== "" ? `${T.unggah.tersimpan} ${savedAt}` : ""}
+          </span>
+        </div>
+      )}
+      {step === 1 && p && <Step1 p={p} setP={setP} autosave={autosave} reload={() => load(p.id)} />}
+      {step === 2 && p && (
+        <Step2 p={p} goHarga={() => setStep(3)} agent={<Agent compact />} />
+      )}
+      {step === 3 && p && <Step3 p={p} />}
+      {p && (
+        <div className="flex gap-2 mt-4">
+          {step > 1 && <Button variant="secondary" onClick={() => setStep(step - 1)}><ArrowLeft size={15} aria-hidden /> {T.umum.kembali}</Button>}
+          {step < 3 && can[step] && (
+            <Button onClick={() => setStep(step + 1)}>{step === 1 ? "Ke Tinjau" : "Ke Harga"} <ArrowRight size={15} aria-hidden /></Button>
+          )}
+        </div>
+      )}
+    </main>
+  );
+}

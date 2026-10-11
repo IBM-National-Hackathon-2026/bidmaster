@@ -1,19 +1,19 @@
-# CONTOH SANITASI — salin ke tender_company.md lalu ganti dengan profil perusahaan.
-# File ini yang di-push. Data asli bersifat rahasia, jangan commit.
-# Teks bebas, 1200 karakter pertama masuk ke bab Profil Perusahaan.
+# CONTOH — salin ke tender_company.md lalu sesuaikan dengan profil perusahaan.
+# 1200 karakter pertama masuk ke bab Profil Perusahaan.
 # Legalitas (NIB/NPWP/akta) diisi lewat form, bukan dari file ini.
 
-# Profil Perusahaan — [NAMA PERUSAHAAN]
+# Profil Perusahaan — PT Solusi Teknologi Nusantara (NusaTech)
 
 ## Identitas
-Nama: [NAMA PERUSAHAAN]. Bidang: [BIDANG USAHA].
-Alamat: [ALAMAT].
+PT Solusi Teknologi Nusantara (NusaTech, fiktif). Berdiri 2014, 85 karyawan, berkantor pusat di Jakarta. Bidang: pengembangan perangkat lunak dan konsultasi teknologi.
 
 ## Layanan
-[DAFTAR LAYANAN — contoh: pengembangan aplikasi web, API, UI/UX, pengujian, deployment, pemeliharaan.]
+Pengembangan aplikasi web dan mobile (Python Django/FastAPI, Node.js, React, Flutter), API dan integrasi sistem (REST, SOAP, webhook, QRIS), UI/UX, pengujian perangkat lunak, deployment, dan pemeliharaan. Data disimpan di wilayah Indonesia (AWS Jakarta atau on-premise klien).
 
-## Portofolio
-[CANTUMKAN HANYA proyek nyata. Jangan mengarang pengalaman atau sertifikasi.]
+## Portofolio (simulasi)
+Portal pajak daerah (2021), platform armada logistik (2022), origination pinjaman bank (2022), antrean rumah sakit (2023), dashboard ritel (2023), administrasi kampus (2024), marketplace koperasi tani (2024), portal klaim asuransi (2025).
 
 ## Kapabilitas
-[TEKNOLOGI yang benar-benar dikuasai tim.]
+ISO/IEC 27001:2022 (berlaku s.d. November 2027), ISO 9001:2015, OWASP ASVS Level 2, uji penetrasi tahunan. SLA standar 99,5%/bulan. Garansi 3 bulan pasca go-live.
+
+> DATA FIKTIF UNTUK DEMO. Detail ketentuan (K01–K18) ada di knowledge_perusahaan.md (dikelola admin via Langflow).

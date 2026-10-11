@@ -1,15 +1,16 @@
-import { CheckCircle2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
-import { LogoMark, Wordmark } from "../components/Logo";
 import { Alert, Button, Card, Input, Label } from "../components/ui/controls";
+import { T } from "../ui-text";
 
 export default function Login() {
   const nav = useNavigate();
   const { login, user, ready } = useAuth();
   const [nama, setNama] = useState("");
   const [pw, setPw] = useState("");
+  const [show, setShow] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -18,54 +19,46 @@ export default function Login() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
-    if (nama.trim().length < 2) return setErr("Nama pengguna minimal 2 karakter.");
-    if (pw.length < 4) return setErr("Kata sandi minimal 4 karakter.");
+    if (nama.trim().length < 2 || pw === "") return setErr(T.auth.kosong);
     setBusy(true);
     try {
       await login(nama.trim(), pw);
       nav("/app");
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Login gagal.");
+      const s = (e as { status?: number }).status;
+      setErr(s === 401 ? T.auth.salah : T.auth.jaringan);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <main className="min-h-[calc(100vh-60px)] grid lg:grid-cols-2 relative overflow-hidden">
-      <div className="hero-glow glow-amber w-[480px] h-[480px] left-[-160px] bottom-[-160px]" aria-hidden="true" />
-      <div className="hidden lg:flex flex-col justify-center p-12 relative overflow-hidden auth-side" aria-hidden="true">
-        <div className="max-w-sm anim-fade-up">
-          <div className="flex items-center gap-3 mb-6">
-            <LogoMark size={44} inverted />
-            <Wordmark className="text-2xl text-white" />
+    <main className="min-h-[calc(100vh-120px)] flex items-center justify-center p-4">
+      <Card className="anim-fade-up w-full max-w-md p-8">
+        <h1 className="text-2xl font-extrabold text-white">{T.auth.judul}</h1>
+        <p className="text-base text-slate-400 mt-1 mb-5">{T.auth.sub}</p>
+        <form onSubmit={submit} noValidate>
+          <Label htmlFor="user">{T.auth.nama}</Label>
+          <Input id="user" autoFocus autoComplete="username" placeholder="nama.pengguna"
+            value={nama} onChange={(e) => setNama(e.target.value)}
+            aria-invalid={err !== "" && nama.trim().length < 2} />
+          <Label htmlFor="pw">{T.auth.sandi}</Label>
+          <div className="relative">
+            <Input id="pw" type={show ? "text" : "password"} autoComplete="current-password"
+              value={pw} onChange={(e) => setPw(e.target.value)}
+              aria-invalid={err !== "" && pw === ""} className="pr-12" />
+            <button type="button" onClick={() => setShow(!show)}
+              aria-label={show ? T.auth.sembunyi : T.auth.lihat} aria-pressed={show}
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-2.5 min-w-11 min-h-11 text-slate-300 hover:text-white rounded-lg">
+              {show ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+            </button>
           </div>
-          <h2 className="text-3xl font-extrabold mb-3 text-white">Satu alat untuk semua kebutuhan tender</h2>
-          <p className="text-slate-300 text-[0.95rem]">Draft 11 bab + RAB dari form, harga terkunci katalog, gate otomatis, audit tercatat.</p>
-          <ul className="mt-7 space-y-3 text-sm text-slate-200 list-none">
-            {["Gate KAK, pagu, dan legalitas otomatis", "Export DOCX siap kirim setelah disetujui", "Chat agent via Langflow"].map((f) => (
-              <li key={f} className="flex gap-2.5 items-start"><CheckCircle2 size={17} className="text-brand mt-0.5 shrink-0" />{f}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <div className="flex items-center justify-center p-6 relative">
-        <Card className="anim-fade-up w-full max-w-md p-9">
-          <h1 className="text-2xl font-extrabold text-white">Masuk ke tim</h1>
-          <p className="text-sm text-slate-400 mt-1 mb-4">Akses internal. Semua aktivitas dicatat di audit.</p>
-          <form onSubmit={submit} noValidate>
-            <Label htmlFor="user">Nama pengguna</Label>
-            <Input id="user" autoComplete="username" placeholder="admin" value={nama}
-              onChange={(e) => setNama(e.target.value)} aria-invalid={err !== "" && nama.trim().length < 2} />
-            <Label htmlFor="pw">Kata sandi</Label>
-            <Input id="pw" type="password" autoComplete="current-password" value={pw}
-              onChange={(e) => setPw(e.target.value)} aria-invalid={err !== "" && pw.length < 4} />
-            {err !== "" && <div className="mt-3"><Alert kind="error">{err}</Alert></div>}
-            <div className="grid mt-4"><Button type="submit" disabled={busy}>{busy ? "Memeriksa…" : "Masuk"}</Button></div>
-          </form>
-          <p className="text-center text-xs text-slate-500 mt-4">Sesi 12 jam · Seed: <code className="bg-white/10 px-1 rounded">admin / bidmaster123</code></p>
-        </Card>
-      </div>
+          {err !== "" && <div className="mt-3" role="alert"><Alert kind="error">{err}</Alert></div>}
+          <div className="grid mt-5">
+            <Button type="submit" disabled={busy}>{busy ? T.auth.memeriksa : T.auth.tombol}</Button>
+          </div>
+        </form>
+      </Card>
     </main>
   );
 }

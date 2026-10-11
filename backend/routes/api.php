@@ -3,10 +3,12 @@
 use App\Http\Controllers\AgentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DraftController;
+use App\Http\Controllers\ProposalsController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => ['ok' => true]);
 Route::get('/catalog', [DraftController::class, 'catalog']);
+Route::get('/company', [ProposalsController::class, 'company']);
 Route::get('/agent/status', [AgentController::class, 'status']);
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::post('/logout', [AuthController::class, 'logout']);
@@ -19,5 +21,12 @@ Route::middleware(['token', 'throttle:120,1'])->group(function () {
         Route::post('/draft', [DraftController::class, 'store'])->middleware('throttle:30,1');
         Route::post('/export', [DraftController::class, 'export'])->middleware('throttle:30,1');
         Route::post('/agent', [AgentController::class, 'send'])->middleware('throttle:30,1');
+        Route::post('/proposals', [ProposalsController::class, 'store']);
+        Route::patch('/proposals/{proposal}', [ProposalsController::class, 'update']);
+        Route::delete('/proposals/{proposal}', [ProposalsController::class, 'destroy']);
+        Route::post('/proposals/{proposal}/upload', [ProposalsController::class, 'upload']);
+        Route::post('/proposals/{proposal}/analyze', [ProposalsController::class, 'analyze'])->middleware('throttle:10,1');
     });
+    Route::get('/proposals', [ProposalsController::class, 'index']);
+    Route::get('/proposals/{proposal}', [ProposalsController::class, 'show']);
 });

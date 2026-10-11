@@ -19,11 +19,14 @@ class LangflowService
     }
 
     /** @return array{ok:bool,text?:string,error?:string} */
-    public function run(string $message, string $flow, string $sessionId = ''): array
+    public function run(string $message, string $flow, string $sessionId = '', array $tweaks = []): array
     {
         $payload = ['input_value' => $message, 'output_type' => 'chat', 'input_type' => 'chat'];
         if ($sessionId !== '') {
             $payload['session_id'] = $sessionId;
+        }
+        if ($tweaks !== []) {
+            $payload['tweaks'] = $tweaks;
         }
         try {
             $res = Http::timeout(300)
