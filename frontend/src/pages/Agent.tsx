@@ -1,4 +1,4 @@
-import { ArrowUpRight, Check, Copy, FileText, Lock, Paperclip, RefreshCw, Send, TriangleAlert, X } from "lucide-react";
+import { ArrowUpRight, Check, Copy, Download, FileText, Lock, Paperclip, RefreshCw, Send, TriangleAlert, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth";
@@ -7,18 +7,58 @@ import { toast } from "../components/ui/toast";
 import { api, authHeaders } from "../lib/utils";
 import { T } from "../ui-text";
 
-export type Msg = { role: "user" | "bot"; text: string; err?: boolean; lampiran?: string };
+export type Msg = { role: "user" | "bot"; text: string; err?: boolean; lampiran?: string; mode?: Mode; saranFile?: boolean };
 type Lampiran = { file: File; nama: string };
+type Mode = "proposal" | "umum";
 
 const HINTS = [
   "Buatkan draft proposal untuk kafe di Surabaya, butuh web + reservasi, budget 10jt",
   "Revisi proposal: tambahkan fitur galeri menu",
   "Buatkan PRD dari brief website tadi",
   "Tender dinas pemerintah, pagu 50 juta, durasi 3 bulan",
+  "Buatkan file Word siap unduh dari draft di atas",
 ];
 
 const ACCEPT = [".txt", ".md", ".csv", ".json", ".pdf", ".docx"];
 const MAX_BYTES = 200 * 1024;
+
+/** Buat nama file aman dari judul/instansi. */
+function slug(s: string): string {
+  const t = s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return t || "jawaban-bob";
+}
+
+/** Unduh teks jawaban Bob sebagai .docx (server) atau .md (klien). */
+export async function unduhJawaban(text: string, format: "docx" | "md", nama: string): Promise<void> {
+  if (format === "md") {
+    const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${slug(nama)}.md`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    return;
+  }
+  const r = await fetch("/api/agent/file", {
+    method: "POST",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ markdown: text, format: "docx", nama }),
+  });
+  if (!r.ok) {
+    const j = (await r.json().catch(() => ({}))) as { error?: string };
+    throw new Error(j.error ?? T.agen.unduhGagal);
+  }
+  const blob = await r.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${slug(nama)}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
 
 /** Markdown ringan → HTML dengan blok & spasi yang benar. */
 export function md(text: string): string {
@@ -75,6 +115,46 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+/** Tombol unduh jawaban Bob sebagai .docx / .md. */
+function DownloadButton({ text, nama, saran }: { text: string; nama: string; saran?: boolean }) {
+  const [busy, setBusy] = useState<"docx" | "md" | null>(null);
+  const [open, setOpen] = useState(false);
+  async function go(format: "docx" | "md") {
+    if (busy) return;
+    setBusy(format);
+    try {
+      await unduhJawaban(text, format, nama);
+      toast(T.agen.unduhSukses, "ok");
+    } catch (e) {
+      toast(e instanceof Error ? e.message : T.agen.unduhGagal, "warn");
+    } finally {
+      setBusy(null);
+      setOpen(false);
+    }
+  }
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)} disabled={busy !== null}
+        aria-label={T.agen.unduhJawaban} aria-expanded={open}
+        className={`transition-opacity p-1.5 rounded-md inline-flex items-center gap-1 ${saran ? "opacity-100 bg-brand-light text-brand" : "opacity-0 group-hover:opacity-100 focus:opacity-100 text-slate-500 hover:text-brand hover:bg-slate-100"}`}>
+        <Download size={13} aria-hidden />
+        <span className="text-[0.68rem] font-semibold">{busy ? "…" : T.agen.unduhJawaban}</span>
+      </button>
+      {open && (
+        <div className="absolute z-20 mt-1 left-0 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[11rem] anim-fade-up">
+          <button onClick={() => go("docx")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-2">
+            <FileText size={13} aria-hidden /> {T.agen.unduhDocx}
+          </button>
+          <button onClick={() => go("md")} className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-2">
+            <Download size={13} aria-hidden /> {T.agen.unduhMd}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function ChatBob({ variant = "compact", context }: {
   variant?: "compact" | "full";
   context?: { id: number; instansi: string };
@@ -85,6 +165,7 @@ export function ChatBob({ variant = "compact", context }: {
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState<boolean | null>(null);
   const [lamp, setLamp] = useState<Lampiran | null>(null);
+  const [mode, setMode] = useState<Mode>("proposal");
   const { user } = useAuth();
   const logged = user !== null;
   const box = useRef<HTMLDivElement>(null);
@@ -117,22 +198,23 @@ export function ChatBob({ variant = "compact", context }: {
     setLamp(null);
     setBusy(true);
     try {
-      let j: { text: string };
+      let j: { text: string; saran_file?: boolean };
       if (l) {
         const fd = new FormData();
         fd.append("message", t);
         fd.append("flow", "bidmaster_proposal_generator");
         fd.append("session_id", sessionId);
+        fd.append("mode", mode);
         if (context) fd.append("konteks_proposal", String(context.id));
         fd.append("file", l.file);
         j = await api<{ text: string }>("/api/agent", { method: "POST", headers: authHeaders(), body: fd });
       } else {
         j = await api<{ text: string }>("/api/agent", {
           method: "POST", headers: authHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ message: t, flow: "bidmaster_proposal_generator", session_id: sessionId }),
+          body: JSON.stringify({ message: t, flow: "bidmaster_proposal_generator", session_id: sessionId, mode }),
         });
       }
-      setMsgs((m) => [...m, { role: "bot", text: j.text }]);
+      setMsgs((m) => [...m, { role: "bot", text: j.text, mode, saranFile: j.saran_file === true }]);
     } catch (e) {
       setMsgs((m) => [...m, { role: "bot", text: `**${T.agen.gagal}**\n\n${e instanceof Error ? e.message : ""}`.trim(), err: true }]);
     } finally {
@@ -249,10 +331,22 @@ export function ChatBob({ variant = "compact", context }: {
                           <RefreshCw size={13} aria-hidden /> {T.agen.ulangi}
                         </button>
                       )}
+                      {m.saranFile && !m.err && (
+                        <div className="mt-3 flex items-start gap-2 bg-brand-light border border-brand/25 rounded-xl px-3 py-2 text-xs text-[#0F1B3D]">
+                          <Download size={14} className="text-brand mt-0.5 shrink-0" aria-hidden />
+                          <span>{T.agen.saranFile}</span>
+                        </div>
+                      )}
                     </div>}
-                <div className="flex items-center gap-2 mt-1.5 px-1">
+                <div className="flex items-center gap-2 mt-1.5 px-1 flex-wrap">
                   <span className="text-[0.7rem] text-slate-400">{new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span>
+                  {m.role === "bot" && m.mode === "umum" && (
+                    <span className="text-[0.65rem] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">{T.agen.umumBadge}</span>
+                  )}
                   {m.role === "bot" && !m.err && <CopyButton text={m.text} />}
+                  {m.role === "bot" && !m.err && (
+                    <DownloadButton text={m.text} nama={context?.instansi || "jawaban-bob"} saran={m.saranFile} />
+                  )}
                 </div>
               </div>
             </div>
@@ -262,6 +356,21 @@ export function ChatBob({ variant = "compact", context }: {
 
         {/* Komposer */}
         <div className="shrink-0 border-t border-slate-200 bg-white/90 backdrop-blur p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-3xl mx-auto mb-2 flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-slate-500" id="bob-mode-label">{T.agen.mode}</span>
+            <div role="group" aria-labelledby="bob-mode-label" className="inline-flex bg-slate-100 border border-slate-200 rounded-full p-0.5">
+              {(["proposal", "umum"] as Mode[]).map((mo) => (
+                <button key={mo} type="button" onClick={() => setMode(mo)} disabled={busy}
+                  title={mo === "proposal" ? T.agen.modeProposalKet : T.agen.modeUmumKet}
+                  aria-pressed={mode === mo}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors min-h-8 ${mode === mo ? "bg-brand text-white shadow-[0_2px_10px_rgba(15,27,61,0.25)]" : "text-slate-600 hover:text-brand"}`}>
+                  {mo === "proposal" ? T.agen.modeProposal : T.agen.modeUmum}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-slate-500 truncate">{mode === "proposal" ? T.agen.modeProposalKet : T.agen.modeUmumKet}</span>
+          </div>
+
           {msgs.length === 0 && (
             <div className="flex gap-1.5 flex-wrap mb-2 max-w-3xl mx-auto">
               {HINTS.map((h) => (

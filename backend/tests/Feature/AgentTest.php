@@ -96,4 +96,75 @@ class AgentTest extends TestCase
         $this->postJson('/api/agent', ['message' => 'halo', 'flow' => 'flow_asing'],
             ['Authorization' => "Bearer {$t}"])->assertStatus(400);
     }
+
+    public function test_agent_mode_proposal_tanpa_tweak(): void
+    {
+        $this->fakeLangflow();
+        $t = $this->token();
+        $this->postJson('/api/agent', ['message' => 'halo'], ['Authorization' => "Bearer {$t}"])
+            ->assertOk()->assertJsonPath('mode', 'proposal');
+        Http::assertSent(fn ($req) => ! array_key_exists('tweaks', $req->data()));
+    }
+
+    public function test_agent_mode_umum_mengirim_override_prompt(): void
+    {
+        $this->fakeLangflow();
+        $t = $this->token();
+        $this->postJson('/api/agent', ['message' => 'apa itu cloud computing?', 'mode' => 'umum'],
+            ['Authorization' => "Bearer {$t}"])->assertOk()->assertJsonPath('mode', 'umum');
+        Http::assertSent(function ($req) {
+            $b = $req->data();
+            $node = config('bidmaster.langflow_prompt_node');
+
+            return isset($b['tweaks'][$node]['template'])
+                && str_contains($b['tweaks'][$node]['template'], 'Pertanyaan umum')
+                && str_contains($b['tweaks'][$node]['template'], '{context}')
+                && str_contains($b['tweaks'][$node]['template'], '{tender}');
+        });
+    }
+
+    public function test_agent_saran_file_benar_saat_minta_file(): void
+    {
+        $this->fakeLangflow();
+        $t = $this->token();
+        $this->postJson('/api/agent', ['message' => 'Buatkan file Word siap unduh dari draft ini'],
+            ['Authorization' => "Bearer {$t}"])->assertOk()->assertJsonPath('saran_file', true);
+        $this->postJson('/api/agent', ['message' => 'Jelaskan singkat saja'],
+            ['Authorization' => "Bearer {$t}"])->assertOk()->assertJsonPath('saran_file', false);
+    }
+
+    public function test_agent_file_docx_menghasilkan_unduhan(): void
+    {
+        $this->fakeLangflow();
+        $t = $this->token();
+        $r = $this->postJson('/api/agent/file',
+            ['markdown' => "# Judul\n\nIsi **tebal** dan tabel:\n\n| Komponen | Qty |\n|---|---|\n| DEV-BE | 2 |\n\n- satu\n- dua",
+                'format' => 'docx', 'nama' => 'Draft Kafe'],
+            ['Authorization' => "Bearer {$t}"]);
+        $r->assertOk();
+        $this->assertStringStartsWith('PK', $r->getContent());
+        $this->assertStringContainsString('draft_kafe.docx', (string) $r->headers->get('Content-Disposition'));
+        $this->assertDatabaseHas('audits', ['aksi' => 'agent-file']);
+    }
+
+    public function test_agent_file_md_menghasilkan_markdown(): void
+    {
+        $this->fakeLangflow();
+        $t = $this->token();
+        $r = $this->postJson('/api/agent/file', ['markdown' => '# Halo Bob', 'format' => 'md', 'nama' => 'catatan'],
+            ['Authorization' => "Bearer {$t}"]);
+        $r->assertOk();
+        $this->assertSame('# Halo Bob', $r->getContent());
+        $this->assertStringContainsString('catatan.md', (string) $r->headers->get('Content-Disposition'));
+    }
+
+    public function test_agent_file_tolak_isi_kosong_dan_terlalu_besar(): void
+    {
+        $this->fakeLangflow();
+        $t = $this->token();
+        $this->postJson('/api/agent/file', ['markdown' => ''], ['Authorization' => "Bearer {$t}"])
+            ->assertStatus(422)->assertJsonPath('field', 'markdown');
+        $this->postJson('/api/agent/file', ['markdown' => str_repeat('a', 201 * 1024)], ['Authorization' => "Bearer {$t}"])
+            ->assertStatus(422);
+    }
 }

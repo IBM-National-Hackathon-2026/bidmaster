@@ -95,4 +95,13 @@ class ExportTest extends TestCase
         $this->assertFalse($r->json('ok'));
         $this->assertStringContainsString('pagu', strtolower(implode(' ', $r->json('kurang'))));
     }
+
+    public function test_export_draft_docx_dengan_tabel_tidak_error(): void
+    {
+        [, $h] = $this->boot();
+        $md = "# Penawaran\n\n| Komponen | Qty |\n|---|:--:|\n| DEV-BE | 2 |\n\n- satu\n- dua";
+        $r = $this->postJson('/api/export', ['format' => 'docx', 'markdown' => $md], $h);
+        $r->assertOk();
+        $this->assertStringStartsWith('PK', $r->getContent());
+    }
 }

@@ -18,6 +18,33 @@ class LangflowService
         return config('bidmaster.langflow_flow', 'generate_proposal_draft');
     }
 
+    /**
+     * Override Prompt node agar Bob bisa menjawab pertanyaan umum (di luar
+     * konteks proposal) tanpa kehilangan kemampuan proposal/tender.
+     */
+    public function generalTemplate(): array
+    {
+        $node = config('bidmaster.langflow_prompt_node', 'Prompt Template-KZctx');
+        $template = <<<'TPL'
+        Kamu "Bob", asisten AI perusahaan PT Solusi Teknologi Nusantara (NusaTech).
+        Jawab ramah, ringkas, dan akurat dalam bahasa Indonesia.
+        - Pertanyaan umum (di luar tender) tetap dijawab dengan baik.
+        - Untuk proposal/tender, gunakan KONTEKS PERUSAHAAN; jangan mengarang fakta, harga, atau sertifikasi.
+        - Jika diminta membuat dokumen/file, tulis isi lengkap dan rapi dalam Markdown
+          (judul, tabel, daftar) agar bisa diekspor ke Word.
+        - Tandai hal yang belum pasti dengan [perlu konfirmasi].
+        - Harga final dan keputusan akhir tetap di tangan manusia.
+
+        KONTEKS PERUSAHAAN:
+        {context}
+
+        PERMINTAAN PENGGUNA:
+        {tender}
+        TPL;
+
+        return [$node => ['template' => $template]];
+    }
+
     /** @return array{ok:bool,text?:string,error?:string} */
     public function run(string $message, string $flow, string $sessionId = '', array $tweaks = []): array
     {

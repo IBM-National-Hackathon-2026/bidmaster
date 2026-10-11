@@ -21,6 +21,7 @@ Route::middleware(['token', 'throttle:120,1'])->group(function () {
         Route::post('/draft', [DraftController::class, 'store'])->middleware('throttle:30,1');
         Route::post('/export', [DraftController::class, 'export'])->middleware('throttle:30,1');
         Route::post('/agent', [AgentController::class, 'send'])->middleware('throttle:30,1');
+        Route::post('/agent/file', [AgentController::class, 'file'])->middleware('throttle:30,1');
         Route::post('/proposals', [ProposalsController::class, 'store']);
         Route::patch('/proposals/{proposal}', [ProposalsController::class, 'update']);
         Route::delete('/proposals/{proposal}', [ProposalsController::class, 'destroy']);

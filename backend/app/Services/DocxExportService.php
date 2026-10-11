@@ -19,7 +19,7 @@ class DocxExportService
                 return;
             }
             $first = $tableRows[0];
-            $isHeader = count($tableRows) > 1 && preg_match('/^[\s:|\-]+$/', $tableRows[1]);
+            $isHeader = count($tableRows) > 1 && $this->isSeparatorRow($tableRows[1]);
             $rows = $isHeader ? [$tableRows[0], ...array_slice($tableRows, 2)] : $tableRows;
             $t = $section->addTable(['borderSize' => 4, 'borderColor' => '999999']);
             foreach ($rows as $i => $row) {
@@ -52,6 +52,8 @@ class DocxExportService
                 $section->addTitle(mb_substr($line, 2), 1);
             } elseif (str_starts_with($line, '- ') || str_starts_with($line, '* ')) {
                 $section->addListItem('• '.mb_substr($line, 2));
+            } elseif (preg_match('/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/', $line)) {
+                $section->addText('');
             } elseif (trim($line) !== '') {
                 $this->addRich($section, $line);
             } else {
@@ -65,16 +67,33 @@ class DocxExportService
         return file_get_contents($tmp);
     }
 
+    /** Baris pemisah tabel Markdown, mis. "|---|:--:|". Aman untuk array sel. */
+    private function isSeparatorRow(array $row): bool
+    {
+        if ($row === []) {
+            return false;
+        }
+        foreach ($row as $cell) {
+            if (preg_match('/^[\s:|-]+$/', (string) $cell) !== 1) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private function addRich($container, string $text): void
     {
         $run = method_exists($container, 'addTextRun')
             ? $container->addTextRun() : $container;
-        foreach (preg_split('/(\*\*.+?\*\*)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE) as $part) {
+        foreach (preg_split('/(\*\*.+?\*\*|\*[^*\n]+?\*)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE) as $part) {
             if ($part === '') {
                 continue;
             }
             if (str_starts_with($part, '**') && str_ends_with($part, '**') && strlen($part) > 4) {
                 $run->addText(mb_substr($part, 2, -2), ['bold' => true]);
+            } elseif (str_starts_with($part, '*') && str_ends_with($part, '*') && strlen($part) > 2) {
+                $run->addText(mb_substr($part, 1, -1), ['italic' => true]);
             } else {
                 $run->addText($part);
             }

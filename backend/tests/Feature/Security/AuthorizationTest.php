@@ -34,6 +34,7 @@ class AuthorizationTest extends TestCase
         $this->postJson('/api/draft', $this->draftBody(), $h)->assertStatus(403);
         $this->postJson('/api/export', ['format' => 'docx', 'markdown' => '# x'], $h)->assertStatus(403);
         $this->postJson('/api/agent', ['message' => 'halo'], $h)->assertStatus(403);
+        $this->postJson('/api/agent/file', ['markdown' => '# x'], $h)->assertStatus(403);
     }
 
     public function test_viewer_boleh_baca(): void
