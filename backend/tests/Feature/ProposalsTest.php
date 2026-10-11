@@ -125,6 +125,40 @@ class ProposalsTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_hapus_requirement_mengosongkan_hasil_analisis(): void
+    {
+        [$p, $h] = $this->buat($this->token());
+        $f = UploadedFile::fake()->createWithContent('req.txt', "Baris satu\nBaris dua");
+        $this->post("/api/proposals/{$p['id']}/upload", ['kind' => 'requirement', 'file' => $f], $h)->assertOk();
+
+        $r = $this->deleteJson("/api/proposals/{$p['id']}/file?kind=requirement", [], $h);
+        $r->assertOk();
+        $this->assertSame('', $r->json('proposal.req_nama'));
+        $this->assertSame('', $r->json('proposal.req_teks'));
+        $this->assertSame(0, $r->json('proposal.req_jumlah'));
+        $this->assertSame([], $r->json('proposal.items'));
+        $this->assertSame('draf', $r->json('proposal.status'));
+        $this->assertDatabaseHas('audits', ['aksi' => 'proposal_ubah']);
+    }
+
+    public function test_hapus_pendukung_berdasarkan_index(): void
+    {
+        [$p, $h] = $this->buat($this->token());
+        $a = UploadedFile::fake()->createWithContent('dukungan_a.txt', "Dokumen A");
+        $b = UploadedFile::fake()->createWithContent('dukungan_b.txt', "Dokumen B");
+        $this->post("/api/proposals/{$p['id']}/upload", ['kind' => 'pendukung', 'file' => $a], $h)->assertOk();
+        $this->post("/api/proposals/{$p['id']}/upload", ['kind' => 'pendukung', 'file' => $b], $h)->assertOk();
+
+        $r = $this->deleteJson("/api/proposals/{$p['id']}/file?kind=pendukung&index=0", [], $h);
+        $r->assertOk();
+        $pend = $r->json('proposal.pendukung');
+        $this->assertCount(1, $pend);
+        $this->assertSame('dukungan_b.txt', $pend[0]['nama']);
+
+        $this->deleteJson("/api/proposals/{$p['id']}/file?kind=pendukung&index=5", [], $h)
+            ->assertStatus(404);
+    }
+
     public function test_analyze_validasi_sumber(): void
     {
         [$p, $h] = $this->buat($this->token());

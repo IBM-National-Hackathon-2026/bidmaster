@@ -42,5 +42,11 @@ export const ProposalApi = {
   },
   analyze: (id: number) => api<{ proposal: Proposal; ringkasan: { butir: number; valid: number; perlu_konfirmasi: number; waktu_detik: number } }>(
     `/api/proposals/${id}/analyze`, { method: "POST", headers: authHeaders() }),
+  deleteFile: (id: number, kind: "requirement" | "pendukung", index?: number) => {
+    const q = new URLSearchParams({ kind });
+    if (index !== undefined) q.set("index", String(index));
+    return api<{ proposal: Proposal; ok: boolean }>(`/api/proposals/${id}/file?${q.toString()}`, {
+      method: "DELETE", headers: authHeaders() });
+  },
   company: () => api<{ nama_resmi: string; nama_singkat: string; tagline: string }>("/api/company"),
 };

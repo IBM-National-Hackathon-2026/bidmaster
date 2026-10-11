@@ -25,6 +25,7 @@ Route::middleware(['token', 'throttle:120,1'])->group(function () {
         Route::patch('/proposals/{proposal}', [ProposalsController::class, 'update']);
         Route::delete('/proposals/{proposal}', [ProposalsController::class, 'destroy']);
         Route::post('/proposals/{proposal}/upload', [ProposalsController::class, 'upload']);
+        Route::delete('/proposals/{proposal}/file', [ProposalsController::class, 'deleteFile']);
         Route::post('/proposals/{proposal}/analyze', [ProposalsController::class, 'analyze'])->middleware('throttle:10,1');
         Route::patch('/proposals/{proposal}/items/{item}/decision', [ProposalsController::class, 'decide']);
         Route::post('/proposals/{proposal}/approve-sesuai', [ProposalsController::class, 'approveSesuai']);

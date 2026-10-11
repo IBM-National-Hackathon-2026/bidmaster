@@ -212,6 +212,47 @@ class ProposalsController
                 'jumlah' => $parsed['jumlah'], 'status' => 'berhasil dibaca']]);
     }
 
+    public function deleteFile(Request $request, Proposal $proposal)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $kind = $request->input('kind', 'requirement');
+        if (! in_array($kind, ['requirement', 'pendukung'], true)) {
+            return response()->json(['error' => 'Jenis harus requirement/pendukung.'], 400);
+        }
+        $u = $request->attributes->get('member');
+
+        if ($kind === 'requirement') {
+            $nama = $proposal->req_nama;
+            $proposal->req_nama = '';
+            $proposal->req_teks = '';
+            $proposal->req_satuan = 'baris';
+            $proposal->req_jumlah = 0;
+            $proposal->req_units = [];
+            // Hasil analisis lama tidak lagi sahih tanpa dokumen sumber.
+            $proposal->items = [];
+            $proposal->decisions = [];
+            $proposal->approvals = [];
+            $proposal->status = 'draf';
+            $proposal->save();
+            $this->audits->log($u['id'], 'proposal_ubah', "#{$proposal->id} hapus requirement {$nama}");
+        } else {
+            $pend = $proposal->pendukung ?? [];
+            $idx = (int) $request->input('index', -1);
+            if ($idx < 0 || $idx >= count($pend)) {
+                return response()->json(['error' => 'Dokumen pendukung tidak ditemukan.'], 404);
+            }
+            $nama = $pend[$idx]['nama'] ?? '';
+            array_splice($pend, $idx, 1);
+            $proposal->pendukung = array_values($pend);
+            $proposal->save();
+            $this->audits->log($u['id'], 'proposal_ubah', "#{$proposal->id} hapus pendukung {$nama}");
+        }
+
+        return response()->json(['proposal' => $this->full($proposal->fresh()), 'ok' => true]);
+    }
+
     public function quotes(Request $request)
     {
         $codes = [];

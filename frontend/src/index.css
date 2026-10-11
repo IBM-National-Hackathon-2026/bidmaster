@@ -104,10 +104,40 @@ body {
   from { background-position: 200% 0; }
   to { background-position: -200% 0; }
 }
+@keyframes pop-in {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes check-draw {
+  from { stroke-dashoffset: 32; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes progress-stripes {
+  from { background-position: 0 0; }
+  to { background-position: 40px 0; }
+}
 
 .anim-fade-up { animation: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .anim-msg { animation: msg-in 0.22s ease-out; }
 .anim-pulse-ring { animation: pulse-ring 2.4s ease-out infinite; }
+.anim-pop { animation: pop-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-slide-up { animation: slide-in-up 0.35s ease-out both; }
+.check-path {
+  stroke-dasharray: 32;
+  stroke-dashoffset: 32;
+  animation: check-draw 0.45s 0.1s ease-out forwards;
+}
+.progress-stripes {
+  background-image: linear-gradient(45deg, rgba(255,255,255,0.35) 25%, transparent 25%, transparent 50%,
+    rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.35) 75%, transparent 75%, transparent);
+  background-size: 40px 40px;
+  animation: progress-stripes 0.8s linear infinite;
+}
 .d1 { animation-delay: 80ms; }
 .d2 { animation-delay: 160ms; }
 .d3 { animation-delay: 240ms; }
@@ -145,9 +175,10 @@ body {
 .typing-dot:nth-child(3) { animation-delay: 0.3s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .anim-fade-up, .anim-msg, .anim-pulse-ring, .typing-dot, .hero-glow {
+  .anim-fade-up, .anim-msg, .anim-pulse-ring, .anim-pop, .anim-slide-up, .typing-dot, .hero-glow, .progress-stripes {
     animation: none;
   }
+  .check-path { stroke-dashoffset: 0; animation: none; }
 }
 
 @media print {
