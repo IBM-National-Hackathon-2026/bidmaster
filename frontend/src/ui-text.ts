@@ -252,6 +252,9 @@ export const T = {
     konteksAtas: "konteks di atas",
     konteksBawah: "konteks di bawah",
     teksDikutip: "teks yang dikutip",
+    sumberKe: "Sumber",
+    lihatSumber: "Lihat sumber lengkap",
+    sitasiKet: "Klik angka kecil untuk melihat sumbernya.",
   },
   validasi: {
     wajib: "Wajib diisi.",

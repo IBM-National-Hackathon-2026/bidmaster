@@ -9,24 +9,73 @@ export type SourceRef =
   | { kind: "katalog"; kode: string; nama: string; satuan: string; harga: number }
   | { kind: "pengguna"; label: string; nilai: string };
 
-export function SourceButton({ s, onOpen }: {
-  s: SourceRef; onOpen: (s: SourceRef, anchor: HTMLElement) => void;
-}) {
-  const label = s.kind === "klien"
-    ? `${T.tinjau.sumberKlien} — ${s.baris ? "baris " + s.baris : "hal. " + s.halaman + ", par. " + s.paragraf}`
-    : s.kind === "knowledge" ? `${T.tinjau.sumberKnowledge} — ${s.kode}`
-    : s.kind === "katalog" ? `${T.tinjau.sumberKatalog} — ${s.kode}`
-    : `${s.label} (${T.tinjau.sumberPengguna})`;
-  return (
-    <button
-      onClick={(e) => onOpen(s, e.currentTarget)}
-      aria-label={`Lihat sumber: ${label}`}
-      className="text-[0.72rem] font-semibold text-brand border border-brand/50 rounded-full px-3 py-1.5 min-h-11 inline-flex items-center hover:bg-brand-light transition-colors">
-      {label}
-    </button>
-  );
+export type SourceDetail = { judul: string; meta: string; isi: string };
+
+/** Label ringkas untuk sebuah sumber (dipakai tooltip & popover). */
+export function labelSumber(s: SourceRef): string {
+  switch (s.kind) {
+    case "klien":
+      return `${T.tinjau.sumberKlien} — ${s.baris ? "baris " + s.baris : "hal. " + s.halaman + ", par. " + s.paragraf}`;
+    case "knowledge":
+      return `${T.tinjau.sumberKnowledge} — ${s.kode}`;
+    case "katalog":
+      return `${T.tinjau.sumberKatalog} — ${s.kode}`;
+    default:
+      return `${s.label} (${T.tinjau.sumberPengguna})`;
+  }
 }
 
+/**
+ * Ambil ringkasan sumber untuk popover: judul, meta (jenis), dan cuplikan isi.
+ * Untuk sumber klien, `dokumen` (nama file) dipakai sebagai judul bila ada.
+ */
+export function useSourceDetail(proposalId: number, s: SourceRef, dokumen = "", enabled = true): { detail: SourceDetail | null; err: string } {
+  const [detail, setDetail] = useState<SourceDetail | null>(null);
+  const [err, setErr] = useState("");
+  const key = JSON.stringify(s);
+
+  useEffect(() => {
+    setDetail(null);
+    setErr("");
+    if (!enabled) return;
+    if (s.kind === "pengguna") {
+      setDetail({ judul: s.label, meta: T.tinjau.sumberPengguna, isi: s.nilai || "—" });
+      return;
+    }
+    if (s.kind === "katalog") {
+      setDetail({
+        judul: s.nama,
+        meta: `${T.tinjau.sumberKatalog} · ${s.kode}`,
+        isi: `Satuan: ${s.satuan} · Acuan: Rp ${s.harga.toLocaleString("id-ID")}`,
+      });
+      return;
+    }
+    if (s.kind === "knowledge") {
+      api<{ quotes: { kode: string; teks: string }[] }>(
+        `/api/knowledge/quotes?codes=${encodeURIComponent(s.kode)}`, { headers: authHeaders() })
+        .then((j) => {
+          const q = j.quotes[0];
+          setDetail({ judul: q?.kode ?? s.kode, meta: T.tinjau.sumberKnowledge, isi: q?.teks ?? "" });
+        })
+        .catch((e) => setErr(e instanceof Error ? e.message : T.umum.cobaLagi));
+      return;
+    }
+    const q = new URLSearchParams();
+    if (s.baris) q.set("baris", String(s.baris));
+    if (s.halaman) q.set("halaman", String(s.halaman));
+    if (s.paragraf) q.set("paragraf", String(s.paragraf));
+    q.set("kutipan", s.kutipan);
+    api<{ label: string; target: string }>(
+      `/api/proposals/${proposalId}/source?${q.toString()}`, { headers: authHeaders() })
+      .then((b) => setDetail({ judul: dokumen || b.label || T.tinjau.sumberKlien, meta: `${T.tinjau.sumberKlien} · ${b.label}`, isi: b.target }))
+      .catch((e) => setErr(e instanceof Error ? e.message : T.umum.cobaLagi));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposalId, key, dokumen, enabled]);
+
+  return { detail, err };
+}
+
+/** Panel sumber lengkap (sidebar kanan; bottom-sheet di layar kecil). */
 export function SourcePanel({ proposalId, s, onClose, returnTo }: {
   proposalId: number; s: SourceRef; onClose: () => void; returnTo: HTMLElement | null;
 }) {

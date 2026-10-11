@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, ClipboardCheck, HelpCircle, Layers, Sparkles } from "lucide-react";
-import { SourceButton, SourcePanel, type SourceRef } from "../components/SourcePanel";
+import { SourcePanel, type SourceRef } from "../components/SourcePanel";
+import { CiteMarker } from "../components/CiteMarker";
 import { Alert, Badge, Button, Card, FieldError } from "../components/ui/controls";import { toast } from "../components/ui/toast";
 import { type Decision, type Item, type Proposal } from "../lib/proposals";
 import { T } from "../ui-text";
@@ -207,6 +208,10 @@ export default function Step2({ p, setP, goHarga, agent }: {
             const dc = decisions[it.id];
             const form = dec[it.id];
             const sk = srcKlien(it);
+            const sources: SourceRef[] = [
+              ...(sk ? [sk] : []),
+              ...it.sumber_knowledge.map((k) => ({ kind: "knowledge", kode: k } as SourceRef)),
+            ];
             return (
               <article key={it.id} className={`bg-white border-2 rounded-2xl p-5 card-hover ${it.status === "berisiko" ? "border-red-300" : "border-[#C9DDEE]"}`}>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -215,14 +220,17 @@ export default function Step2({ p, setP, goHarga, agent }: {
                   {it.perlu_konfirmasi && <Badge ok={false}>{T.tinjau.perluKonfirmasi}</Badge>}
                   <span className="text-xs text-slate-500 ml-auto">{T.tinjau.keyakinan}: <b className="text-slate-700">{it.keyakinan}</b></span>
                 </div>
-                <p className="text-base text-slate-800 mt-2 leading-relaxed">{it.requirement || "(tanpa teks)"}</p>
-                {it.alasan !== "" && <p className="text-sm text-slate-600 mt-1.5"><span className="font-semibold">{T.tinjau.alasan}:</span> {it.alasan}</p>}
-                <div className="flex gap-1.5 flex-wrap mt-2.5">
-                  {sk && <SourceButton s={sk} onOpen={(s, a) => setPanel({ s, anchor: a })} />}
-                  {it.sumber_knowledge.map((k) => (
-                    <SourceButton key={k} s={{ kind: "knowledge", kode: k }} onOpen={(s, a) => setPanel({ s, anchor: a })} />
+                <p className="text-base text-slate-800 mt-2 leading-relaxed">
+                  {it.requirement || "(tanpa teks)"}
+                  {sources.map((s, i) => (
+                    <CiteMarker key={i} n={i + 1} s={s} proposalId={p.id} dokumen={p.req_nama}
+                      onFull={(ss, a) => setPanel({ s: ss, anchor: a })} />
                   ))}
-                </div>
+                </p>
+                {it.alasan !== "" && <p className="text-sm text-slate-600 mt-1.5"><span className="font-semibold">{T.tinjau.alasan}:</span> {it.alasan}</p>}
+                {sources.length > 0 && (
+                  <p className="text-xs text-slate-500 mt-2">{sources.length} {T.tinjau.sumber.toLowerCase()} · {T.umum.sitasiKet}</p>
+                )}
 
                 <div className="mt-4 border-t border-slate-200 pt-4">
                   <div className="flex items-center gap-2 flex-wrap">
