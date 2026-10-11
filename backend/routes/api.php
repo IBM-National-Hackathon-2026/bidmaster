@@ -31,6 +31,11 @@ Route::middleware(['token', 'throttle:120,1'])->group(function () {
         Route::get('/proposals/{proposal}/prices', [ProposalsController::class, 'prices']);
         Route::patch('/proposals/{proposal}/prices', [ProposalsController::class, 'pricesUpdate']);
         Route::post('/proposals/{proposal}/approve', [ProposalsController::class, 'approve']);
+        Route::get('/proposals/{proposal}/download-check', [ProposalsController::class, 'downloadCheck']);
+        Route::post('/proposals/{proposal}/preview', [ProposalsController::class, 'preview']);
+        Route::post('/proposals/{proposal}/export', [ProposalsController::class, 'exportProposal']);
+        Route::get('/proposals/{proposal}/versions', [ProposalsController::class, 'versions']);
+        Route::get('/proposals/{proposal}/versions/{versi}/file', [ProposalsController::class, 'versionFile']);
     });
     Route::get('/proposals', [ProposalsController::class, 'index']);
     Route::get('/proposals/{proposal}', [ProposalsController::class, 'show']);

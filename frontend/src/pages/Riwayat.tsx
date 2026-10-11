@@ -12,6 +12,8 @@ export default function Riwayat() {
   const [err, setErr] = useState("");
   const [confirm, setConfirm] = useState<number | null>(null);
   const [audit, setAudit] = useState<{ ts: number; aksi: string; detail: string }[]>([]);
+  const [vers, setVers] = useState<Record<number, { versi: number }[]>>({});
+  const [openV, setOpenV] = useState<number | null>(null);
 
   async function load() {
     try {
@@ -40,6 +42,31 @@ export default function Riwayat() {
     }
   }
 
+  async function toggleVersi(id: number) {
+    if (openV === id) {
+      setOpenV(null);
+      return;
+    }
+    try {
+      const j = await api<{ versions: { versi: number }[] }>(`/api/proposals/${id}/versions`, { headers: authHeaders() });
+      setVers((m) => ({ ...m, [id]: j.versions }));
+      setOpenV(id);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : T.umum.cobaLagi);
+    }
+  }
+
+  async function unduhVersi(id: number, v: number, format: string) {
+    const r = await fetch(`/api/proposals/${id}/versions/${v}/file?format=${format}`, { headers: authHeaders() });
+    if (!r.ok) return setErr(T.umum.cobaLagi);
+    const nama = (r.headers.get("Content-Disposition") ?? "").match(/filename="(.+?)"/)?.[1] ?? `proposal-v${v}.${format}`;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(await r.blob());
+    a.download = nama;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
   return (
     <main className="max-w-4xl mx-auto px-4 pb-24">
       <Card>
@@ -62,10 +89,23 @@ export default function Riwayat() {
                     <td className="py-2 pr-3 whitespace-nowrap">{r.updated_at ? new Date(r.updated_at).toLocaleString("id-ID") : "—"}</td>
                     <td className="py-2 pr-3">{r.instansi || "(tanpa nama)"}</td>
                     <td className="py-2 pr-3">{r.status}</td>
-                    <td className="py-2"><div className="flex gap-2">
+                    <td className="py-2"><div className="flex gap-2 flex-wrap">
                       <Link to={`/app/${r.id}`} className="text-brand font-semibold text-sm">{T.riwayat.buka}</Link>
+                      <button onClick={() => toggleVersi(r.id)} className="text-slate-400 text-sm hover:text-white">
+                        {T.harga.versi} ({(vers[r.id] ?? []).length || r.current_version || 0})</button>
                       <button onClick={() => setConfirm(r.id)} className="text-slate-400 text-sm hover:text-white">{T.riwayat.hapus}</button>
-                    </div></td>
+                    </div>
+                    {openV === r.id && (
+                      <div className="text-xs text-slate-300 mt-1">
+                        {(vers[r.id] ?? []).map((v) => (
+                          <span key={v.versi} className="mr-2">v{v.versi}
+                            <button onClick={() => unduhVersi(r.id, v.versi, "docx")} className="text-brand underline ml-1">.docx</button>
+                            <button onClick={() => unduhVersi(r.id, v.versi, "md")} className="text-brand underline ml-1">.md</button>
+                          </span>
+                        ))}
+                        {(vers[r.id] ?? []).length === 0 && <span className="text-slate-500">—</span>}
+                      </div>
+                    )}</td>
                   </tr>
                 ))}
               </tbody>

@@ -125,3 +125,11 @@ body {
     animation: none;
   }
 }
+
+@media print {
+  body { background: #fff; }
+  body * { visibility: hidden; }
+  #print-doc, #print-doc * { visibility: visible; }
+  #print-doc { position: absolute; left: 0; top: 0; width: 100%; }
+  .no-print { display: none !important; }
+}

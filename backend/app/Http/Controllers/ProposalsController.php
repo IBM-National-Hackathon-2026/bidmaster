@@ -31,6 +31,12 @@ class ProposalsController
             'nama_resmi' => $data['nama_resmi'] ?? '',
             'nama_singkat' => $data['nama_singkat'] ?? '',
             'tagline' => $data['tagline'] ?? '',
+            'warna_utama' => $data['warna_utama'] ?? '#1F3864',
+            'legalitas' => [
+                'nib' => $data['nib'] ?? '',
+                'npwp' => $data['npwp'] ?? '',
+                'akta' => $data['akta_pendirian'] ?? '',
+            ],
         ]);
     }
 
@@ -514,5 +520,197 @@ class ProposalsController
         $this->audits->log($u['id'], 'persetujuan', "#{$proposal->id} disetujui oleh {$oleh}");
 
         return response()->json(['proposal' => $this->full($proposal->fresh())]);
+    }
+
+    private function companyFull(): array
+    {
+        $dir = config('bidmaster.knowledge_dir');
+        $file = $dir.'/perusahaan.json';
+        $data = is_file($file) ? json_decode(file_get_contents($file), true) : [];
+        if (! is_array($data)) {
+            $data = [];
+        }
+        $profil = '';
+        $kf = $dir.'/knowledge_perusahaan.md';
+        if (is_file($kf)) {
+            $profil = mb_substr(trim(file_get_contents($kf)), 0, 1200);
+        }
+
+        return ['data' => $data, 'profil' => $profil];
+    }
+
+    private function logoPath(): string
+    {
+        $p = storage_path('app/company-logo.png');
+        if (is_file($p)) {
+            return $p;
+        }
+        $alt = config('bidmaster.knowledge_dir').'/../frontend/public/NusaTech-Logo.png';
+
+        return is_file($alt) ? $alt : '';
+    }
+
+    /** @return array{ok:bool,kurang:list<string>} */
+    private function syaratUnduh(Proposal $proposal, \App\Services\PriceService $harga): array
+    {
+        $kurang = [];
+        $items = $proposal->items ?? [];
+        $decisions = $proposal->decisions ?? [];
+        $risiko = 0;
+        foreach ($items as $it) {
+            if (($it['status'] ?? '') === 'berisiko' && ! isset($decisions[$it['id'] ?? ''])) {
+                $risiko++;
+            }
+        }
+        if ($items !== [] && $risiko > 0) {
+            $kurang[] = "{$risiko} butir Berisiko belum diputuskan";
+        }
+        $ring = $harga->ringkasan($proposal);
+        if ($ring['pagu_ok'] === false) {
+            $kurang[] = 'Total melewati pagu';
+        }
+        $co = $this->companyFull()['data'];
+        foreach (['nib' => 'NIB', 'npwp' => 'NPWP', 'akta_pendirian' => 'Akta'] as $k => $label) {
+            if (trim((string) ($co[$k] ?? '')) === '') {
+                $kurang[] = "Legalitas perusahaan kurang: {$label} (hubungi admin)";
+            }
+        }
+        if ($ring['perlu_persetujuan'] && ($proposal->approvals ?? []) === []) {
+            $kurang[] = 'Persetujuan wajib (harga menyimpang >15% atau diskon >10%)';
+        }
+
+        return ['ok' => $kurang === [], 'kurang' => $kurang, 'ringkasan' => $ring];
+    }
+
+    public function downloadCheck(Request $request, Proposal $proposal, \App\Services\PriceService $harga)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+
+        return response()->json($this->syaratUnduh($proposal, $harga));
+    }
+
+    public function preview(Request $request, Proposal $proposal,
+        \App\Services\PriceService $harga, \App\Services\DocumentService $docs)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $d = $request->isJson() ? $request->json()->all() : [];
+        $snap = $this->snapshot($proposal, $harga, $d);
+
+        return response()->json(['markdown' => $docs->build($snap)['markdown']]);
+    }
+
+    private function snapshot(Proposal $proposal, \App\Services\PriceService $harga, array $options): array
+    {
+        $decisions = $proposal->decisions ?? [];
+        $klarifikasi = [];
+        foreach ($proposal->items ?? [] as $it) {
+            $dc = $decisions[$it['id'] ?? ''] ?? null;
+            if ($dc && ($dc['putusan'] ?? '') === 'tanya') {
+                $klarifikasi[] = ['id' => $it['id'] ?? '', 'pertanyaan' => $dc['pertanyaan'] ?? ''];
+            }
+        }
+        $appr = $proposal->approvals ?? [];
+        $last = end($appr);
+
+        return [
+            'proposal' => ['instansi' => $proposal->instansi, 'durasi_minggu' => $proposal->durasi_minggu],
+            'items' => $proposal->items ?? [],
+            'decisions' => $decisions,
+            'prices' => $proposal->prices ?? [],
+            'discount' => $proposal->discount ?? [],
+            'ringkasan' => $harga->ringkasan($proposal),
+            'company' => $this->companyFull()['data'],
+            'profil' => $this->companyFull()['profil'],
+            'klarifikasi' => $klarifikasi,
+            'approved_by' => $last['oleh'] ?? '',
+            'options' => ['lampiran_sumber' => (bool) ($options['lampiran_sumber'] ?? true),
+                'lampiran_klarifikasi' => (bool) ($options['lampiran_klarifikasi'] ?? true)],
+        ];
+    }
+
+    public function exportProposal(Request $request, Proposal $proposal,
+        \App\Services\PriceService $harga, \App\Services\DocumentService $docs,
+        \App\Services\ProposalDocxService $docx)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $u = $request->attributes->get('member');
+        $d = $request->isJson() ? $request->json()->all() : [];
+        $format = $d['format'] ?? 'docx';
+        if (! in_array($format, ['docx', 'md'], true)) {
+            return response()->json(['error' => 'Format harus docx/md.'], 400);
+        }
+        $cek = $this->syaratUnduh($proposal, $harga);
+        if (! $cek['ok']) {
+            return response()->json(['error' => 'Syarat belum terpenuhi.', 'kurang' => $cek['kurang'],
+                'field' => 'syarat'], 422);
+        }
+        $snap = $this->snapshot($proposal, $harga, $d);
+        $built = $docs->build($snap);
+        $versi = $proposal->current_version + 1;
+        $proposal->versions()->create(['versi' => $versi, 'snapshot' => $snap]);
+        $proposal->current_version = $versi;
+        $proposal->status = 'diunduh';
+        $proposal->save();
+        $nama = pathinfo($built['nama_file'], PATHINFO_FILENAME).'.'.$format;
+        $this->audits->log($u['id'], 'export', "#{$proposal->id} v{$versi} {$format} {$nama}");
+
+        if ($format === 'md') {
+            return response($built['markdown'], 200, [
+                'Content-Type' => 'text/markdown; charset=utf-8',
+                'Content-Disposition' => "attachment; filename=\"{$nama}\"",
+            ]);
+        }
+
+        return response($docx->toBytes($snap, $this->logoPath()), 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition' => "attachment; filename=\"{$nama}\"",
+        ]);
+    }
+
+    public function versions(Request $request, Proposal $proposal)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+
+        return response()->json(['versions' => $proposal->versions()->get(['versi', 'created_at'])
+            ->map(fn ($v) => ['versi' => $v->versi, 'pada' => $v->created_at?->toIso8601String()])->all()]);
+    }
+
+    public function versionFile(Request $request, Proposal $proposal, int $versi,
+        \App\Services\DocumentService $docs, \App\Services\ProposalDocxService $docx)
+    {
+        if (! $this->own($request, $proposal)) {
+            return response()->json(['error' => 'Akses ditolak untuk peran ini.'], 403);
+        }
+        $v = $proposal->versions()->where('versi', $versi)->first();
+        if (! $v) {
+            return response()->json(['error' => 'Versi tidak ditemukan.'], 404);
+        }
+        $format = $request->query('format', 'docx');
+        if (! in_array($format, ['docx', 'md'], true)) {
+            return response()->json(['error' => 'Format harus docx/md.'], 400);
+        }
+        $u = $request->attributes->get('member');
+        $this->audits->log($u['id'], 'export', "#{$proposal->id} unduh ulang v{$versi} {$format}");
+        $built = $docs->build($v->snapshot);
+        $nama = pathinfo($built['nama_file'], PATHINFO_FILENAME).'.'.$format;
+        if ($format === 'md') {
+            return response($built['markdown'], 200, [
+                'Content-Type' => 'text/markdown; charset=utf-8',
+                'Content-Disposition' => "attachment; filename=\"{$nama}\"",
+            ]);
+        }
+
+        return response($docx->toBytes($v->snapshot, $this->logoPath()), 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition' => "attachment; filename=\"{$nama}\"",
+        ]);
     }
 }
