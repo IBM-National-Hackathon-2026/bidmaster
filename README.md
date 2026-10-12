@@ -31,7 +31,7 @@ data/  (gitignored)        ← bidmaster.sqlite (bind-mount, di-migrate saat con
 # backend (butuh PHP 8.2+ + Composer, ext-zip untuk PhpWord)
 cd backend
 composer install
-php artisan migrate --force && php artisan db:seed --force
+php artisan app:boot                             # migrate + seed + cache (1 perintah)
 php artisan serve --host=127.0.0.1 --port=8000   # API di :8000
 
 # frontend (butuh Node 20+, terminal lain)
@@ -47,12 +47,19 @@ npm run dev                                      # UI di :5173 (proxy /api → :
 # 1) file DB harus ada dulu agar bind-mount berupa file, bukan folder:
 #    PowerShell: mkdir data -ea 0; New-Item -ItemType File data/bidmaster.sqlite -Force
 #    Linux/macOS: mkdir -p data && touch data/bidmaster.sqlite
+# 2) jalan (build sekali, ~1-2 menit; berikutnya cepat karena cache layer)
 SEED_ADMIN_PASS=xxx LANGFLOW_URL=http://host.docker.internal:7860 LANGFLOW_API_KEY=xxx \
-  docker compose up --build
+  docker compose up --build -d
 # UI http://localhost:8080 (nginx → frontend + proxy /api → backend)
+docker compose logs -f backend                   # pantau: "Aplikasi siap."
 ```
 
-Migrasi dijalankan otomatis saat container start. Perubahan kode → `docker compose build backend frontend && docker compose up -d --force-recreate`.
+**Yang terjadi saat start** (`docker compose up`):
+1. Container `backend` menjalankan `php artisan app:boot` → migrasi, seed admin (dilewati bila sudah ada), lalu cache config/route/view — semua dalam **satu bootstrap** (dulu 5 proses terpisah).
+2. `frontend` = nginx menyajikan SPA hasil build.
+3. API siap ±8 detik, halaman ±1 detik. Cek: `curl http://localhost:8080/api/health` → `{"ok":true}`.
+
+Migrasi dijalankan otomatis saat container start. Perubahan kode → `docker compose build backend frontend && docker compose up -d --force-recreate`. Menghentikan: `docker compose down` (data tetap di `data/bidmaster.sqlite`).
 
 ## Alur 3 langkah
 
@@ -88,6 +95,30 @@ Tab **Tanya Bob** (Langkah 2) + halaman penuh **`/bob`**. Fitur: **mode Proposal
 
 Design pattern: Controller tipis → Service layer → Repository (interface + Eloquent) → Strategy (gates) → Middleware (TokenAuth, RequireRole, SecurityHeaders, throttle) → validasi di frontend + backend.
 
+## Pola & Arsitektur (Clean Code / OOP)
+
+Backend Laravel menerapkan **layered architecture** dengan pemisahan tanggung jawab yang jelas (bukan DDD penuh — lihat catatan di bawah):
+
+| Layer | Folder | Tanggung jawab |
+|---|---|---|
+| **Presentation** | `Http/Controllers` | Terima request, panggil service, kembalikan JSON. Tipis — tanpa logika bisnis. |
+| **Application/Service** | `Services` (9 kelas) | Logika bisnis: analisis, harga, komposisi draf, ekspor, parser dokumen. |
+| **Domain/Strategy** | `Gates` | 3 aturan bisnis sebagai `GateCheck` yang bisa ditukar (`PaguCheck`, `KakCoverageCheck`, `LegalitasCheck`) diorkestrasi `GateEvaluator`. |
+| **Persistence** | `Repositories` + `Contracts` | Akses data lewat **interface** (`MemberRepository`, `TokenRepository`, `AuditRepository`) → implementasi Eloquent bisa diganti tanpa menyentuh service. |
+| **Domain Model** | `Models` | Entity Eloquent + relasi. |
+| **Cross-cutting** | `Http/Middleware`, `Providers`, `Console/Commands` | Auth token, role, header keamanan, dependency injection, perintah artisan. |
+
+**Prinsip OOP/SOLID yang terlihat:**
+- **Dependency Injection** — semua dependensi di-inject lewat constructor (`ProposalsController`, `DraftComposerService`, dll) dan di-bind di `BidMasterServiceProvider` (IoC container Laravel).
+- **Dependency Inversion** — service bergantung pada *interface* repository, bukan kelas konkret.
+- **Single Responsibility** — 1 kelas 1 tugas (mis. `DocumentParserService` hanya parsing, `PriceService` hanya hitung harga).
+- **Open/Closed** — menambah aturan gate = tambah kelas `GateCheck` baru, tanpa mengubah `GateEvaluator`.
+- **Encapsulation** — konstanta/aturan bisnis (`INDUSTRIES`, `MAX_DOC`, sitemap) dikapsul dalam kelas; logika validasi terpusat di `DraftComposerService::validate`.
+
+**Frontend** juga terstruktur: komponen terpisah (`components/`, `pages/`), state via hooks, API layer terpusat (`lib/utils.ts` + `lib/proposals.ts`), dan **semua teks UI di satu file** (`ui-text.ts`) — memudahkan lokalisasi tanpa menyentuh logika.
+
+**Catatan jujur — ini BUKAN DDD penuh.** DDD idealnya punya *Bounded Context*, *Aggregate Root*, *Value Object*, *Domain Event*, dan *Ubiquitous Language* yang dipisah dari infrastruktur. Di sini logika domain masih menyatu dengan framework (Service menerima/ mengembalikan array, model Eloquent aktif sebagai persistence). Yang diterapkan adalah **layered + repository + strategy pattern** — fondasi yang rapi dan mudah diuji (82 test), tapi untuk skala enterprise bisa ditingkatkan ke DDD dengan memisahkan `Domain/` (entity + value object murni) dari `Infrastructure/`.
+
 ## Performa
 
 Dioptimalkan agar tetap responsif saat analisis/Bob berjalan lama:
@@ -99,6 +130,7 @@ Dioptimalkan agar tetap responsif saat analisis/Bob berjalan lama:
 - **Aset ter-gzip + cache** — nginx meng-gzip JS/CSS/SVG/JSON (bundel JS 342 KB → **~104 KB** transfer) dan memberi `Cache-Control: immutable` pada aset ber-hash (Vite), `30d` untuk font/gambar.
 - **Code-splitting per rute** — landing + shell dimuat lebih dulu; halaman aplikasi (`/app`, `/bob`, `/riwayat`, `/login`) di-*lazy-load*.
 - **Dedupe status mesin** — `/api/agent/status` diambil sekali dan dibagi ke Nav + Bob (bukan dua kali).
+- **Startup cepat** — `app:boot` menggabungkan migrate+seed+cache dalam satu bootstrap; `.dockerignore` memangkas konteks build dari ~190MB ke ~3,4MB; font di-preload.
 
 Atur jumlah worker bila perlu: `PHP_CLI_SERVER_WORKERS=4 docker compose up`.
 
