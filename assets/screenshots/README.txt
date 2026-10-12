@@ -1,10 +1,12 @@
-# Folder ini untuk gambar/screenshot aplikasi yang dipakai di README.
+# Folder tangkapan layar untuk README
 
-Letakkan file di sini dengan nama persis berikut (format PNG, lebar disarankan 1600–1920px):
+Berkas di sini ditautkan otomatis oleh README.md (root). Format PNG.
 
-- 00-hero.png            → banner utama (tampilan landing/beranda)
-- 01-unggah.png          → Langkah 1: unggah dokumen + analisis
-- 02-tinjau-sitasi.png   → Langkah 2: daftar butir + popover sitasi terbuka
-- 03-harga.png           → Langkah 3: tabel harga + gate
-- 04-bob.png             → halaman Bob (chat + unduh jawaban)
-- 05-landing.png         → halaman landing publik (mobile)
+- 00-hero.png            -> Halaman landing publik (/) secara penuh
+- 01-unggah.png          -> Langkah 1: unggah dokumen + analisis
+- 02-tinjau-sitasi.png   -> Langkah 2: daftar butir + popover sitasi terbuka
+- 03-harga.png           -> Langkah 3: tabel harga + status gate
+- 04-bob.png             -> Halaman Bob: chat + tombol unduh jawaban
+
+Catatan: situs adalah SATU halaman responsif (mobile-first), bukan dua situs.
+Tidak ada "versi mobile" terpisah -- landing publik ada di alamat "/" (root).

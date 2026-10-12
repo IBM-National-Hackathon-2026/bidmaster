@@ -16,7 +16,8 @@ Dikembangkan oleh **PT Solusi Teknologi Nusantara (NusaTech)** untuk IBM Nationa
 
 </div>
 
-![BidMaster AI — antarmuka aplikasi](assets/screenshots/00-hero.png)
+![BidMaster AI — halaman landing publik](assets/screenshots/00-hero.png)
+*Halaman landing publik (sebelum masuk) — menjelaskan alur 3 langkah, fitur, agen Bob, dan FAQ; menyatakan kepemilikan NusaTech.*
 
 ---
 
@@ -60,10 +61,8 @@ Tim → React 19 (wizard 3 langkah) → Laravel 13 API → Langflow (RAG K01–K
 
 ### Tangkapan layar
 
-> **Catatan:** gambar di bawah akan tampil setelah Anda mengunggahnya. Lihat [bagian gambar](#cara-mengunggah-gambar-readme) di bawah.
-
-![Landing page BidMaster AI](assets/screenshots/05-landing.png)
-*Halaman landing publik — mobile-first, menyatakan kepemilikan NusaTech.*
+![Langkah 1 — unggah dan analisis](assets/screenshots/01-unggah.png)
+*Langkah 1: unggah dokumen requirement, isi data dasar, jalankan analisis.*
 
 ![Langkah 2 — daftar butir dengan sitasi](assets/screenshots/02-tinjau-sitasi.png)
 *Langkah 2: tiap klaim punya angka sitasi yang membuka popover sumber.*
@@ -108,9 +107,6 @@ Galat Langflow diklasifikasi menjadi pesan Indonesia yang ramah (bukan JSON ment
 Detail teknis hanya masuk **log server**. Bila tetap gagal, pengguna diberi opsi **Lanjut tanpa AI (analisis darurat)**: setiap baris requirement jadi butir **Berisiko/keyakinan rendah** yang **wajib ditinjau manusia** — tidak ada yang lolos tanpa tinjauan.
 
 ### Tangkapan layar
-
-![Langkah 1 — unggah dan analisis](assets/screenshots/01-unggah.png)
-*Langkah 1: unggah dokumen, isi data dasar, jalankan analisis.*
 
 ![Langkah 3 — harga dan gate](assets/screenshots/03-harga.png)
 *Langkah 3: harga per baris, diskon, dan syarat sebelum unduh.*
@@ -454,28 +450,17 @@ Dirilis di bawah **MIT License** — lihat berkas [LICENSE](LICENSE) untuk teks 
 Copyright (c) 2026 PT Solusi Teknologi Nusantara (NusaTech)
 ```
 
-### Cara mengunggah gambar README
+### Galeri tangkapan layar
 
-Letakkan berkas gambar di folder **`assets/screenshots/`** dengan nama berikut (README sudah menautkannya otomatis):
+Seluruh gambar tersimpan di `assets/screenshots/`:
 
-| Nama berkas | Isi yang disarankan |
+| Berkas | Isi |
 |---|---|
-| `05-landing.png` | Halaman landing publik (tampilan mobile) |
+| `00-hero.png` | Halaman landing publik (`/`) secara penuh — satu halaman responsif (mobile-first) |
 | `01-unggah.png` | Langkah 1 — unggah dokumen + analisis |
 | `02-tinjau-sitasi.png` | Langkah 2 — daftar butir + **popover sitasi terbuka** |
 | `03-harga.png` | Langkah 3 — tabel harga + status gate |
 | `04-bob.png` | Halaman Bob — chat + tombol unduh jawaban |
-| `00-hero.png` | (Opsional) banner utama untuk bagian paling atas |
-
-**Cara:** simpan tangkapan layar (PNG, lebar 1600–1920px), beri nama **persis** seperti tabel di atas, lalu taruh di `assets/screenshots/`. Setelah itu commit & push:
-
-```sh
-git add assets/screenshots/*.png
-git commit -m "docs: tambah tangkapan layar aplikasi"
-git push
-```
-
-Jika nama berkas berbeda, cukup sesuaikan tautan `![...](assets/screenshots/NAMA.png)` di bagian [Pengenalan](#tangkapan-layar) dan [Ikhtisar](#tangkapan-layar-1).
 
 ---
 
