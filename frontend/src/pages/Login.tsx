@@ -33,7 +33,12 @@ export default function Login() {
       nav("/app");
     } catch (e) {
       const s = (e as { status?: number }).status;
-      const m = s === 401 ? T.auth.salah : T.auth.jaringan;
+      const m =
+        s === 401 ? T.auth.salah
+        : s === 429 ? T.auth.sibuk
+        : s === 0 || s == null ? T.auth.jaringan
+        : s >= 500 ? T.auth.server
+        : T.auth.jaringan;
       setErr(m); toast(m, "error");
     } finally {
       setBusy(false);

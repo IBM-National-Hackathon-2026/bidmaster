@@ -19,6 +19,15 @@ class BootCommand extends Command
 
     public function handle(): int
     {
+        // WAJIB: bersihkan cache LAMA lebih dulu. Tanpa ini, `config:cache`
+        // menulis ulang config yang sedang dimuat — yaitu nilai dari cache lama —
+        // sehingga config yang basi/tercemar akan terus-menerus dipertahankan
+        // (self-perpetuating). Contoh nyata: DB_DATABASE basi membuat aplikasi
+        // menunjuk file sqlite yang salah.
+        $this->call('config:clear');
+        $this->call('route:clear');
+        $this->call('view:clear');
+
         $this->call('migrate', ['--force' => true]);
 
         // Seed hanya bila belum ada anggota (idempoten, hemat waktu start).

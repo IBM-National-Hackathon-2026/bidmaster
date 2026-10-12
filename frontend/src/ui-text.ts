@@ -31,6 +31,8 @@ export const T = {
     salah: "Nama atau kata sandi salah. Periksa kembali lalu coba lagi.",
     kosong: "Isi nama pengguna dan kata sandi dulu.",
     jaringan: "Jaringan gagal. Periksa koneksi lalu coba lagi.",
+    server: "Server sedang bermasalah. Tunggu sebentar lalu coba lagi.",
+    sibuk: "Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.",
   },
   langkah: {
     judul: ["Unggah", "Tinjau", "Harga & Setujui"],

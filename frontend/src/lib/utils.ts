@@ -25,7 +25,13 @@ export function authHeaders(extra: Record<string, string> = {}) {
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(path, init);
+  let r: Response;
+  try {
+    r = await fetch(path, init);
+  } catch (e) {
+    // Benar-benar gagal jaringan (server mati, DNS, CORS) — tak ada HTTP status.
+    throw Object.assign(new Error("Jaringan gagal."), { status: 0, network: true, cause: e });
+  }
   const j = (await r.json().catch(() => ({}))) as T & { error?: string };
   if (!r.ok) throw Object.assign(new Error(j.error ?? "Gagal."), { status: r.status, data: j });
   return j;
