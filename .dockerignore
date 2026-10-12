@@ -1,0 +1,56 @@
+# Konteks build Docker — kecualikan yang tidak perlu agar build cepat & ringan.
+# Deps di-install ulang di dalam image (composer install / npm ci), jadi folder
+# dependensi lokal tidak perlu ikut dikirim sebagai konteks build.
+
+# Dependensi & hasil build (dibuat di dalam image)
+frontend/node_modules
+frontend/dist
+backend/vendor
+**/node_modules
+
+# VCS & metadata
+.git
+.gitignore
+.github
+
+# Data lokal & runtime (di-bind-mount saat jalan, bukan bagian image)
+data
+data.db
+data.db-shm
+data.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+chroma_db
+chroma
+
+# Secrets & lokal (contoh tetap disertakan)
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# File runtime yang dibuat ulang saat start (dir tetap ada via .gitignore)
+backend/storage/logs/*.log
+backend/storage/framework/views/*.php
+backend/bootstrap/cache/*.php
+.phpunit.result.cache
+
+# Non-core (docs, arsip, stack lama)
+docs
+outputs
+simulator
+api
+web
+langflow/archive
+langflow/components
+
+# OS / IDE
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

@@ -33,7 +33,7 @@ RUN mkdir -p database && touch database/database.sqlite \
   && php artisan package:discover
 
 EXPOSE 8000
-# Migrasi + cache config/route/view saat start, lalu jalankan server dengan
-# beberapa worker (pcntl) supaya request lambat (analisis/Bob) tidak memblokir
-# request lain. PHP_CLI_SERVER_WORKERS butuh ekstensi pcntl.
-CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --force && php artisan config:cache && php artisan route:cache && php artisan view:cache && PHP_CLI_SERVER_WORKERS=${PHP_CLI_SERVER_WORKERS:-8} php -S 0.0.0.0:8000 -t public"]
+# Siapkan aplikasi dalam SATU bootstrap (migrate+seed+cache) lalu jalankan
+# server dengan beberapa worker (pcntl) supaya request lambat (analisis/Bob)
+# tidak memblokir request lain. PHP_CLI_SERVER_WORKERS butuh ekstensi pcntl.
+CMD ["sh", "-c", "php artisan app:boot && PHP_CLI_SERVER_WORKERS=${PHP_CLI_SERVER_WORKERS:-8} php -S 0.0.0.0:8000 -t public"]
