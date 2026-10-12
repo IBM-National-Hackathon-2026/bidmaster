@@ -16,6 +16,8 @@ Dikembangkan oleh **PT Solusi Teknologi Nusantara (NusaTech)** untuk IBM Nationa
 
 </div>
 
+![BidMaster AI — antarmuka aplikasi](assets/screenshots/00-hero.png)
+
 ---
 
 ## Daftar Isi
