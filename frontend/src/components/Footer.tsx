@@ -25,15 +25,15 @@ export function Footer() {
         </nav>
 
         <div className="text-sm">
-          <h3 className="font-bold text-[#0F1B3D] mb-3">Perusahaan</h3>
-          <p className="text-slate-600">PT Solusi Teknologi Nusantara (NusaTech)</p>
+          <h3 className="font-bold text-[#0F1B3D] mb-3">Pengembang</h3>
+          <p className="text-slate-600">Tim UINSA — Universitas Islam Negeri Sunan Ampel</p>
           <p className="text-slate-500 mt-2 text-xs">Alat internal pre-sales. Semua aktivitas tercatat di jejak audit.</p>
         </div>
       </div>
 
       <div className="border-t border-slate-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
-          <span>© 2026 PT Solusi Teknologi Nusantara (NusaTech). Seluruh hak dilindungi.</span>
+          <span>© 2026 Tim UINSA — Universitas Islam Negeri Sunan Ampel. Seluruh hak dilindungi.</span>
           <span>BidMaster AI · draft → gate → persetujuan manusia</span>
         </div>
       </div>

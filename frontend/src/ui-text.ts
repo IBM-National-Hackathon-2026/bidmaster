@@ -295,7 +295,7 @@ export const LANDING = {
   badge: "Tools internal untuk proposal tender",
   h1: "Draft proposal tender jadi dalam hitungan menit, bukan hari.",
   sub: "BidMaster AI memeriksa dokumen requirement baris per baris, menautkan tiap klaim ke sumbernya, dan menyusun RAB — manusia yang memutuskan dan menyetujui.",
-  credit: "Dikembangkan oleh PT Solusi Teknologi Nusantara (NusaTech)",
+  credit: "Dikembangkan oleh Tim UINSA — Universitas Islam Negeri Sunan Ampel",
   masuk: "Masuk & mulai",
   cara: "Lihat cara kerja",
   demoJudul: "Coba demo interaktif",
@@ -311,14 +311,14 @@ export const LANDING = {
   langkah: [
     ["Unggah & analisis", "Tempel dokumen KAK atau requirement. Sistem memecah tiap baris kebutuhan dan mencocokkannya ke kemampuan perusahaan."],
     ["Tinjau & putuskan", "Buka sumber tiap klaim, putuskan Benar/Ubah/Tanyakan. Butir Berisiko wajib diputuskan."],
-    ["Harga & unduh", "Tentukan harga proposal, lewati gate, unduh DOCX berlogo NusaTech."],
+    ["Harga & unduh", "Tentukan harga proposal, lewati gate, unduh DOCX berlogo perusahaan Anda."],
   ] as [string, string][],
   fitur: [
     ["Sitasi per butir", "Tiap klaim punya tombol sumber ke teks asli dokumen dan knowledge perusahaan."],
     ["Gate pemblokir", "KAK, pagu, dan legalitas diperiksa otomatis. Belum lolos = belum bisa unduh."],
     ["Harga ditentukan manusia", "Katalog hanya acuan. Deviasi dicatat alasannya dan butuh persetujuan."],
     ["Jejak audit penuh", "Keputusan, perubahan harga, dan unduhan tercatat siapa dan kapan."],
-    ["Export berlogo", "DOCX dengan cover, header, dan logo PT Solusi Teknologi Nusantara."],
+    ["Export berlogo", "DOCX dengan cover, header, dan logo perusahaan."],
     ["Human-in-the-loop", "AI mengusulkan, manusia memutuskan. Butir ragu masuk daftar klarifikasi."],
   ] as [string, string][],
   agenJudul: "Agen yang menjawab dengan sumber, bukan sekadar chat.",
@@ -339,7 +339,7 @@ export const LANDING = {
   ctaMasuk: "Masuk & mulai",
   ctaCara: "Lihat cara kerja",
   footerKet: "Asisten pre-sales: unggah, periksa dengan sumber, putuskan, unduh.",
-  footerHak: "© 2026 PT Solusi Teknologi Nusantara (NusaTech). Seluruh hak dilindungi.",
+  footerHak: "© 2026 Tim UINSA — Universitas Islam Negeri Sunan Ampel. Seluruh hak dilindungi.",
 } as const;
 
 export type LandingDemoType = {
@@ -376,7 +376,7 @@ export const LANDING_DEMO: LandingDemoType[] = [
 ];
 
 export const LANDING_AGENT_QA: [string, string][] = [
-  ["Ubah jadi lebih formal", "Sudah. Ringkasan memakai nada formal dan mencantumkan profil PT Solusi Teknologi Nusantara."],
+  ["Ubah jadi lebih formal", "Sudah. Ringkasan memakai nada formal dan mencantumkan profil perusahaan."],
   ["Tandai yang belum pasti", "Bagian yang belum pasti saya tandai [perlu konfirmasi] agar diperiksa manusia."],
   ["Tampilkan sumbernya", "Setiap klaim punya tombol sumber ke baris dokumen atau kode knowledge K01–K18."],
 ];

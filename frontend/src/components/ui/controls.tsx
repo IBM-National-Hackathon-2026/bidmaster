@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Check, TriangleAlert, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
@@ -65,7 +66,11 @@ export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLab
 /** Pesan validasi ringkas di bawah field. */
 export function FieldError({ children }: { children?: React.ReactNode }) {
   if (!children) return null;
-  return <p className="text-xs text-red-700 mt-1 flex items-center gap-1" role="alert">⚠ {children}</p>;
+  return (
+    <p className="text-xs text-red-700 mt-1 flex items-center gap-1" role="alert">
+      <TriangleAlert size={13} aria-hidden /> {children}
+    </p>
+  );
 }
 
 export function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: string }) {
@@ -81,11 +86,11 @@ export function Badge({ ok, children }: { ok: boolean; children: React.ReactNode
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-3 py-1 text-xs border-[1.5px]",
+        "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs border-[1.5px]",
         ok ? "border-green-600 text-green-800 bg-green-50" : "border-red-600 text-red-800 bg-red-50"
       )}
     >
-      {(ok ? "✓ " : "✗ ")}
+      {ok ? <Check size={13} aria-hidden /> : <X size={13} aria-hidden />}
       {children}
     </span>
   );

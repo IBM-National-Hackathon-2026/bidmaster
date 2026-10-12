@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, CalendarClock, FileText, FileUp, Info, RefreshCw, Sparkles, Trash2, TriangleAlert, UploadCloud, Wallet } from "lucide-react";
+import { ArrowRight, Building2, CalendarClock, Check, FileText, FileUp, Info, RefreshCw, Sparkles, Trash2, TriangleAlert, UploadCloud, Wallet } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Button, Card, FieldError, Input, Label, Select } from "../components/ui/controls";
 import { toast } from "../components/ui/toast";
@@ -314,8 +314,10 @@ export default function Step1({ p, setP, autosave, reload }: {
               <ol className="space-y-2" aria-live="polite">
                 {T.unggah.tahap.map((t, i) => (
                   <li key={t} className={`text-sm flex items-center gap-2 ${i < stage ? "text-green-700" : i === stage ? "text-[#0F1B3D] font-semibold" : "text-slate-500"}`}>
-                    <span className={`w-2 h-2 rounded-full ${i < stage ? "bg-green-400" : i === stage ? "bg-brand animate-pulse" : "bg-slate-300"}`} />
-                    {t}{i === stage ? "…" : i < stage ? " ✓" : ""}
+                    {i < stage
+                      ? <Check size={15} aria-hidden />
+                      : <span className={`w-2 h-2 rounded-full ${i === stage ? "bg-brand animate-pulse" : "bg-slate-300"}`} />}
+                    {t}{i === stage ? "..." : ""}
                   </li>
                 ))}
               </ol>

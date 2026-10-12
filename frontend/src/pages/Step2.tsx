@@ -236,7 +236,7 @@ export default function Step2({ p, setP, goHarga, agent }: {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-bold text-[#0F1B3D]">{T.tinjau.putusanJudul}</p>
                     {dc
-                      ? <span className="text-xs font-semibold text-green-700 inline-flex items-center gap-1">✓ {T.tinjau.sudahDiputus} ({dc.putusan})</span>
+                      ? <span className="text-xs font-semibold text-green-700 inline-flex items-center gap-1"><CheckCircle2 size={13} aria-hidden /> {T.tinjau.sudahDiputus} ({dc.putusan})</span>
                       : <span className="text-xs text-slate-500">{T.tinjau.belumDiputus}</span>}
                   </div>
                   <div className="flex gap-2 flex-wrap mt-2" role="group" aria-label={T.tinjau.putusanJudul}>

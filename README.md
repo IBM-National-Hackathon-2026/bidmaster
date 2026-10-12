@@ -4,7 +4,7 @@
 
 **Asisten pre-sales yang memeriksa dokumen tender baris per baris — dengan sitasi, gate, dan keputusan manusia.**
 
-Dikembangkan oleh **PT Solusi Teknologi Nusantara (NusaTech)** untuk IBM National Hackathon 2026.
+Dikembangkan oleh **Tim UINSA — Universitas Islam Negeri Sunan Ampel** untuk IBM National Hackathon 2026.
 
 [![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev)
@@ -17,7 +17,7 @@ Dikembangkan oleh **PT Solusi Teknologi Nusantara (NusaTech)** untuk IBM Nationa
 </div>
 
 ![BidMaster AI — halaman landing publik](assets/screenshots/00-hero.png)
-*Halaman landing publik (sebelum masuk) — menjelaskan alur 3 langkah, fitur, agen Bob, dan FAQ; menyatakan kepemilikan NusaTech.*
+*Halaman landing publik (sebelum masuk) — menjelaskan alur 3 langkah, fitur, agen Bob, dan FAQ; mencantumkan kredit pengembang Tim UINSA.*
 
 ---
 
@@ -440,14 +440,16 @@ BidMaster AI menunjukkan bahwa AI dapat mempercepat pekerjaan pre-sales tender *
 
 ### Kredit
 
-Dikembangkan oleh **PT Solusi Teknologi Nusantara (NusaTech)** untuk IBM National Hackathon 2026.
+Dikembangkan oleh **Tim UINSA — Universitas Islam Negeri Sunan Ampel** untuk IBM National Hackathon 2026.
+
+> **Catatan:** *PT Solusi Teknologi Nusantara (NusaTech)* adalah **perusahaan dummy** yang dipakai sebagai contoh di data demo (`knowledge/`) dan cover proposal — bukan pengembang proyek ini.
 
 ### Lisensi
 
 Dirilis di bawah **MIT License** — lihat berkas [LICENSE](LICENSE) untuk teks lengkapnya.
 
 ```
-Copyright (c) 2026 PT Solusi Teknologi Nusantara (NusaTech)
+Copyright (c) 2026 Tim UINSA — Universitas Islam Negeri Sunan Ampel
 ```
 
 ### Galeri tangkapan layar
@@ -466,6 +468,6 @@ Seluruh gambar tersimpan di `assets/screenshots/`:
 
 <div align="center">
 
-Dibuat dengan ❤️ oleh **NusaTech** · BidMaster AI · 2026
+Dibuat oleh **Tim UINSA** - BidMaster AI - 2026
 
 </div>

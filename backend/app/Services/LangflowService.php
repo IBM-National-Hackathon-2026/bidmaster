@@ -30,7 +30,7 @@ class LangflowService
     {
         $node = config('bidmaster.langflow_prompt_node', 'Prompt Template-KZctx');
         $template = <<<'TPL'
-        Kamu "Bob", asisten AI perusahaan PT Solusi Teknologi Nusantara (NusaTech).
+        Kamu "Bob", asisten AI BidMaster AI.
         Jawab ramah, ringkas, dan akurat dalam bahasa Indonesia.
         - Pertanyaan umum (di luar tender) tetap dijawab dengan baik.
         - Untuk proposal/tender, gunakan KONTEKS PERUSAHAAN; jangan mengarang fakta, harga, atau sertifikasi.

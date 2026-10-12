@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BadgeCheck, Download, FileCheck2, Landmark, Percent, Sparkles, Tag, Trash2 } from "lucide-react";
+import { BadgeCheck, Check, Circle, Download, FileCheck2, Landmark, Percent, Sparkles, Tag, Trash2 } from "lucide-react";
 import { Alert, Badge, Button, Card, FieldError, Input, Label, Select, Skeleton, SkeletonRows } from "../components/ui/controls";
 import { toast } from "../components/ui/toast";
 import type { Proposal } from "../lib/proposals";
@@ -101,7 +101,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
       setP(j.proposal);
       setRing(j.ringkasan);
       setRows(j.ringkasan.rows);
-      toast(T.harga.simpan + " ✓", "ok");
+      toast(T.harga.simpan, "ok");
       const c = await api<{ ok: boolean; kurang: string[] }>(`/api/proposals/${p.id}/download-check`, { headers: authHeaders() });
       setKurang(c.ok ? [] : c.kurang);
     } catch (e) {
@@ -438,7 +438,7 @@ export default function Step3({ p, setP, refresh, goStep }: {
             <ul className="mt-2 space-y-2 text-sm">
               {T.harga.syarat.map((s, i) => (
                 <li key={s} className={`flex items-start gap-2 ${syarat[i].ok ? "text-green-700" : "text-slate-500"}`}>
-                  <span aria-hidden className="mt-0.5">{syarat[i].ok ? "✓" : "○"}</span>
+                  <span aria-hidden className="mt-0.5">{syarat[i].ok ? <Check size={15} /> : <Circle size={13} />}</span>
                   {syarat[i].aksi && !syarat[i].ok
                     ? <button onClick={syarat[i].aksi} className="underline text-left min-h-11 inline-flex items-center">{s}</button>
                     : <span>{s}</span>}
